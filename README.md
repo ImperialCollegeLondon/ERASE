@@ -1,1 +1,2 @@
-# erase
+# ERASE
+This folder contains simulation tools that are under development (and developed) for the ERASE project. This belongs to Ashwin Kumar Rajagopalan (SNSF Early.Postdoc Mobility Fellowship - P2EZP2_191875), Imperial College London (a.rajagopalan@imperial.ac.uk).
