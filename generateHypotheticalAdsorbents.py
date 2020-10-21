@@ -25,8 +25,7 @@
 #
 ############################################################################
 
-def generateHypotheticalAdsorbents(numberOfGases, numberOfAdsorbents):
-    
+def generateHypotheticalAdsorbents(numberOfGases, numberOfAdsorbents): 
     import numpy as np
     from numpy import savez
     from smt.sampling_methods import LHS
