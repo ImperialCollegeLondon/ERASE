@@ -14,6 +14,8 @@
 # "estimated" differences in the change of mass of the sensor array
 #
 # Last modified:
+# - 2020-10-22, AK: Change error to relative from absolute, add opt bounds,
+#                   input arguments, and initial guess
 # - 2020-10-21, AK: Initial creation
 #
 # Input arguments:
@@ -24,16 +26,16 @@
 #
 ############################################################################
 
-def estimateConcentration(moleFracID,sensorID):
+def estimateConcentration(numberOfAdsorbents, numberOfGases, moleFracID, sensorID):
     import numpy as np
     from generateTrueSensorResponse import generateTrueSensorResponse
     from scipy.optimize import basinhopping
     
     # Total number of sensor elements/gases simulated and generated using 
     # generateHypotheticalAdsorbents.py function
-    numberOfAdsorbents = 100;
-    numberOfGases = 2;
-    
+    # numberOfAdsorbents = 4;
+    # numberOfGases = 3;
+
     # Total pressure of the gas [Pa]
     pressureTotal = np.array([1.e5]);
     
@@ -55,7 +57,7 @@ def estimateConcentration(moleFracID,sensorID):
     
     # Parse out the true sensor response for a sensor array with n number of
     # sensors given by sensorID
-    arrayTrueResponse = np.zeros(sensorID.shape[0])
+    arrayTrueResponse = 0.5*np.ones(sensorID.shape[0])
     for ii in range(sensorID.shape[0]):
         arrayTrueResponse[ii] = sensorTrueResponse[sensorID[ii],moleFracID]
     
@@ -66,11 +68,13 @@ def estimateConcentration(moleFracID,sensorID):
     # Minimize an objective function to compute the mole fraction of the feed
     # gas to the sensor
     initialCondition = np.zeros(numberOfGases) # Initial guess
+    optBounds = np.tile([0.,1.], (numberOfGases,1)) # BOunding the mole fractions
     # Use the basin hopping minimizer to escape local minima when evaluating
     # the function. The number of iterations is hard-coded and fixed at 50
     estMoleFraction = basinhopping(concObjectiveFunction, initialCondition, 
-                                   minimizer_kwargs = {"args": inputParameters}, niter = 50)
-    return estMoleFraction.x
+                                   minimizer_kwargs = {"args": inputParameters, 
+                                                       "bounds": optBounds}, niter = 50)
+    return np.concatenate((sensorID,estMoleFraction.x), axis=0)
 
 # func: concObjectiveFunction, computes the sum of square error for the 
 # finger print for varying gas concentrations, using the minimize function
@@ -89,4 +93,4 @@ def concObjectiveFunction(x, *inputParameters):
     arraySimResponse = simulateSensorArray(sensorID, pressureTotal, temperature, moleFraction)
     
     # Compute the sum of the error for the sensor array
-    return sum(np.power(arrayTrueResponse - arraySimResponse,2))
+    return sum(np.power((arrayTrueResponse - arraySimResponse)/arrayTrueResponse,2))

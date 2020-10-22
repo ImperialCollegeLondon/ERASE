@@ -14,6 +14,7 @@
 # n sorbents. 
 #
 # Last modified:
+# - 2020-10-22, AK: Add two/three gases
 # - 2020-10-21, AK: Cosmetic changes and make it a function
 # - 2020-10-20, AK: Obtain sensor array finger print
 # - 2020-10-19, AK: Initial creation
@@ -33,7 +34,8 @@ def simulateSensorArray(sensorID, pressureTotal, temperature, moleFraction):
     from simulateSSL import simulateSSL
         
     # For now load a given adsorbent isotherm material file
-    loadFileName = "isothermParameters_20201020_1756_5f263af.npz"
+    # loadFileName = "isothermParameters_20201020_1756_5f263af.npz" # Two gases
+    loadFileName = "isothermParameters_20201022_1056_782efa3.npz" # Three gases
     hypoAdsorbentFile = os.path.join('inputResources',loadFileName);
     
     # Check if the file with the adsorbent properties exist 

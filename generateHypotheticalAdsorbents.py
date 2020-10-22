@@ -71,7 +71,7 @@ def generateHypotheticalAdsorbents(numberOfGases, numberOfAdsorbents):
                 isothermCounter += 1
 
     # Save the adsorbent isotherm parameters into a native numpy file
-    # The .npy file is saved in a folder called inputResources (hardcoded)
+    # The .npz file is saved in a folder called inputResources (hardcoded)
     filePrefix = "isothermParameters"
     saveFileName = filePrefix + "_" + simulationDT + "_" + gitCommitID + ".npz";
     savePath = os.path.join('inputResources',saveFileName)

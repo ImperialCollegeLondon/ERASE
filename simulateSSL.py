@@ -13,6 +13,7 @@
 # and concentrations.
 #
 # Last modified:
+# - 2020-10-22, AK: Minor cosmetic changes
 # - 2020-10-19, AK: Incorporate sorbent density and minor improvements
 # - 2020-10-19, AK: Change functionality to work with a single sorbent input
 # - 2020-10-16, AK: Initial creation
@@ -25,7 +26,7 @@
 #
 ############################################################################
 
-def simulateSSL(adsorbentMaterial, adsorbentDensity, pressureTotal, 
+def simulateSSL(adsorbentIsotherm, adsorbentDensity, pressureTotal, 
                 temperature, moleFraction):
     import numpy as np
     import math
@@ -36,7 +37,7 @@ def simulateSSL(adsorbentMaterial, adsorbentDensity, pressureTotal,
     # Get the number of gases
     numberOfGases = moleFraction.shape[1]
 
-    if moleFraction.shape[1] != adsorbentMaterial.shape[0]:
+    if moleFraction.shape[1] != adsorbentIsotherm.shape[0]:
         raise Exception("The dimensions of the mole fraction and the number of gases in the adsorbent is not consistent!")
 
     # Initialize the equilibriumLoadings array with zeros
@@ -49,9 +50,9 @@ def simulateSSL(adsorbentMaterial, adsorbentDensity, pressureTotal,
             for kk in range(temperature.shape[0]):
                 # Parse out the saturation capacity, equilibrium constant, and 
                 # heat of adsorption
-                qsat = adsorbentMaterial[ii,0]
-                b0 = adsorbentMaterial[ii,1]
-                delH = adsorbentMaterial[ii,2]
+                qsat = adsorbentIsotherm[ii,0]
+                b0 = adsorbentIsotherm[ii,1]
+                delH = adsorbentIsotherm[ii,2]
                 # Compute the concentraiton
                 conc = pressureTotal*moleFraction[jj,ii]/(Rg*temperature[kk])
                 # Compute the numerator and denominator for SSL
