@@ -13,6 +13,7 @@
 # and concentrations.
 #
 # Last modified:
+# - 2020-10-23, AK: Replace the noncompetitive to competitive isotherm
 # - 2020-10-22, AK: Minor cosmetic changes
 # - 2020-10-19, AK: Incorporate sorbent density and minor improvements
 # - 2020-10-19, AK: Change functionality to work with a single sorbent input
@@ -29,7 +30,6 @@
 def simulateSSL(adsorbentIsotherm, adsorbentDensity, pressureTotal, 
                 temperature, moleFraction):
     import numpy as np
-    import math
     
     # Gas constant
     Rg = 8.314; # [J/mol K]
@@ -51,13 +51,17 @@ def simulateSSL(adsorbentIsotherm, adsorbentDensity, pressureTotal,
                 # Parse out the saturation capacity, equilibrium constant, and 
                 # heat of adsorption
                 qsat = adsorbentIsotherm[ii,0]
-                b0 = adsorbentIsotherm[ii,1]
-                delH = adsorbentIsotherm[ii,2]
+                b0 = adsorbentIsotherm[:,1]
+                delH = adsorbentIsotherm[:,2]
+                b = np.multiply(b0,np.exp(-delH/(Rg*temperature[kk])))
                 # Compute the concentraiton
-                conc = pressureTotal*moleFraction[jj,ii]/(Rg*temperature[kk])
+                conc = pressureTotal*moleFraction[jj,:]/(Rg*temperature[kk])
+                # Compute sum(b*c) for the multicomponet competitive eqbm (den.)
+                bStarConc = np.multiply(b,conc)
+                sumbStarConc = np.sum(bStarConc)
                 # Compute the numerator and denominator for SSL
-                loadingNum = adsorbentDensity*qsat*b0*math.exp(-delH/(Rg*temperature[kk]))*conc
-                loadingDen = 1 + b0*math.exp(-delH/(Rg*temperature[kk]))*conc
+                loadingNum = adsorbentDensity*qsat*b[ii]*conc[ii]
+                loadingDen = 1 + sumbStarConc
                 # Compute the equilibrium loading
                 equilibriumLoadings[jj,kk,ii] = loadingNum/loadingDen # [mol/m3]
                 

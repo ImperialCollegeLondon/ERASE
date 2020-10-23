@@ -40,8 +40,8 @@ num_cores = multiprocessing.cpu_count()
 
 # Total number of sensor elements/gases simulated and generated using 
 # generateHypotheticalAdsorbents.py function
-numberOfAdsorbents = 10;
-numberOfGases = 3;
+numberOfAdsorbents = 10
+numberOfGases = 3
     
 # "True" gas composition that is exposed to the sensor array (0-4)
 # Check generateTrueSensorResponse.py for the actual concentrations
