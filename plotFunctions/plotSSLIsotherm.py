@@ -25,16 +25,18 @@
 
 import numpy as np
 import os
+import sys
+sys.path.append('..') # Add path to search for packages and files (one level up)
 from numpy import load
 from simulateSSL import simulateSSL
 import matplotlib.pyplot as plt
 plt.style.use('singleColumn.mplstyle') # Custom matplotlib style file
 
 # Flag for saving figure
-saveFlag = False
+saveFlag = True
 
 # Save file extension (png or pdf)
-saveFileExtension = ".pdf"
+saveFileExtension = ".png"
 
 # Sensor ID to be plotted
 sensorID = 50
@@ -52,7 +54,7 @@ moleFraction = np.array([np.linspace(0,1,101)])
 # For now load a given adsorbent isotherm material file
 # loadFileName = "isothermParameters_20201020_1756_5f263af.npz" # Two gases
 loadFileName = "isothermParameters_20201022_1056_782efa3.npz" # Three gases
-hypoAdsorbentFile = os.path.join('inputResources',loadFileName);
+hypoAdsorbentFile = os.path.join('..','inputResources',loadFileName);
 
 # Check if the file with the adsorbent properties exist 
 if os.path.exists(hypoAdsorbentFile):
@@ -78,11 +80,11 @@ for ii in range(adsorbentIsotherm.shape[0]):
                                       pressureTotal,temperature,moleFraction.T))/adsorbentDensity # [mol/m3]
 
 # Get the commit ID of the current repository
-from getCommitID import getCommitID
+from auxiliaryFunctions.getCommitID import getCommitID
 gitCommitID = getCommitID()
 
 # Get the current date and time for saving purposes    
-from getCurrentDateTime import getCurrentDateTime
+from auxiliaryFunctions.getCurrentDateTime import getCurrentDateTime
 currentDT = getCurrentDateTime()
 
 # Git commit id of the loaded isotherm file
@@ -107,10 +109,10 @@ ax.legend()
 if saveFlag:
     # FileName: PureIsotherm_<sensorID>_<currentDateTime>_<GitCommitID_Data>_<GitCommitID_Current>
     saveFileName = "PureIsotherm_" + str(sensorID) + "_" + currentDT + "_" + gitCommmitID_loadedFile + "_" + gitCommitID + saveFileExtension
-    savePath = os.path.join('simulationFigures',saveFileName)
+    savePath = os.path.join('..','simulationFigures',saveFileName)
     # Check if inputResources directory exists or not. If not, create the folder
-    if not os.path.exists('simulationFigures'):
-        os.mkdir('simulationFigures')
+    if not os.path.exists(os.path.join('..','simulationFigures')):
+        os.mkdir(os.path.join('..','simulationFigures'))
     plt.savefig (savePath)
     
 # For the figure to be saved show should appear after the save
