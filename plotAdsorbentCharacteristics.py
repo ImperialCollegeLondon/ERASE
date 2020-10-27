@@ -9,11 +9,10 @@
 # Authors:  Ashwin Kumar Rajagopalan (AK)
 #
 # Purpose:
-# Plots the single site Langmuir isotherms
+# Plots the adsorbent properties for the hypothetical materials
 #
 # Last modified:
-# - 2020-10-27, AK: Further improvements and cosmetic changes
-# - 2020-10-26, AK: Initial creation
+# - 2020-10-27, AK: Initial creation
 #
 # Input arguments:
 #
@@ -23,31 +22,19 @@
 #
 ############################################################################
 
-import numpy as np
 import os
 from numpy import load
-from simulateSSL import simulateSSL
 import matplotlib.pyplot as plt
-plt.style.use('singleColumn.mplstyle') # Custom matplotlib style file
+plt.style.use('doubleColumn.mplstyle') # Custom matplotlib style file
 
 # Flag for saving figure
 saveFlag = False
 
 # Save file extension (png or pdf)
-saveFileExtension = ".pdf"
+saveFileExtension = ".png"
 
-# Sensor ID to be plotted
-sensorID = 50
-
-# Total pressure of the gas [Pa]
-pressureTotal = np.array([1.e5])
-
-# Temperature of the gas [K]
-# Can be a vector of temperatures
-temperature = np.array([298.15])
-
-# Molefraction
-moleFraction = np.array([np.linspace(0,1,101)])
+# Select the id of gas that is to be plotted
+gasID = 0
 
 # For now load a given adsorbent isotherm material file
 # loadFileName = "isothermParameters_20201020_1756_5f263af.npz" # Two gases
@@ -58,25 +45,13 @@ hypoAdsorbentFile = os.path.join('inputResources',loadFileName);
 if os.path.exists(hypoAdsorbentFile):
     loadedFileContent = load(hypoAdsorbentFile)
     adsorbentIsothermTemp = loadedFileContent['adsIsotherm']
-    adsorbentDensityTemp = loadedFileContent['adsDensity']
+    adsorbentIsotherm = adsorbentIsothermTemp[gasID,:,:]
+    adsorbentDensity = loadedFileContent['adsDensity']
     molecularWeight = loadedFileContent['molWeight']
 else:
     errorString = "Adsorbent property file " + hypoAdsorbentFile + " does not exist."
     raise Exception(errorString)
     
-###### TO DO: SERIOUS ISSUE WITH THE ISOTHERM PLOTTING
-# Evaluate the isotherms
-adsorbentID = np.array([sensorID]) # Do this for consistency
-adsorbentIsotherm = adsorbentIsothermTemp[:,:,adsorbentID]
-adsorbentDensity = adsorbentDensityTemp[adsorbentID]
-equilibriumLoadings = np.zeros([moleFraction.shape[1],adsorbentIsotherm.shape[0]])
-# Loop through all the gases so that the single component isotherm is 
-# generated. If not multicomponent genretaed. Additionally, several 
-# transpose operations are performed to be self-consistent with other codes
-for ii in range(adsorbentIsotherm.shape[0]):
-    equilibriumLoadings[:,ii] = np.squeeze(simulateSSL(adsorbentIsotherm[ii,:,:].T,adsorbentDensity,
-                                      pressureTotal,temperature,moleFraction.T))/adsorbentDensity # [mol/m3]
-
 # Get the commit ID of the current repository
 from getCommitID import getCommitID
 gitCommitID = getCommitID()
@@ -89,29 +64,41 @@ currentDT = getCurrentDateTime()
 gitCommmitID_loadedFile = hypoAdsorbentFile[-11:-4]
 
 # Plot the pure single component isotherm for the n gases
+colorVar = range(1,101)
 fig = plt.figure
-ax = plt.gca()
-# HARD CODED for 3 gases
-ax.plot(pressureTotal*moleFraction.T/1.e5, equilibriumLoadings[:,0],
-         linewidth=1.5,color='r', label = '$g_1$')
-ax.plot(pressureTotal*moleFraction.T/1.e5, equilibriumLoadings[:,1],
-         linewidth=1.5,color='b', label = '$g_2$')
-ax.plot(pressureTotal*moleFraction.T/1.e5, equilibriumLoadings[:,2],
-         linewidth=1.5,color='g', label = '$g_3$')
-ax.set(xlabel='$P$ [bar]', 
-       ylabel='$q^*$ [mol kg$^{\mathregular{-1}}$]',
-       xlim = [0, 1], ylim = [0, 10])
-ax.legend()
+ax1 = plt.subplot(1,3,1)
+s1 = ax1.scatter(adsorbentIsotherm[0,:], adsorbentIsotherm[1,:], c = colorVar, cmap='RdYlBu')
+ax1.set(xlabel='$q_\mathregular{sat}$ [mol kg$^{\mathregular{-1}}$]',
+        ylabel='$b_\mathregular{0}$ [m$^{\mathregular{3}}$ mol$^{\mathregular{-1}}$]',
+       xlim = [0, 10], ylim = [0, 3e-6])
+ax1.locator_params(axis="x", nbins=4)
+ax1.locator_params(axis="y", nbins=4)
+
+ax2 = plt.subplot(1,3,2)
+s2 = ax2.scatter(adsorbentIsotherm[0,:], -adsorbentIsotherm[2,:], c = colorVar, cmap='RdYlBu')
+ax2.set(xlabel='$q_\mathregular{sat}$ [mol kg$^{\mathregular{-1}}$]',
+        ylabel='-$\Delta H$ [J mol$^{\mathregular{-1}}$]',
+       xlim = [0, 10], ylim = [0, 4e4])
+ax2.locator_params(axis="x", nbins=4)
+ax2.locator_params(axis="y", nbins=4)
+
+ax3 = plt.subplot(1,3,3)
+s3 = ax3.scatter(adsorbentIsotherm[0,:], adsorbentDensity, c = colorVar, cmap='RdYlBu')
+ax3.set(xlabel='$q_\mathregular{sat}$ [mol kg$^{\mathregular{-1}}$]',
+        ylabel='$\\rho$ [kg m$^{\mathregular{-3}}$]',
+       xlim = [0, 10], ylim = [500, 1500])
+ax3.locator_params(axis="x", nbins=4)
+ax3.locator_params(axis="y", nbins=4)
 
 #  Save the figure
 if saveFlag:
     # FileName: PureIsotherm_<sensorID>_<currentDateTime>_<GitCommitID_Data>_<GitCommitID_Current>
-    saveFileName = "PureIsotherm_" + str(sensorID) + "_" + currentDT + "_" + gitCommmitID_loadedFile + "_" + gitCommitID + saveFileExtension
+    saveFileName = "AdsCharac_" + str(gasID) + "_" + currentDT + "_" + gitCommmitID_loadedFile + "_" + gitCommitID + saveFileExtension
     savePath = os.path.join('simulationFigures',saveFileName)
     # Check if inputResources directory exists or not. If not, create the folder
     if not os.path.exists('simulationFigures'):
         os.mkdir('simulationFigures')
     plt.savefig (savePath)
-    
+
 # For the figure to be saved show should appear after the save
 plt.show()
