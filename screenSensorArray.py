@@ -77,8 +77,7 @@ save (savePath, arrayConcentration)
 
 ##### FOR 2 SORBENT SENSOR ARRAY #####
 # Get the current date and time for saving purposes    
-from getCurrentDateTime import getCurrentDateTime
-simulationDT = getCurrentDateTime()
+simulationDT = auxiliaryFunctions.getCurrentDateTime()
 
 # Loop over all the sorbents for a single material sensor
 # Using parallel processing to loop through all the materials

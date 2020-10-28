@@ -12,6 +12,7 @@
 # Plots the single site Langmuir isotherms
 #
 # Last modified:
+# - 2020-10-28, AK: Minor fix for save file name
 # - 2020-10-28, AK: Add auxiliary functions as a module
 # - 2020-10-27, AK: Further improvements and cosmetic changes
 # - 2020-10-26, AK: Initial creation
@@ -33,7 +34,7 @@ import matplotlib.pyplot as plt
 plt.style.use('singleColumn.mplstyle') # Custom matplotlib style file
 
 # Flag for saving figure
-saveFlag = True
+saveFlag = False
 
 # Save file extension (png or pdf)
 saveFileExtension = ".png"
@@ -106,7 +107,7 @@ ax.legend()
 #  Save the figure
 if saveFlag:
     # FileName: PureIsotherm_<sensorID>_<currentDateTime>_<GitCommitID_Data>_<GitCommitID_Current>
-    saveFileName = "PureIsotherm_" + str(sensorID) + "_" + currentDT + "_" + gitCommmitID_loadedFile + "_" + gitCommitID + saveFileExtension
+    saveFileName = "PureIsotherm_" + str(sensorID) + "_" + currentDT + "_" + gitCommitID  + "_" + gitCommmitID_loadedFile + saveFileExtension
     savePath = os.path.join('..','simulationFigures',saveFileName)
     # Check if inputResources directory exists or not. If not, create the folder
     if not os.path.exists(os.path.join('..','simulationFigures')):

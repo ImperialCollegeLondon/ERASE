@@ -12,6 +12,7 @@
 # Plots the adsorbent properties for the hypothetical materials
 #
 # Last modified:
+# - 2020-10-28, AK: Minor fix for save file name
 # - 2020-10-28, AK: Add auxiliary functions as a module
 # - 2020-10-27, AK: Initial creation
 #
@@ -63,9 +64,11 @@ currentDT = auxiliaryFunctions.getCurrentDateTime()
 # Git commit id of the loaded isotherm file
 gitCommmitID_loadedFile = hypoAdsorbentFile[-11:-4]
 
-# Plot the pure single component isotherm for the n gases
+# Scatter plot for qsat vs b0, delH, and rho
 colorVar = range(1,101)
 fig = plt.figure
+
+# qsat vs b0
 ax1 = plt.subplot(1,3,1)
 s1 = ax1.scatter(adsorbentIsotherm[0,:], adsorbentIsotherm[1,:], c = colorVar, cmap='RdYlBu')
 ax1.set(xlabel='$q_\mathregular{sat}$ [mol kg$^{\mathregular{-1}}$]',
@@ -74,6 +77,7 @@ ax1.set(xlabel='$q_\mathregular{sat}$ [mol kg$^{\mathregular{-1}}$]',
 ax1.locator_params(axis="x", nbins=4)
 ax1.locator_params(axis="y", nbins=4)
 
+# qsat vs delH
 ax2 = plt.subplot(1,3,2)
 s2 = ax2.scatter(adsorbentIsotherm[0,:], -adsorbentIsotherm[2,:], c = colorVar, cmap='RdYlBu')
 ax2.set(xlabel='$q_\mathregular{sat}$ [mol kg$^{\mathregular{-1}}$]',
@@ -82,6 +86,7 @@ ax2.set(xlabel='$q_\mathregular{sat}$ [mol kg$^{\mathregular{-1}}$]',
 ax2.locator_params(axis="x", nbins=4)
 ax2.locator_params(axis="y", nbins=4)
 
+# qsat vs rho
 ax3 = plt.subplot(1,3,3)
 s3 = ax3.scatter(adsorbentIsotherm[0,:], adsorbentDensity, c = colorVar, cmap='RdYlBu')
 ax3.set(xlabel='$q_\mathregular{sat}$ [mol kg$^{\mathregular{-1}}$]',
@@ -92,8 +97,8 @@ ax3.locator_params(axis="y", nbins=4)
 
 #  Save the figure
 if saveFlag:
-    # FileName: PureIsotherm_<sensorID>_<currentDateTime>_<GitCommitID_Data>_<GitCommitID_Current>
-    saveFileName = "AdsCharac_" + str(gasID) + "_" + currentDT + "_" + gitCommmitID_loadedFile + "_" + gitCommitID + saveFileExtension
+    # FileName: AdsCharac_<sensorID>_<currentDateTime>_<GitCommitID_Current>_<GitCommitID_Data>
+    saveFileName = "AdsCharac_" + str(gasID) + "_" + currentDT + "_" + gitCommitID + "_" + gitCommmitID_loadedFile + saveFileExtension
     savePath = os.path.join('..','simulationFigures',saveFileName)
     # Check if inputResources directory exists or not. If not, create the folder
     if not os.path.exists(os.path.join('..','simulationFigures')):
