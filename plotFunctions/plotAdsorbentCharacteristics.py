@@ -12,6 +12,7 @@
 # Plots the adsorbent properties for the hypothetical materials
 #
 # Last modified:
+# - 2020-10-28, AK: Add auxiliary functions as a module
 # - 2020-10-27, AK: Initial creation
 #
 # Input arguments:
@@ -23,14 +24,13 @@
 ############################################################################
 
 import os
-import sys
-sys.path.append('..') # Add path to search for packages and files
 from numpy import load
+import auxiliaryFunctions
 import matplotlib.pyplot as plt
 plt.style.use('doubleColumn.mplstyle') # Custom matplotlib style file
 
 # Flag for saving figure
-saveFlag = True
+saveFlag = False
 
 # Save file extension (png or pdf)
 saveFileExtension = ".pdf"
@@ -55,12 +55,10 @@ else:
     raise Exception(errorString)
     
 # Get the commit ID of the current repository
-from auxiliaryFunctions.getCommitID import getCommitID
-gitCommitID = getCommitID()
+gitCommitID = auxiliaryFunctions.getCommitID()
 
 # Get the current date and time for saving purposes    
-from auxiliaryFunctions.getCurrentDateTime import getCurrentDateTime
-currentDT = getCurrentDateTime()
+currentDT = auxiliaryFunctions.getCurrentDateTime()
 
 # Git commit id of the loaded isotherm file
 gitCommmitID_loadedFile = hypoAdsorbentFile[-11:-4]

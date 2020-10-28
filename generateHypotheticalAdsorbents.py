@@ -13,6 +13,7 @@
 # sorbents are assumed to exhibit Langmuirian behavior.
 #
 # Last modified:
+# - 2020-10-28, AK: Add auxiliary functions as a module
 # - 2020-10-19, AK: Add adsorbent density and molecular weight
 # - 2020-10-19, AK: Integrate git commit and save material properties
 # - 2020-10-16, AK: Initial creation
@@ -28,16 +29,15 @@
 def generateHypotheticalAdsorbents(numberOfGases, numberOfAdsorbents): 
     import numpy as np
     from numpy import savez
+    import auxiliaryFunctions
     from smt.sampling_methods import LHS
     import os # For OS related stuff (make directory, file separator, etc.)
     
     # Get the commit ID of the current repository
-    from getCommitID import getCommitID
-    gitCommitID = getCommitID()
+    gitCommitID = auxiliaryFunctions.getCommitID()
 
     # Get the current date and time for saving purposes    
-    from getCurrentDateTime import getCurrentDateTime
-    simulationDT = getCurrentDateTime()
+    simulationDT = auxiliaryFunctions.getCurrentDateTime()
     
     # Define a range for single site Langmuir isotherm for one sensor material 
     # [qsat [mol/kg] b0 [m3/mol] delH [J/mol]]

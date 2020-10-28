@@ -32,7 +32,7 @@ def simulateSensorArray(sensorID, pressureTotal, temperature, moleFraction):
     from numpy import load
     import os
     from simulateSSL import simulateSSL
-        
+
     # For now load a given adsorbent isotherm material file
     # loadFileName = "isothermParameters_20201020_1756_5f263af.npz" # Two gases
     loadFileName = "isothermParameters_20201022_1056_782efa3.npz" # Three gases

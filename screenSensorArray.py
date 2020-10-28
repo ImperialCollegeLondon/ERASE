@@ -13,6 +13,7 @@
 # sorbents are assumed to exhibit Langmuirian behavior.
 #
 # Last modified:
+# - 2020-10-28, AK: Add auxiliary functions as a module
 # - 2020-10-22, AK: Initial creation
 #
 # Input arguments:
@@ -25,6 +26,7 @@
 
 import numpy as np
 from numpy import save
+import auxiliaryFunctions
 import multiprocessing # For parallel processing
 from joblib import Parallel, delayed  # For parallel processing
 from tqdm import tqdm # To track progress of the loop
@@ -32,8 +34,7 @@ from estimateConcentration import estimateConcentration
 import os
 
 # Get the commit ID of the current repository
-from getCommitID import getCommitID
-gitCommitID = getCommitID()
+gitCommitID = auxiliaryFunctions.getCommitID()
 
 # Find out the total number of cores available for parallel processing
 num_cores = multiprocessing.cpu_count()
@@ -49,8 +50,7 @@ moleFracID = 0
 
 ##### FOR 1 SORBENT SENSOR ARRAY #####
 # Get the current date and time for saving purposes    
-from getCurrentDateTime import getCurrentDateTime
-simulationDT = getCurrentDateTime()
+simulationDT = auxiliaryFunctions.getCurrentDateTime()
 
 # Loop over all the sorbents for a single material sensor
 # Using parallel processing to loop through all the materials

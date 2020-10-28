@@ -12,6 +12,7 @@
 # Plots the single site Langmuir isotherms
 #
 # Last modified:
+# - 2020-10-28, AK: Add auxiliary functions as a module
 # - 2020-10-27, AK: Further improvements and cosmetic changes
 # - 2020-10-26, AK: Initial creation
 #
@@ -25,8 +26,7 @@
 
 import numpy as np
 import os
-import sys
-sys.path.append('..') # Add path to search for packages and files (one level up)
+import auxiliaryFunctions
 from numpy import load
 from simulateSSL import simulateSSL
 import matplotlib.pyplot as plt
@@ -80,12 +80,10 @@ for ii in range(adsorbentIsotherm.shape[0]):
                                       pressureTotal,temperature,moleFraction.T))/adsorbentDensity # [mol/m3]
 
 # Get the commit ID of the current repository
-from auxiliaryFunctions.getCommitID import getCommitID
-gitCommitID = getCommitID()
+gitCommitID = auxiliaryFunctions.getCommitID()
 
 # Get the current date and time for saving purposes    
-from auxiliaryFunctions.getCurrentDateTime import getCurrentDateTime
-currentDT = getCurrentDateTime()
+currentDT = auxiliaryFunctions.getCurrentDateTime()
 
 # Git commit id of the loaded isotherm file
 gitCommmitID_loadedFile = hypoAdsorbentFile[-11:-4]
