@@ -14,6 +14,7 @@
 # and should be modified.
 #
 # Last modified:
+# - 2020-10-30, AK: Fix to find number of gases
 # - 2020-10-22, AK: Add two/three gases
 # - 2020-10-21, AK: Initial creation
 #
@@ -25,22 +26,24 @@
 #
 ############################################################################
 
-def generateTrueSensorResponse(numberOfAdsorbents, pressureTotal, temperature):
+def generateTrueSensorResponse(numberOfAdsorbents, numberOfGases, pressureTotal, temperature):
     import numpy as np
     from simulateSensorArray import simulateSensorArray
     
     # Mole fraction of the gas [-]
     # Can be [jxg], where j is the number of mole fractions for g gases
-    # moleFraction = np.array([[0.05, 0.95],
-    #                          [0.15, 0.85],
-    #                          [0.40, 0.60],
-    #                          [0.75, 0.25],
-    #                          [0.90, 0.10]])
-    moleFraction = np.array([[0.05, 0.15, 0.80],
-                              [0.15, 0.25, 0.60],
-                              [0.40, 0.35, 0.25],
-                              [0.75, 0.10, 0.15],
-                              [0.90, 0.05, 0.05]])
+    if numberOfGases == 2:
+        moleFraction = np.array([[0.05, 0.95],
+                                  [0.15, 0.85],
+                                  [0.40, 0.60],
+                                  [0.75, 0.25],
+                                  [0.90, 0.10]])
+    elif numberOfGases == 3:
+        moleFraction = np.array([[0.05, 0.15, 0.80],
+                                  [0.15, 0.25, 0.60],
+                                  [0.40, 0.35, 0.25],
+                                  [0.75, 0.10, 0.15],
+                                  [0.90, 0.05, 0.05]])
     
     # Get the individual sensor reponse for all the five "test" concentrations
     sensorTrueResponse = np.zeros((numberOfAdsorbents,moleFraction.shape[0]))

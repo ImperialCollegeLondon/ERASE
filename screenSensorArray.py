@@ -35,7 +35,7 @@ from estimateConcentration import estimateConcentration
 import os
 
 # Number of sensors in the array
-numSensors = 3
+numSensors = 2
 
 # Get the commit ID of the current repository
 gitCommitID = auxiliaryFunctions.getCommitID()
@@ -46,7 +46,7 @@ num_cores = multiprocessing.cpu_count()
 # Total number of sensor elements/gases simulated and generated using 
 # generateHypotheticalAdsorbents.py function
 numberOfAdsorbents = 10
-numberOfGases = 3
+numberOfGases = 2
     
 # "True" gas composition that is exposed to the sensor array (0-4)
 # Check generateTrueSensorResponse.py for the actual concentrations

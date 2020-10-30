@@ -14,6 +14,7 @@
 # "estimated" differences in the change of mass of the sensor array
 #
 # Last modified:
+# - 2020-10-30, AK: Fix to find number of gases
 # - 2020-10-22, AK: Change error to relative from absolute, add opt bounds,
 #                   input arguments, and initial guess
 # - 2020-10-21, AK: Initial creation
@@ -44,7 +45,8 @@ def estimateConcentration(numberOfAdsorbents, numberOfGases, moleFracID, sensorI
     temperature = np.array([298.15]);
     
     # Get the individual sensor reponse for all the given "experimental/test" concentrations
-    sensorTrueResponse = generateTrueSensorResponse(numberOfAdsorbents,pressureTotal,temperature)
+    sensorTrueResponse = generateTrueSensorResponse(numberOfAdsorbents,numberOfGases,
+                                                    pressureTotal,temperature)
     
     # True mole fraction index (provide the index corresponding to the true
     # experimental mole fraction (0-4, check generateTrueSensorResponse.py)
