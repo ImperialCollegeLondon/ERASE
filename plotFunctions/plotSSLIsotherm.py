@@ -12,6 +12,7 @@
 # Plots the single site Langmuir isotherms
 #
 # Last modified:
+# - 2020-11-04, AK: Plot 3rd gas
 # - 2020-10-28, AK: Minor fix for save file name
 # - 2020-10-28, AK: Add auxiliary functions as a module
 # - 2020-10-27, AK: Further improvements and cosmetic changes
@@ -40,7 +41,10 @@ saveFlag = False
 saveFileExtension = ".png"
 
 # Sensor ID to be plotted
-sensorID = 50
+sensorID = 17
+
+# Number of gases to determine the hypothetical sorbents roster
+numGases = 2
 
 # Total pressure of the gas [Pa]
 pressureTotal = np.array([1.e5])
@@ -53,8 +57,11 @@ temperature = np.array([298.15])
 moleFraction = np.array([np.linspace(0,1,101)])
 
 # For now load a given adsorbent isotherm material file
-# loadFileName = "isothermParameters_20201020_1756_5f263af.npz" # Two gases
-loadFileName = "isothermParameters_20201022_1056_782efa3.npz" # Three gases
+if numGases == 2:
+    loadFileName = "isothermParameters_20201020_1756_5f263af.npz" # Two gases
+elif numGases == 3:
+    loadFileName = "isothermParameters_20201022_1056_782efa3.npz" # Three gases
+
 hypoAdsorbentFile = os.path.join('..','inputResources',loadFileName);
 
 # Check if the file with the adsorbent properties exist 
@@ -97,11 +104,12 @@ ax.plot(pressureTotal*moleFraction.T/1.e5, equilibriumLoadings[:,0],
          linewidth=1.5,color='r', label = '$g_1$')
 ax.plot(pressureTotal*moleFraction.T/1.e5, equilibriumLoadings[:,1],
          linewidth=1.5,color='b', label = '$g_2$')
-ax.plot(pressureTotal*moleFraction.T/1.e5, equilibriumLoadings[:,2],
-         linewidth=1.5,color='g', label = '$g_3$')
+if numGases == 3:
+    ax.plot(pressureTotal*moleFraction.T/1.e5, equilibriumLoadings[:,2],
+            linewidth=1.5,color='g', label = '$g_3$')
 ax.set(xlabel='$P$ [bar]', 
        ylabel='$q^*$ [mol kg$^{\mathregular{-1}}$]',
-       xlim = [0, 1], ylim = [0, 10])
+       xlim = [0, 1], ylim = [0, 0.01])
 ax.legend()
 
 #  Save the figure
