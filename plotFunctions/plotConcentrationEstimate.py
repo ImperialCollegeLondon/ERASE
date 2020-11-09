@@ -12,6 +12,7 @@
 # Plots to visualize estimated concentration
 #
 # Last modified:
+# - 2020-11-09, AK: Cosmetic changes
 # - 2020-11-04, AK: Improve plotting capability for three gases/sensors
 # - 2020-10-30, AK: Add zoomed in version
 # - 2020-10-29, AK: Improvements to the plots
@@ -45,8 +46,8 @@ saveFileExtension = ".png"
 plotZoomDist = False
 
 # Gas concentration
-molFracG1 = 0.4
-molFracG2 = 0.6
+molFracG1 = 0.90
+molFracG2 = 0.10
 molFracG3 = 1 - molFracG1 - molFracG2
 
 # Xlimits and Ylimits
@@ -72,8 +73,11 @@ densityX = False
 # loadFileName = "arrayConcentration_20201030_1109_5c77a62.npy" # 3 gases, 1 sensor
 # loadFileName = "arrayConcentration_20201030_0913_5c77a62.npy" # 3 gases, 2 sensors
 # loadFileName = "arrayConcentration_20201029_2328_5c77a62.npy" # 3 gases, 3 sensors
-loadFileName = "arrayConcentration_20201030_1731_da1707b.npy" # 2 gases, 2 sensor
 # loadFileName = "arrayConcentration_20201102_1423_da1707b.npy" # 2 gases, 1 sensor
+# loadFileName = "arrayConcentration_20201104_1732_cc08dc4.npy" # 2 gases, 2 sensor [0.15, 0.85]
+# loadFileName = "arrayConcentration_20201030_1731_da1707b.npy" # 2 gases, 2 sensor [0.4, 0.6]
+# loadFileName = "arrayConcentration_20201104_1842_cc08dc4.npy" # 2 gases, 2 sensor [0.75, 0.25]
+loadFileName = "arrayConcentration_20201104_2227_cc08dc4.npy" # 2 gases, 2 sensor [0.75, 0.25]
 simResultsFile = os.path.join('..','simulationResults',loadFileName);
 
 # Get the commit ID of the current repository
@@ -88,6 +92,7 @@ simID_loadedFile = loadFileName[-21:-4]
 # Check if the file with the adsorbent properties exist 
 if os.path.exists(simResultsFile):
     resultOutput = load(simResultsFile)
+    actualOutput = resultOutput    
     if numberOfGases == 2:
         if resultOutput.shape[1] == 3:
             resultOutput = np.delete(resultOutput,[0],1)

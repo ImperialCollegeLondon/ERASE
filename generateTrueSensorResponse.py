@@ -14,6 +14,8 @@
 # and should be modified.
 #
 # Last modified:
+# - 2020-11-09, AK: Introduce custom mole fraction input
+# - 2020-11-05, AK: Introduce new case for mole fraction sweep
 # - 2020-10-30, AK: Fix to find number of gases
 # - 2020-10-22, AK: Add two/three gases
 # - 2020-10-21, AK: Initial creation
@@ -26,10 +28,11 @@
 #
 ############################################################################
 
-def generateTrueSensorResponse(numberOfAdsorbents, numberOfGases, pressureTotal, temperature):
+def generateTrueSensorResponse(numberOfAdsorbents, numberOfGases, pressureTotal, temperature, **kwargs):
     import numpy as np
+    import pdb
     from simulateSensorArray import simulateSensorArray
-    
+
     # Mole fraction of the gas [-]
     # Can be [jxg], where j is the number of mole fractions for g gases
     if numberOfGases == 2:
@@ -43,7 +46,25 @@ def generateTrueSensorResponse(numberOfAdsorbents, numberOfGases, pressureTotal,
                                   [0.15, 0.25, 0.60],
                                   [0.40, 0.35, 0.25],
                                   [0.75, 0.10, 0.15],
-                                  [0.90, 0.05, 0.05]])
+                                  [0.90, 0.05, 0.05]])        
+    # To sweep through the entire mole fraction range for 2 gases
+    elif numberOfGases == 20000:
+        moleFraction = np.array([np.linspace(0,1,1001), 1 - np.linspace(0,1,1001)]).T
+    # To sweep through the entire mole fraction range for 3 gases
+    elif numberOfGases == 30000:
+        moleFractionTemp = np.zeros([1001,3])
+        num1 = np.random.uniform(0.0,1.0,1001)
+        num2 = np.random.uniform(0.0,1.0,1001)
+        num3 = np.random.uniform(0.0,1.0,1001)
+        sumNum = num1 + num2 + num3
+        moleFractionTemp[:,0] = num1/sumNum
+        moleFractionTemp[:,1] = num2/sumNum
+        moleFractionTemp[:,2] = num3/sumNum
+        moleFraction = moleFractionTemp[moleFractionTemp[:,0].argsort()]   
+    
+    # Check if a custom mole fraction is provided intead of the predefined one
+    if 'moleFraction' in kwargs:
+        moleFraction = np.array([kwargs["moleFraction"]])
     
     # Get the individual sensor reponse for all the five "test" concentrations
     sensorTrueResponse = np.zeros((numberOfAdsorbents,moleFraction.shape[0]))

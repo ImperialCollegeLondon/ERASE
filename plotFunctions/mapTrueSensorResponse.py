@@ -9,9 +9,11 @@
 # Authors:  Ashwin Kumar Rajagopalan (AK)
 #
 # Purpose:
-#
+# Maps the sensor response as a function of mole fraction and the sorbent
+# used
 #
 # Last modified:
+# - 2020-11-06, AK: Cosmetic changes
 # - 2020-10-23, AK: Initial creation
 #
 # Input arguments:
@@ -52,7 +54,7 @@ sensorID = range(0,20)
 histSensorID = 16
 
 # Total pressure of the gas [Pa]
-numberOfGases = 2
+numberOfGases = 20000 # 20000 does a complete concentraiton sweep for 2/3 gases
 
 # Mole fraction to be plotted
 moleFraction = np.linspace(0,1,1001)
@@ -66,8 +68,9 @@ temperature = np.array([298.15])
 
 # Total number of sensor elements/gases simulated and generated using 
 # generateHypotheticalAdsorbents.py function
-numberOfAdsorbents = 20
+numberOfAdsorbents = 20 
 
+# Generate the true sensor response
 sensorTrueResponse = generateTrueSensorResponse(numberOfAdsorbents, numberOfGases,
                                                 pressureTotal, temperature)
 
@@ -123,16 +126,16 @@ ax.set(xlabel='Adsorbent ID [-]',
         xlim = [0, 20], ylim = [0,300])
 ax.locator_params(axis="x", nbins=4)
 ax.locator_params(axis="y", nbins=4)
-plt.colorbar(s1,ax=ax)   
+plt.colorbar(s1,ax=ax,label="$y_1$ [-]")   
  
 #  Save the figure
 if saveFlag:
-    # FileName: PureIsotherm_<sensorID>_<currentDateTime>_<GitCommitID_Data>_<GitCommitID_Current>
+    # FileName: SensorMapRaw_<currentDateTime>_<GitCommitID_Current>
     saveFileName = "SensorMapRaw_" + currentDT + "_" + gitCommitID + saveFileExtension
-    savePath = os.path.join('..','simulationFigures',saveFileName)
-    # Check if inputResources directory exists or not. If not, create the folder
+    savePath = os.path.join('simulationFigures',saveFileName)
+    # Check if simulationFigures directory exists or not. If not, create the folder
     if not os.path.exists(os.path.join('..','simulationFigures')):
-        os.mkdir(os.path.join('..','simulationFigures'))
+        os.mkdir(os.path.join('simulationFigures'))
     plt.savefig (savePath)
 
 # Plot the sensor finger print for different concentrations of gases, but with
@@ -147,15 +150,15 @@ ax.set(xlabel='Adsorbent ID [-]',
         xlim = [0, 20], ylim = [-10,5])
 ax.locator_params(axis="x", nbins=4)
 ax.locator_params(axis="y", nbins=4)
-plt.colorbar(s2,ax=ax)    
+plt.colorbar(s2,ax=ax,label="$y_1$ [-]")    
 #  Save the figure
 if saveFlag:
-    # FileName: PureIsotherm_<sensorID>_<currentDateTime>_<GitCommitID_Data>_<GitCommitID_Current>
+    # FileName:  SensorMapSNV_<currentDateTime>_<GitCommitID_Current>
     saveFileName = "SensorMapSNV_" + currentDT + "_" + gitCommitID + saveFileExtension
-    savePath = os.path.join('..','simulationFigures',saveFileName)
-    # Check if inputResources directory exists or not. If not, create the folder
+    savePath = os.path.join('simulationFigures',saveFileName)
+    # Check if simulationFigures directory exists or not. If not, create the folder
     if not os.path.exists(os.path.join('..','simulationFigures')):
-        os.mkdir(os.path.join('..','simulationFigures'))
+        os.mkdir(os.path.join('simulationFigures'))
     plt.savefig (savePath)
 
 plt.show()

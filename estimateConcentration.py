@@ -14,6 +14,8 @@
 # "estimated" differences in the change of mass of the sensor array
 #
 # Last modified:
+# - 2020-11-09, AK: Changes to initial condition and optimizer bounds
+# - 2020-11-05, AK: Introduce keyword argument for custom mole fraction
 # - 2020-10-30, AK: Fix to find number of gases
 # - 2020-10-22, AK: Change error to relative from absolute, add opt bounds,
 #                   input arguments, and initial guess
@@ -27,15 +29,10 @@
 #
 ############################################################################
 
-def estimateConcentration(numberOfAdsorbents, numberOfGases, moleFracID, sensorID):
+def estimateConcentration(numberOfAdsorbents, numberOfGases, moleFracID, sensorID, **kwargs):
     import numpy as np
     from generateTrueSensorResponse import generateTrueSensorResponse
     from scipy.optimize import basinhopping
-    
-    # Total number of sensor elements/gases simulated and generated using 
-    # generateHypotheticalAdsorbents.py function
-    # numberOfAdsorbents = 4;
-    # numberOfGases = 3;
 
     # Total pressure of the gas [Pa]
     pressureTotal = np.array([1.e5]);
@@ -45,12 +42,16 @@ def estimateConcentration(numberOfAdsorbents, numberOfGases, moleFracID, sensorI
     temperature = np.array([298.15]);
     
     # Get the individual sensor reponse for all the given "experimental/test" concentrations
-    sensorTrueResponse = generateTrueSensorResponse(numberOfAdsorbents,numberOfGases,
+    if 'moleFraction' in kwargs:
+        sensorTrueResponse = generateTrueSensorResponse(numberOfAdsorbents,numberOfGases,
+                                                    pressureTotal,temperature, moleFraction = kwargs["moleFraction"])
+        moleFracID = 0 # Index becomes a scalar quantity
+    else:
+        sensorTrueResponse = generateTrueSensorResponse(numberOfAdsorbents,numberOfGases,
                                                     pressureTotal,temperature)
-    
-    # True mole fraction index (provide the index corresponding to the true
-    # experimental mole fraction (0-4, check generateTrueSensorResponse.py)
-    moleFracID = moleFracID
+        # True mole fraction index (provide the index corresponding to the true
+        # experimental mole fraction (0-4, check generateTrueSensorResponse.py)
+        moleFracID = moleFracID    
 
     # Sensor combinations used in the array. This is a [gx1] vector that maps to
     # the sorbent/material ID generated using the 
@@ -59,7 +60,7 @@ def estimateConcentration(numberOfAdsorbents, numberOfGases, moleFracID, sensorI
     
     # Parse out the true sensor response for a sensor array with n number of
     # sensors given by sensorID
-    arrayTrueResponse = 0.5*np.ones(sensorID.shape[0])
+    arrayTrueResponse = np.zeros(sensorID.shape[0])
     for ii in range(sensorID.shape[0]):
         arrayTrueResponse[ii] = sensorTrueResponse[sensorID[ii],moleFracID]
     
@@ -69,13 +70,16 @@ def estimateConcentration(numberOfAdsorbents, numberOfGases, moleFracID, sensorI
     
     # Minimize an objective function to compute the mole fraction of the feed
     # gas to the sensor
-    initialCondition = np.zeros(numberOfGases) # Initial guess
+    initialCondition = np.random.uniform(0,1,numberOfGases) # Initial guess
     optBounds = np.tile([0.,1.], (numberOfGases,1)) # BOunding the mole fractions
+    optCons = {'type':'eq','fun': lambda x: sum(x) - 1} # Cinstrain the sum to 1.
     # Use the basin hopping minimizer to escape local minima when evaluating
     # the function. The number of iterations is hard-coded and fixed at 50
     estMoleFraction = basinhopping(concObjectiveFunction, initialCondition, 
-                                   minimizer_kwargs = {"args": inputParameters, 
-                                                       "bounds": optBounds}, niter = 50)
+                                    minimizer_kwargs = {"args": inputParameters, 
+                                                        "bounds": optBounds,
+                                                        "constraints": optCons},
+                                    niter = 50)
     return np.concatenate((sensorID,estMoleFraction.x), axis=0)
 
 # func: concObjectiveFunction, computes the sum of square error for the 
@@ -90,7 +94,8 @@ def concObjectiveFunction(x, *inputParameters):
     
     # Reshape the mole fraction to a row vector for compatibility
     moleFraction = np.array([x]) # This is needed to keep the structure as a row instead of column
-    
+    # moleFraction = np.array([x,1.-x]).T # This is needed to keep the structure as a row instead of column
+
     # Compute the sensor reponse for a given mole fraction input
     arraySimResponse = simulateSensorArray(sensorID, pressureTotal, temperature, moleFraction)
     
