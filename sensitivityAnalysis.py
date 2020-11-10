@@ -134,6 +134,9 @@ print(meanConcEstimate[0,0], meanConcEstimate[0,1],
 
 # Save the mean, standard deviation, and molefraction array    
 savez (savePath, numberOfGases = numberOfGases,
-        moleFractionG1 = meanMoleFracG1, 
+        numberOfIterations = numberOfIterations,
+        moleFractionG1 = meanMoleFracG1,
+        meanError = meanError,
+        stdError = stdError,
         meanConcEstimate = meanConcEstimate,
         stdConcEstimate = stdConcEstimate)
