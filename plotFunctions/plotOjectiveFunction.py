@@ -12,6 +12,7 @@
 # Plots the objective function used for concentration estimation
 #
 # Last modified:
+# - 2020-11-11, AK: Cosmetic changes and add standard deviation plot
 # - 2020-11-05, AK: Initial creation
 #
 # Input arguments:
@@ -23,12 +24,12 @@
 ############################################################################
 
 import numpy as np
+from numpy import load
 from kneed import KneeLocator # To compute the knee/elbow of a curve
 from generateTrueSensorResponse import generateTrueSensorResponse
 from simulateSensorArray import simulateSensorArray
 import os
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 plt.style.use('singleColumn.mplstyle') # Custom matplotlib style file
 import auxiliaryFunctions
 
@@ -36,6 +37,9 @@ os.chdir("..")
 
 # Save flag for figure
 saveFlag = False
+
+# Plot flag to show standard deviation of errors
+plotStdError = False
 
 # Save file extension (png or pdf)
 saveFileExtension = ".png"
@@ -54,10 +58,10 @@ numberOfAdsorbents = 20
 numberOfGases = 2
 
 # Mole Fraction of interest
-moleFrac = [0.5, 0.5]
+moleFrac = [0.1, 0.9]
 
 # Sensor ID
-sensorID = np.array([17, 15])
+sensorID = np.array([16, 7])
 
 # Get the commit ID of the current repository
 gitCommitID = auxiliaryFunctions.getCommitID()
@@ -155,7 +159,7 @@ ax.legend()
 
 #  Save the figure
 if saveFlag:
-    # FileName: PureIsotherm_<sensorID>_<currentDateTime>_<GitCommitID_Data>_<GitCommitID_Current>
+    # FileName: SensorResponse_<sensorID>_<currentDateTime>_<GitCommitID_Current>
     sensorText = str(sensorID).replace('[','').replace(']','').replace(' ','-')
     saveFileName = "SensorResponse_" + sensorText + "_" + currentDT + "_" + gitCommitID + saveFileExtension
     savePath = os.path.join('simulationFigures',saveFileName)
@@ -186,14 +190,54 @@ ax.legend()
 
 #  Save the figure
 if saveFlag:
-    # FileName: PureIsotherm_<sensorID>_<currentDateTime>_<GitCommitID_Data>_<GitCommitID_Current>
+    # FileName: SensorObjFunc_<sensorID>_<noleFrac>_<currentDateTime>_<GitCommitID_Current>
     sensorText = str(sensorID).replace('[','').replace(']','').replace(' ','-')
     moleFrac = str(moleFrac).replace('[','').replace(']','').replace(' ','').replace(',','-').replace('.','')
     saveFileName = "SensorObjFunc_" + sensorText + "_" + moleFrac + "_" + currentDT + "_" + gitCommitID + saveFileExtension
     savePath = os.path.join('simulationFigures',saveFileName)
-    # Check if inputResources directory exists or not. If not, create the folder
+    # Check if simulationFigures directory exists or not. If not, create the folder
     if not os.path.exists(os.path.join('..','simulationFigures')):
         os.mkdir(os.path.join('..','simulationFigures'))
     plt.savefig (savePath)
 
 plt.show()
+
+# Plot the objective function used to evaluate the concentration for individual
+# sensors and the total (sum)
+if plotStdError:
+    # loadedFile = load("simulationResults/sensitivityAnalysis_17-15_20201109_1033_f7e470f.npz")
+    # loadedFile = load("simulationResults/sensitivityAnalysis_17-15_20201109_1616_63f3499.npz")
+    # loadedFile = load("simulationResults/sensitivityAnalysis_6-2_20201109_1208_f7e470f.npz")
+    loadedFile = load("simulationResults/sensitivityAnalysis_6-2_20201110_0936_63f3499.npz")
+    # loadedFile = load("simulationResults/sensitivityAnalysis_17-16_20201109_1416_63f3499.npz")
+    # loadedFile = load("simulationResults/sensitivityAnalysis_17-16_20201109_1938_63f3499.npz")
+    # loadedFile = load("simulationResults/sensitivityAnalysis_17-6_20201109_1651_63f3499.npz")
+    moleFractionG1 = loadedFile["moleFractionG1"]
+    meanConcEstimate = loadedFile["meanConcEstimate"]
+    stdConcEstimate = loadedFile["stdConcEstimate"]
+    fig = plt.figure
+    ax = plt.gca()
+    ax.semilogy(moleFractionG1,stdConcEstimate[:,0],':ok') # Error first sensor
+    ax.axvline(x=elbowPointS1, linewidth=1, linestyle='dotted', color = 'r') # Elbow point
+    ax.fill_between(xFill1,1.1*np.max(arraySimResponse), facecolor='red', alpha=0.15)
+    ax.axvline(x=elbowPointS2, linewidth=1, linestyle='dotted', color = 'b')  # Elbow point
+    ax.fill_between(xFill2,1.1*np.max(arraySimResponse), facecolor='blue', alpha=0.15)
+    ax.locator_params(axis="x", nbins=4)
+    ax.locator_params(axis="y")
+    ax.set(xlabel='$y_1$ [-]', 
+            ylabel='$\sigma ({y_1})$ [-]',
+            xlim = [0,1.], ylim = [1e-10, 1.])
+    ax.legend()
+    
+    #  Save the figure
+    if saveFlag:
+        # FileName: SensorObjFunc_<sensorID>_<noleFrac>_<currentDateTime>_<GitCommitID_Data>>
+        sensorText = str(sensorID).replace('[','').replace(']','').replace(' ','-')
+        saveFileName = "SensorSenAnalStd_" + sensorText + "_" + currentDT + "_" + gitCommitID + saveFileExtension
+        savePath = os.path.join('simulationFigures',saveFileName)
+        # Check if inputResources directory exists or not. If not, create the folder
+        if not os.path.exists(os.path.join('..','simulationFigures')):
+            os.mkdir(os.path.join('..','simulationFigures'))
+        plt.savefig (savePath)
+    
+    plt.show()

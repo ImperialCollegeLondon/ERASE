@@ -13,6 +13,7 @@
 # concentration estimate
 #
 # Last modified:
+# - 2020-11-11, AK: Add measurement nosie
 # - 2020-11-06, AK: Initial creation
 #
 # Input arguments:
@@ -48,7 +49,7 @@ numberOfAdsorbents = 30
 numberOfGases = 2
 
 # Sensor combination
-sensorID = [17, 16]
+sensorID = [17, 6]
 
 # Custom input mole fraction for gas 1
 meanMoleFracG1 = [0.001, 0.01, 0.1, 0.25, 0.50, 0.75, 0.90]
@@ -57,6 +58,10 @@ numberOfIterations = 100
 
 # Custom input mole fraction for gas 2 (for 3 gas system)
 meanMoleFracG2 = 0.20
+
+# Measurement noise (Guassian noise)
+meanError = 0.
+stdError = 0.1
 
 # Initialize mean and standard deviation of concentration estimates
 meanConcEstimate = np.zeros([len(meanMoleFracG1),numberOfGases])
@@ -82,7 +87,8 @@ for ii in range(len(meanMoleFracG1)):
     arrayConcentration = np.zeros(numberOfAdsorbents)
     arrayConcentration = Parallel(n_jobs=num_cores, prefer="threads")(delayed(estimateConcentration)
                                                                         (numberOfAdsorbents,numberOfGases,None,sensorID,
-                                                                        moleFraction = inputMoleFrac[ii])
+                                                                        moleFraction = inputMoleFrac[ii],
+                                                                        addMeasurementNoise = [meanError,stdError])
                                                                         for ii in tqdm(range(inputMoleFrac.shape[0])))
 
     # Convert the output list to a matrix

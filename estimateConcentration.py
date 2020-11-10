@@ -14,6 +14,7 @@
 # "estimated" differences in the change of mass of the sensor array
 #
 # Last modified:
+# - 2020-11-10, AK: Add measurement noise to true sensor response
 # - 2020-11-09, AK: Changes to initial condition and optimizer bounds
 # - 2020-11-05, AK: Introduce keyword argument for custom mole fraction
 # - 2020-10-30, AK: Fix to find number of gases
@@ -30,6 +31,7 @@
 ############################################################################
 
 def estimateConcentration(numberOfAdsorbents, numberOfGases, moleFracID, sensorID, **kwargs):
+    import pdb
     import numpy as np
     from generateTrueSensorResponse import generateTrueSensorResponse
     from scipy.optimize import basinhopping
@@ -41,6 +43,11 @@ def estimateConcentration(numberOfAdsorbents, numberOfGases, moleFracID, sensorI
     # Can be a vector of temperatures
     temperature = np.array([298.15]);
     
+    # Sensor combinations used in the array. This is a [gx1] vector that maps to
+    # the sorbent/material ID generated using the 
+    # generateHypotheticalAdsorbents.py function
+    sensorID = np.array(sensorID)
+    
     # Get the individual sensor reponse for all the given "experimental/test" concentrations
     if 'moleFraction' in kwargs:
         sensorTrueResponse = generateTrueSensorResponse(numberOfAdsorbents,numberOfGases,
@@ -51,18 +58,28 @@ def estimateConcentration(numberOfAdsorbents, numberOfGases, moleFracID, sensorI
                                                     pressureTotal,temperature)
         # True mole fraction index (provide the index corresponding to the true
         # experimental mole fraction (0-4, check generateTrueSensorResponse.py)
-        moleFracID = moleFracID    
+        moleFracID = moleFracID
 
-    # Sensor combinations used in the array. This is a [gx1] vector that maps to
-    # the sorbent/material ID generated using the 
-    # generateHypotheticalAdsorbents.py function
-    sensorID = np.array(sensorID)
-    
+    # Add measurement noise for the true measurement if the user wants it
+    measurementNoise = np.zeros(sensorID.shape[0])
+    if 'addMeasurementNoise' in kwargs:
+        # The mean and the standard deviation of the Gaussian error is an 
+        # input from the user
+        measurementNoise = np.random.normal(kwargs["addMeasurementNoise"][0],
+                                            kwargs["addMeasurementNoise"][1],
+                                            sensorID.shape[0])
+
     # Parse out the true sensor response for a sensor array with n number of
     # sensors given by sensorID
     arrayTrueResponse = np.zeros(sensorID.shape[0])
     for ii in range(sensorID.shape[0]):
-        arrayTrueResponse[ii] = sensorTrueResponse[sensorID[ii],moleFracID]
+        arrayTrueResponse[ii] = sensorTrueResponse[sensorID[ii],moleFracID] + measurementNoise[ii]
+    
+    # Replace all negative values to zero (for physical consistency)
+    # Print if any of the responses are negative
+    if any(ii<=0. for ii in arrayTrueResponse):       
+        print("Number of negative response: " + str(sum(arrayTrueResponse<0)))
+    arrayTrueResponse[arrayTrueResponse<0.] = 0.
     
     # Pack the input parameters/arguments useful to compute the objective
     # function to estimate the mole fraction as a tuple
