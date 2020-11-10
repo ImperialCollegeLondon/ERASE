@@ -128,9 +128,6 @@ savePath = os.path.join('simulationResults',saveFileName)
 # Check if simulationResults directory exists or not. If not, create the folder
 if not os.path.exists('simulationResults'):
     os.mkdir('simulationResults')
-    
-print(meanConcEstimate[0,0], meanConcEstimate[0,1], 
-      stdConcEstimate[0,0], stdConcEstimate[0,1])
 
 # Save the mean, standard deviation, and molefraction array    
 savez (savePath, numberOfGases = numberOfGases,

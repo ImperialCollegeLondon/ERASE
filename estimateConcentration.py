@@ -74,11 +74,12 @@ def estimateConcentration(numberOfAdsorbents, numberOfGases, moleFracID, sensorI
     for ii in range(sensorID.shape[0]):
         arrayTrueResponse[ii] = sensorTrueResponse[sensorID[ii],moleFracID] + measurementNoise[ii]
     
-    # Replace all negative values to zero (for physical consistency)
+    # Replace all negative values to eps (for physical consistency). Set to 
+    # eps to avoid division by zero        
     # Print if any of the responses are negative
     if any(ii<=0. for ii in arrayTrueResponse):       
         print("Number of negative response: " + str(sum(arrayTrueResponse<0)))
-    arrayTrueResponse[arrayTrueResponse<0.] = 0.
+    arrayTrueResponse[arrayTrueResponse<0.] = np.finfo(float).eps
     
     # Pack the input parameters/arguments useful to compute the objective
     # function to estimate the mole fraction as a tuple
