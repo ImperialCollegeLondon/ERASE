@@ -13,6 +13,7 @@
 # concentration estimate
 #
 # Last modified:
+# - 2020-11-11, AK: Improvements to run in HPC
 # - 2020-11-11, AK: Add measurement nosie
 # - 2020-11-06, AK: Initial creation
 #
@@ -30,9 +31,17 @@ import multiprocessing # For parallel processing
 from joblib import Parallel, delayed  # For parallel processing
 import auxiliaryFunctions
 import os
+import sys
 from tqdm import tqdm # To track progress of the loop
 from estimateConcentration import estimateConcentration
-    
+import argparse
+
+# For atgument parser if run through terminal. Sensor configuration provided
+# as an input using --s and sorbent ids separated by a space
+# e.g. python sensitivityAnalysis.py --s 6 2
+parser = argparse.ArgumentParser()
+parser.add_argument('--s', nargs='+', type=int)
+
 # Get the commit ID of the current repository
 gitCommitID = auxiliaryFunctions.getCommitID()
 
@@ -49,10 +58,18 @@ numberOfAdsorbents = 30
 numberOfGases = 2
 
 # Sensor combination
-sensorID = [17, 6]
+# Check if argument provided (from terminal)
+if len(sys.argv)>1:
+    print("Sensor configuration provided!")
+    for _, value in parser.parse_args()._get_kwargs():
+        sensorID = value
+# Use default values
+else:
+    print("Sensor configuration not not provided. Default used!")
+    sensorID = [6, 2]
 
 # Custom input mole fraction for gas 1
-meanMoleFracG1 = [0.001, 0.01, 0.1, 0.25, 0.50, 0.75, 0.90]
+meanMoleFracG1 = [0.90]
 diffMoleFracG1 = 0.00 # This plus/minus the mean is the bound for uniform dist.
 numberOfIterations = 100
 
@@ -61,7 +78,7 @@ meanMoleFracG2 = 0.20
 
 # Measurement noise (Guassian noise)
 meanError = 0.
-stdError = 0.1
+stdError = 0.
 
 # Initialize mean and standard deviation of concentration estimates
 meanConcEstimate = np.zeros([len(meanMoleFracG1),numberOfGases])
@@ -111,9 +128,12 @@ savePath = os.path.join('simulationResults',saveFileName)
 # Check if simulationResults directory exists or not. If not, create the folder
 if not os.path.exists('simulationResults'):
     os.mkdir('simulationResults')
+    
+print(meanConcEstimate[0,0], meanConcEstimate[0,1], 
+      stdConcEstimate[0,0], stdConcEstimate[0,1])
 
 # Save the mean, standard deviation, and molefraction array    
-savez (savePath, numberOfGases = numberOfGases,
-       moleFractionG1 = meanMoleFracG1, 
-       meanConcEstimate = meanConcEstimate,
-       stdConcEstimate = stdConcEstimate)
+# savez (savePath, numberOfGases = numberOfGases,
+#         moleFractionG1 = meanMoleFracG1, 
+#         meanConcEstimate = meanConcEstimate,
+#         stdConcEstimate = stdConcEstimate)
