@@ -69,7 +69,7 @@ else:
     sensorID = [6, 2]
 
 # Custom input mole fraction for gas 1
-meanMoleFracG1 = [0.90]
+meanMoleFracG1 = [0.001, 0.01, 0.1, 0.25, 0.50, 0.75, 0.90]
 diffMoleFracG1 = 0.00 # This plus/minus the mean is the bound for uniform dist.
 numberOfIterations = 100
 
@@ -77,8 +77,8 @@ numberOfIterations = 100
 meanMoleFracG2 = 0.20
 
 # Measurement noise (Guassian noise)
-meanError = 0.
-stdError = 0.
+meanError = 0. # [g/kg]
+stdError = 0.1 # [g/kg]
 
 # Initialize mean and standard deviation of concentration estimates
 meanConcEstimate = np.zeros([len(meanMoleFracG1),numberOfGases])
@@ -133,7 +133,7 @@ print(meanConcEstimate[0,0], meanConcEstimate[0,1],
       stdConcEstimate[0,0], stdConcEstimate[0,1])
 
 # Save the mean, standard deviation, and molefraction array    
-# savez (savePath, numberOfGases = numberOfGases,
-#         moleFractionG1 = meanMoleFracG1, 
-#         meanConcEstimate = meanConcEstimate,
-#         stdConcEstimate = stdConcEstimate)
+savez (savePath, numberOfGases = numberOfGases,
+        moleFractionG1 = meanMoleFracG1, 
+        meanConcEstimate = meanConcEstimate,
+        stdConcEstimate = stdConcEstimate)
