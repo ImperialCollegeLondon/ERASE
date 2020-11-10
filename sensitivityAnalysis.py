@@ -117,6 +117,11 @@ for ii in range(len(meanMoleFracG1)):
         meanConcEstimate[ii,1] = np.mean(arrayConcentration[:,3])
         stdConcEstimate[ii,0] = np.std(arrayConcentration[:,2])
         stdConcEstimate[ii,1] = np.std(arrayConcentration[:,3])
+    elif numberOfGases == 2 and len(sensorID) == 3:
+        meanConcEstimate[ii,0] = np.mean(arrayConcentration[:,3])
+        meanConcEstimate[ii,1] = np.mean(arrayConcentration[:,4])
+        stdConcEstimate[ii,0] = np.std(arrayConcentration[:,3])
+        stdConcEstimate[ii,1] = np.std(arrayConcentration[:,4])
 
 # Save the array concentration into a native numpy file
 # The .npz file is saved in a folder called simulationResults (hardcoded)
