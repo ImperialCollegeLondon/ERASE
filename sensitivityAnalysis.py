@@ -13,8 +13,9 @@
 # concentration estimate
 #
 # Last modified:
-# - 2020-11-11, AK: Improvements to run in HPC
-# - 2020-11-11, AK: Add measurement nosie
+# - 2020-11-11, AK: Add multipler nosie
+# - 2020-11-10, AK: Improvements to run in HPC
+# - 2020-11-10, AK: Add measurement nosie
 # - 2020-11-06, AK: Initial creation
 #
 # Input arguments:
@@ -76,6 +77,9 @@ numberOfIterations = 100
 # Custom input mole fraction for gas 2 (for 3 gas system)
 meanMoleFracG2 = 0.20
 
+# Multipler error for the sensor measurement
+multiplierError = [1., 1.]
+
 # Measurement noise (Guassian noise)
 meanError = 0. # [g/kg]
 stdError = 0.1 # [g/kg]
@@ -105,6 +109,7 @@ for ii in range(len(meanMoleFracG1)):
     arrayConcentration = Parallel(n_jobs=num_cores, prefer="threads")(delayed(estimateConcentration)
                                                                         (numberOfAdsorbents,numberOfGases,None,sensorID,
                                                                         moleFraction = inputMoleFrac[ii],
+                                                                        multiplierError = multiplierError,
                                                                         addMeasurementNoise = [meanError,stdError])
                                                                         for ii in tqdm(range(inputMoleFrac.shape[0])))
 
@@ -138,6 +143,7 @@ if not os.path.exists('simulationResults'):
 savez (savePath, numberOfGases = numberOfGases,
         numberOfIterations = numberOfIterations,
         moleFractionG1 = meanMoleFracG1,
+        multiplierError = multiplierError,
         meanError = meanError,
         stdError = stdError,
         meanConcEstimate = meanConcEstimate,

@@ -14,6 +14,7 @@
 # "estimated" differences in the change of mass of the sensor array
 #
 # Last modified:
+# - 2020-11-11, AK: Add multiplier error to true sensor response
 # - 2020-11-10, AK: Add measurement noise to true sensor response
 # - 2020-11-09, AK: Changes to initial condition and optimizer bounds
 # - 2020-11-05, AK: Introduce keyword argument for custom mole fraction
@@ -68,11 +69,19 @@ def estimateConcentration(numberOfAdsorbents, numberOfGases, moleFracID, sensorI
                                             kwargs["addMeasurementNoise"][1],
                                             sensorID.shape[0])
 
+    # Add a multiplier error for the true measurement if the user wants it
+    multiplierError = np.ones(sensorID.shape[0])
+    if 'multiplierError' in kwargs:
+        # The mean and the standard deviation of the Gaussian error is an 
+        # input from the user
+            multiplierError = kwargs["multiplierError"]
+
     # Parse out the true sensor response for a sensor array with n number of
     # sensors given by sensorID
     arrayTrueResponse = np.zeros(sensorID.shape[0])
     for ii in range(sensorID.shape[0]):
-        arrayTrueResponse[ii] = sensorTrueResponse[sensorID[ii],moleFracID] + measurementNoise[ii]
+        arrayTrueResponse[ii] = multiplierError[ii]*sensorTrueResponse[sensorID[ii],moleFracID]
+        + measurementNoise[ii]
     
     # Replace all negative values to eps (for physical consistency). Set to 
     # eps to avoid division by zero        
