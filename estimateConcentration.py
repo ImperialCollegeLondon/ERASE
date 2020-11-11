@@ -82,7 +82,7 @@ def estimateConcentration(numberOfAdsorbents, numberOfGases, moleFracID, sensorI
     for ii in range(sensorID.shape[0]):
         arrayTrueResponse[ii] = multiplierError[ii]*sensorTrueResponse[sensorID[ii],moleFracID]
         + measurementNoise[ii]
-    
+        
     # Replace all negative values to eps (for physical consistency). Set to 
     # eps to avoid division by zero        
     # Print if any of the responses are negative
@@ -92,7 +92,8 @@ def estimateConcentration(numberOfAdsorbents, numberOfGases, moleFracID, sensorI
     
     # Pack the input parameters/arguments useful to compute the objective
     # function to estimate the mole fraction as a tuple
-    inputParameters = (arrayTrueResponse, pressureTotal, temperature, sensorID)
+    inputParameters = (arrayTrueResponse, pressureTotal, temperature, 
+                       sensorID, multiplierError)
     
     # Minimize an objective function to compute the mole fraction of the feed
     # gas to the sensor
@@ -116,14 +117,14 @@ def concObjectiveFunction(x, *inputParameters):
     
     # Unpack the tuple that contains the true response, pressure, temperature,
     # and the sensor identifiers
-    arrayTrueResponse, pressureTotal, temperature, sensorID = inputParameters
+    arrayTrueResponse, pressureTotal, temperature, sensorID, multiplierError = inputParameters
     
     # Reshape the mole fraction to a row vector for compatibility
     moleFraction = np.array([x]) # This is needed to keep the structure as a row instead of column
     # moleFraction = np.array([x,1.-x]).T # This is needed to keep the structure as a row instead of column
 
     # Compute the sensor reponse for a given mole fraction input
-    arraySimResponse = simulateSensorArray(sensorID, pressureTotal, temperature, moleFraction)
-    
+    arraySimResponse = simulateSensorArray(sensorID, pressureTotal, temperature, moleFraction) * multiplierError
+
     # Compute the sum of the error for the sensor array
     return sum(np.power((arrayTrueResponse - arraySimResponse)/arrayTrueResponse,2))
