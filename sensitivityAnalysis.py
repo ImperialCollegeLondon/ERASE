@@ -71,7 +71,7 @@ else:
     sensorID = [6, 2]
 
 # Custom input mole fraction for gas 1
-meanMoleFracG1 = [0.001, 0.01, 0.1, 0.25, 0.50, 0.75, 0.90]
+meanMoleFracG1 = [0.90]
 diffMoleFracG1 = 0.00 # This plus/minus the mean is the bound for uniform dist.
 numberOfIterations = 100
 

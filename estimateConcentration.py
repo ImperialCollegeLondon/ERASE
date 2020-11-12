@@ -81,9 +81,9 @@ def estimateConcentration(numberOfAdsorbents, numberOfGases, moleFracID, sensorI
     # sensors given by sensorID
     arrayTrueResponse = np.zeros(sensorID.shape[0])
     for ii in range(sensorID.shape[0]):
-        arrayTrueResponse[ii] = multiplierError[ii]*sensorTrueResponse[sensorID[ii],moleFracID]
-        + measurementNoise[ii]
-        
+        arrayTrueResponse[ii] = (multiplierError[ii]*sensorTrueResponse[sensorID[ii],moleFracID]
+                                 + measurementNoise[ii])
+
     # Replace all negative values to eps (for physical consistency). Set to 
     # eps to avoid division by zero        
     # Print if any of the responses are negative
