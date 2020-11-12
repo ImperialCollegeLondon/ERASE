@@ -14,6 +14,7 @@
 # "estimated" differences in the change of mass of the sensor array
 #
 # Last modified:
+# - 2020-11-12, AK: Bug fix for multipler error
 # - 2020-11-11, AK: Add multiplier error to true sensor response
 # - 2020-11-10, AK: Add measurement noise to true sensor response
 # - 2020-11-09, AK: Changes to initial condition and optimizer bounds
@@ -74,8 +75,8 @@ def estimateConcentration(numberOfAdsorbents, numberOfGases, moleFracID, sensorI
     if 'multiplierError' in kwargs:
         # The mean and the standard deviation of the Gaussian error is an 
         # input from the user
-            multiplierError = kwargs["multiplierError"]
-
+            multiplierErrorTemp = kwargs["multiplierError"]
+            multiplierError[0:len(multiplierErrorTemp)] = multiplierErrorTemp
     # Parse out the true sensor response for a sensor array with n number of
     # sensors given by sensorID
     arrayTrueResponse = np.zeros(sensorID.shape[0])

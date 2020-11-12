@@ -13,6 +13,7 @@
 # concentration estimate
 #
 # Last modified:
+# - 2020-11-12, AK: Bug fix for multipler error
 # - 2020-11-11, AK: Add multipler nosie
 # - 2020-11-10, AK: Improvements to run in HPC
 # - 2020-11-10, AK: Add measurement nosie
@@ -127,6 +128,11 @@ for ii in range(len(meanMoleFracG1)):
         meanConcEstimate[ii,1] = np.mean(arrayConcentration[:,4])
         stdConcEstimate[ii,0] = np.std(arrayConcentration[:,3])
         stdConcEstimate[ii,1] = np.std(arrayConcentration[:,4])
+    elif numberOfGases == 2 and len(sensorID) == 4:
+        meanConcEstimate[ii,0] = np.mean(arrayConcentration[:,4])
+        meanConcEstimate[ii,1] = np.mean(arrayConcentration[:,5])
+        stdConcEstimate[ii,0] = np.std(arrayConcentration[:,4])
+        stdConcEstimate[ii,1] = np.std(arrayConcentration[:,5])
 
 # Save the array concentration into a native numpy file
 # The .npz file is saved in a folder called simulationResults (hardcoded)
