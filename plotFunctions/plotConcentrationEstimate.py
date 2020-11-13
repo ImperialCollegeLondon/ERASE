@@ -12,6 +12,7 @@
 # Plots to visualize estimated concentration
 #
 # Last modified:
+# - 2020-11-09, AK: Add functionality for .npz file
 # - 2020-11-09, AK: Cosmetic changes
 # - 2020-11-04, AK: Improve plotting capability for three gases/sensors
 # - 2020-10-30, AK: Add zoomed in version
@@ -77,7 +78,8 @@ densityX = False
 # loadFileName = "arrayConcentration_20201104_1732_cc08dc4.npy" # 2 gases, 2 sensor [0.15, 0.85]
 # loadFileName = "arrayConcentration_20201030_1731_da1707b.npy" # 2 gases, 2 sensor [0.4, 0.6]
 # loadFileName = "arrayConcentration_20201104_1842_cc08dc4.npy" # 2 gases, 2 sensor [0.75, 0.25]
-loadFileName = "arrayConcentration_20201104_2227_cc08dc4.npy" # 2 gases, 2 sensor [0.75, 0.25]
+# loadFileName = "arrayConcentration_20201104_2227_cc08dc4.npy" # 2 gases, 2 sensor [0.75, 0.25]
+loadFileName = "sensitivityAnalysis_17-15_20201112_1755_68f00ff.npz"
 simResultsFile = os.path.join('..','simulationResults',loadFileName);
 
 # Get the commit ID of the current repository
@@ -89,9 +91,19 @@ currentDT = auxiliaryFunctions.getCurrentDateTime()
 # Git commit id of the loaded isotherm file
 simID_loadedFile = loadFileName[-21:-4]
 
+# Check if the file is npz and parse out the necessary information
+loadFileExt = loadFileName[-3:]
+if loadFileExt == 'npz':
+    fileNPZ = True 
+else:
+    fileNPZ = False 
+
 # Check if the file with the adsorbent properties exist 
 if os.path.exists(simResultsFile):
-    resultOutput = load(simResultsFile)
+    if fileNPZ:
+        resultOutput = load(simResultsFile)["arrayConcentration"]
+    else:
+        resultOutput = load(simResultsFile)
     actualOutput = resultOutput    
     if numberOfGases == 2:
         if resultOutput.shape[1] == 3:

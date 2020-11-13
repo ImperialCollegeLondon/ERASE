@@ -38,21 +38,11 @@ from tqdm import tqdm # To track progress of the loop
 from estimateConcentration import estimateConcentration
 import argparse
 
-# For argument parser if run through terminal. Sensor configuration provided
+# For atgument parser if run through terminal. Sensor configuration provided
 # as an input using --s and sorbent ids separated by a space
 # e.g. python sensitivityAnalysis.py --s 6 2
 parser = argparse.ArgumentParser()
 parser.add_argument('--s', nargs='+', type=int)
-
-# # Noise configuration provided as an input using --e and mean and standard
-# # deviation of the Gaussian noise is separated by white space
-# # e.g. python sensitivityAnalysis.py --e 0.0 0.1
-# parser.add_argument('--e', nargs='+', type=float)
-
-# # separated by a white space
-# # Multiplier error provided as an input using --m and multiplier error is 
-# # e.g. python sensitivityAnalysis.py --e 0.0 0.1
-# parser.add_argument('--m', nargs='+', type=float)
 
 # Get the commit ID of the current repository
 gitCommitID = auxiliaryFunctions.getCommitID()
@@ -63,6 +53,9 @@ simulationDT = auxiliaryFunctions.getCurrentDateTime()
 # Find out the total number of cores available for parallel processing
 num_cores = multiprocessing.cpu_count()
 
+# Check if multiple concentrations are to be simualated
+multipleConcentrationFlag = False
+
 # Number of adsorbents
 numberOfAdsorbents = 30
 
@@ -72,50 +65,29 @@ numberOfGases = 2
 # Sensor combination
 # Check if argument provided (from terminal)
 if len(sys.argv)>1:
-    print("\nSensor configuration is provided!")
+    print("Sensor configuration provided!")
     for _, value in parser.parse_args()._get_kwargs():
         sensorID = value
 # Use default values
 else:
-    print("\nSensor configuration is not provided. Default used!")
+    print("\nSensor configuration not not provided. Default used!")
     sensorID = [6, 2]
-    
-# # Measurement noise information
-# # Check if argument provided (from terminal) for Guassian noise
-# if len(sys.argv)>1:
-#     print("\nMeasurement noise information is provided!")
-#     for _, value in parser.parse_args()._get_kwargs():
-#         noiseInfo = value
-#         meanError = nosieInfo[0] # [g/kg]
-#         stdError = nosieInfo[1] # [g/kg]
-# # Use default values
-# else:
-#     print("\nMeasurement noise information is not provided!. Default used!")
-#     # Measurement noise (Guassian noise)
-#     meanError = 0. # [g/kg]
-#     stdError = 0.1 # [g/kg]
-    
-# # Multipler error combination
-# # Check if argument provided (from terminal)
-# if len(sys.argv)>1:
-#     print("\Multipler error information is provided!")
-#     for _, value in parser.parse_args()._get_kwargs():
-#         multiplierError = value
-# # Use default values
-# else:
-#     print("\nMultipler error information is not provided. Default used!")
-#     # Multipler error for the sensor measurement
-#     multiplierError = [5., 1.]
-    
+
 # Measurement noise (Guassian noise)
 meanError = 0. # [g/kg]
 stdError = 0.1 # [g/kg]
 
 # Multipler error for the sensor measurement
-multiplierError = [1., 1.]
+multiplierError = [1., 5.]
 
 # Custom input mole fraction for gas 1
-meanMoleFracG1 = [0.001, 0.01, 0.1, 0.25, 0.50, 0.75, 0.90]
+# meanMoleFracG1 = [0.001, 0.01, 0.1, 0.25, 0.50, 0.75, 0.90]
+meanMoleFracG1 = [0.90]
+if not multipleConcentrationFlag:
+    if len(meanMoleFracG1)>1:
+        errorString = "When multipleConcentrationFlag is inactive only one concentration should be provided."
+        raise Exception(errorString)
+        
 diffMoleFracG1 = 0.00 # This plus/minus the mean is the bound for uniform dist.
 numberOfIterations = 100
 
@@ -154,23 +126,31 @@ for ii in range(len(meanMoleFracG1)):
     # Convert the output list to a matrix
     arrayConcentration = np.array(arrayConcentration)
     
-    # Compute the mean and the standard deviation of the concentration estimates
-    if numberOfGases == 2 and len(sensorID) == 2:
-        meanConcEstimate[ii,0] = np.mean(arrayConcentration[:,2])
-        meanConcEstimate[ii,1] = np.mean(arrayConcentration[:,3])
-        stdConcEstimate[ii,0] = np.std(arrayConcentration[:,2])
-        stdConcEstimate[ii,1] = np.std(arrayConcentration[:,3])
-    elif numberOfGases == 2 and len(sensorID) == 3:
-        meanConcEstimate[ii,0] = np.mean(arrayConcentration[:,3])
-        meanConcEstimate[ii,1] = np.mean(arrayConcentration[:,4])
-        stdConcEstimate[ii,0] = np.std(arrayConcentration[:,3])
-        stdConcEstimate[ii,1] = np.std(arrayConcentration[:,4])
-    elif numberOfGases == 2 and len(sensorID) == 4:
-        meanConcEstimate[ii,0] = np.mean(arrayConcentration[:,4])
-        meanConcEstimate[ii,1] = np.mean(arrayConcentration[:,5])
-        stdConcEstimate[ii,0] = np.std(arrayConcentration[:,4])
-        stdConcEstimate[ii,1] = np.std(arrayConcentration[:,5])
+    # Get the concentraiton mean and standard deviation for multiple concentrations
+    # For single concentration, get the true sensor response
+    if multipleConcentrationFlag:
+        # Compute the mean and the standard deviation of the concentration estimates
+        if numberOfGases == 2 and len(sensorID) == 2:
+            meanConcEstimate[ii,0] = np.mean(arrayConcentration[:,2])
+            meanConcEstimate[ii,1] = np.mean(arrayConcentration[:,3])
+            stdConcEstimate[ii,0] = np.std(arrayConcentration[:,2])
+            stdConcEstimate[ii,1] = np.std(arrayConcentration[:,3])
+        elif numberOfGases == 2 and len(sensorID) == 3:
+            meanConcEstimate[ii,0] = np.mean(arrayConcentration[:,3])
+            meanConcEstimate[ii,1] = np.mean(arrayConcentration[:,4])
+            stdConcEstimate[ii,0] = np.std(arrayConcentration[:,3])
+            stdConcEstimate[ii,1] = np.std(arrayConcentration[:,4])
+        elif numberOfGases == 2 and len(sensorID) == 4:
+            meanConcEstimate[ii,0] = np.mean(arrayConcentration[:,4])
+            meanConcEstimate[ii,1] = np.mean(arrayConcentration[:,5])
+            stdConcEstimate[ii,0] = np.std(arrayConcentration[:,4])
+            stdConcEstimate[ii,1] = np.std(arrayConcentration[:,5])        
 
+
+# Check if simulationResults directory exists or not. If not, create the folder
+if not os.path.exists('simulationResults'):
+    os.mkdir('simulationResults')
+    
 # Save the array concentration into a native numpy file
 # The .npz file is saved in a folder called simulationResults (hardcoded)
 filePrefix = "sensitivityAnalysis"
@@ -178,16 +158,24 @@ sensorText = str(sensorID).replace('[','').replace(']','').replace(' ','-').repl
 saveFileName = filePrefix + "_" + sensorText + "_" + simulationDT + "_" + gitCommitID;
 savePath = os.path.join('simulationResults',saveFileName)
 
-# Check if simulationResults directory exists or not. If not, create the folder
-if not os.path.exists('simulationResults'):
-    os.mkdir('simulationResults')
-
-# Save the mean, standard deviation, and molefraction array    
-savez (savePath, numberOfGases = numberOfGases,
-        numberOfIterations = numberOfIterations,
-        moleFractionG1 = meanMoleFracG1,
-        multiplierError = multiplierError,
-        meanError = meanError,
-        stdError = stdError,
-        meanConcEstimate = meanConcEstimate,
-        stdConcEstimate = stdConcEstimate)
+# Save mean and std. for multiple concentraiton and array concentration 
+# array for single concentration
+if multipleConcentrationFlag:
+    # Save the mean, standard deviation, and molefraction array    
+    savez (savePath, numberOfGases = numberOfGases,
+            numberOfIterations = numberOfIterations,
+            moleFractionG1 = meanMoleFracG1,
+            multiplierError = multiplierError,
+            meanError = meanError,
+            stdError = stdError,
+            meanConcEstimate = meanConcEstimate,
+            stdConcEstimate = stdConcEstimate)
+else:
+    # Save the array concentration output
+    savez (savePath, numberOfGases = numberOfGases,
+            numberOfIterations = numberOfIterations,
+            moleFractionG1 = meanMoleFracG1,
+            multiplierError = multiplierError,
+            meanError = meanError,
+            stdError = stdError,
+            arrayConcentration = arrayConcentration)        
