@@ -13,6 +13,7 @@
 # concentration estimate
 #
 # Last modified:
+# - 2020-11-12, AK: Save arrayConcentration in output
 # - 2020-11-12, AK: Bug fix for multipler error
 # - 2020-11-11, AK: Add multipler nosie
 # - 2020-11-10, AK: Improvements to run in HPC
@@ -53,9 +54,6 @@ simulationDT = auxiliaryFunctions.getCurrentDateTime()
 # Find out the total number of cores available for parallel processing
 num_cores = multiprocessing.cpu_count()
 
-# Check if multiple concentrations are to be simualated
-multipleConcentrationFlag = False
-
 # Number of adsorbents
 numberOfAdsorbents = 30
 
@@ -78,15 +76,11 @@ meanError = 0. # [g/kg]
 stdError = 0.1 # [g/kg]
 
 # Multipler error for the sensor measurement
-multiplierError = [1., 5.]
+multiplierError = [1., 1.]
 
 # Custom input mole fraction for gas 1
-# meanMoleFracG1 = [0.001, 0.01, 0.1, 0.25, 0.50, 0.75, 0.90]
-meanMoleFracG1 = [0.90]
-if not multipleConcentrationFlag:
-    if len(meanMoleFracG1)>1:
-        errorString = "When multipleConcentrationFlag is inactive only one concentration should be provided."
-        raise Exception(errorString)
+meanMoleFracG1 = [0.001, 0.01, 0.1, 0.25, 0.50, 0.75, 0.90]
+# meanMoleFracG1 = [0.90]
         
 diffMoleFracG1 = 0.00 # This plus/minus the mean is the bound for uniform dist.
 numberOfIterations = 100
@@ -97,6 +91,10 @@ meanMoleFracG2 = 0.20
 # Initialize mean and standard deviation of concentration estimates
 meanConcEstimate = np.zeros([len(meanMoleFracG1),numberOfGases])
 stdConcEstimate = np.zeros([len(meanMoleFracG1),numberOfGases])
+
+# Initialize the arrayConcentration matrix
+arrayConcentration = np.zeros([len(meanMoleFracG1),numberOfIterations,
+                               numberOfGases+len(sensorID)])
 
 for ii in range(len(meanMoleFracG1)):
     # Generate a uniform distribution of mole fractions
@@ -115,8 +113,7 @@ for ii in range(len(meanMoleFracG1)):
     
     # Loop over all the sorbents for a single material sensor
     # Using parallel processing to loop through all the materials
-    arrayConcentration = np.zeros(numberOfAdsorbents)
-    arrayConcentration = Parallel(n_jobs=num_cores, prefer="threads")(delayed(estimateConcentration)
+    arrayConcentrationTemp = Parallel(n_jobs=num_cores, prefer="threads")(delayed(estimateConcentration)
                                                                         (numberOfAdsorbents,numberOfGases,None,sensorID,
                                                                         moleFraction = inputMoleFrac[ii],
                                                                         multiplierError = multiplierError,
@@ -124,27 +121,26 @@ for ii in range(len(meanMoleFracG1)):
                                                                         for ii in tqdm(range(inputMoleFrac.shape[0])))
 
     # Convert the output list to a matrix
-    arrayConcentration = np.array(arrayConcentration)
+    arrayConcentration[ii,:,:] = np.array(arrayConcentrationTemp)
     
     # Get the concentraiton mean and standard deviation for multiple concentrations
     # For single concentration, get the true sensor response
-    if multipleConcentrationFlag:
-        # Compute the mean and the standard deviation of the concentration estimates
-        if numberOfGases == 2 and len(sensorID) == 2:
-            meanConcEstimate[ii,0] = np.mean(arrayConcentration[:,2])
-            meanConcEstimate[ii,1] = np.mean(arrayConcentration[:,3])
-            stdConcEstimate[ii,0] = np.std(arrayConcentration[:,2])
-            stdConcEstimate[ii,1] = np.std(arrayConcentration[:,3])
-        elif numberOfGases == 2 and len(sensorID) == 3:
-            meanConcEstimate[ii,0] = np.mean(arrayConcentration[:,3])
-            meanConcEstimate[ii,1] = np.mean(arrayConcentration[:,4])
-            stdConcEstimate[ii,0] = np.std(arrayConcentration[:,3])
-            stdConcEstimate[ii,1] = np.std(arrayConcentration[:,4])
-        elif numberOfGases == 2 and len(sensorID) == 4:
-            meanConcEstimate[ii,0] = np.mean(arrayConcentration[:,4])
-            meanConcEstimate[ii,1] = np.mean(arrayConcentration[:,5])
-            stdConcEstimate[ii,0] = np.std(arrayConcentration[:,4])
-            stdConcEstimate[ii,1] = np.std(arrayConcentration[:,5])        
+    # Compute the mean and the standard deviation of the concentration estimates
+    if numberOfGases == 2 and len(sensorID) == 2:
+        meanConcEstimate[ii,0] = np.mean(arrayConcentration[ii,:,2])
+        meanConcEstimate[ii,1] = np.mean(arrayConcentration[ii,:,3])
+        stdConcEstimate[ii,0] = np.std(arrayConcentration[ii,:,2])
+        stdConcEstimate[ii,1] = np.std(arrayConcentration[ii,:,3])
+    elif numberOfGases == 2 and len(sensorID) == 3:
+        meanConcEstimate[ii,0] = np.mean(arrayConcentration[ii,:,3])
+        meanConcEstimate[ii,1] = np.mean(arrayConcentration[ii,:,4])
+        stdConcEstimate[ii,0] = np.std(arrayConcentration[ii,:,3])
+        stdConcEstimate[ii,1] = np.std(arrayConcentration[ii,:,4])
+    elif numberOfGases == 2 and len(sensorID) == 4:
+        meanConcEstimate[ii,0] = np.mean(arrayConcentration[ii,:,4])
+        meanConcEstimate[ii,1] = np.mean(arrayConcentration[ii,:,5])
+        stdConcEstimate[ii,0] = np.std(arrayConcentration[ii,:,4])
+        stdConcEstimate[ii,1] = np.std(arrayConcentration[ii,:,5])        
 
 
 # Check if simulationResults directory exists or not. If not, create the folder
@@ -160,22 +156,14 @@ savePath = os.path.join('simulationResults',saveFileName)
 
 # Save mean and std. for multiple concentraiton and array concentration 
 # array for single concentration
-if multipleConcentrationFlag:
-    # Save the mean, standard deviation, and molefraction array    
-    savez (savePath, numberOfGases = numberOfGases,
-            numberOfIterations = numberOfIterations,
-            moleFractionG1 = meanMoleFracG1,
-            multiplierError = multiplierError,
-            meanError = meanError,
-            stdError = stdError,
-            meanConcEstimate = meanConcEstimate,
-            stdConcEstimate = stdConcEstimate)
-else:
-    # Save the array concentration output
-    savez (savePath, numberOfGases = numberOfGases,
-            numberOfIterations = numberOfIterations,
-            moleFractionG1 = meanMoleFracG1,
-            multiplierError = multiplierError,
-            meanError = meanError,
-            stdError = stdError,
-            arrayConcentration = arrayConcentration)        
+
+# Save the mean, standard deviation, and molefraction array    
+savez (savePath, numberOfGases = numberOfGases,
+       numberOfIterations = numberOfIterations,
+       moleFractionG1 = meanMoleFracG1,
+       multiplierError = multiplierError,
+       meanError = meanError,
+       stdError = stdError,
+       meanConcEstimate = meanConcEstimate,
+       stdConcEstimate = stdConcEstimate,
+       arrayConcentration = arrayConcentration)
