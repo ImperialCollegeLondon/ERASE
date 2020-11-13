@@ -38,11 +38,21 @@ from tqdm import tqdm # To track progress of the loop
 from estimateConcentration import estimateConcentration
 import argparse
 
-# For atgument parser if run through terminal. Sensor configuration provided
+# For argument parser if run through terminal. Sensor configuration provided
 # as an input using --s and sorbent ids separated by a space
 # e.g. python sensitivityAnalysis.py --s 6 2
 parser = argparse.ArgumentParser()
 parser.add_argument('--s', nargs='+', type=int)
+
+# # Noise configuration provided as an input using --e and mean and standard
+# # deviation of the Gaussian noise is separated by white space
+# # e.g. python sensitivityAnalysis.py --e 0.0 0.1
+# parser.add_argument('--e', nargs='+', type=float)
+
+# # separated by a white space
+# # Multiplier error provided as an input using --m and multiplier error is 
+# # e.g. python sensitivityAnalysis.py --e 0.0 0.1
+# parser.add_argument('--m', nargs='+', type=float)
 
 # Get the commit ID of the current repository
 gitCommitID = auxiliaryFunctions.getCommitID()
@@ -62,28 +72,55 @@ numberOfGases = 2
 # Sensor combination
 # Check if argument provided (from terminal)
 if len(sys.argv)>1:
-    print("Sensor configuration provided!")
+    print("\nSensor configuration is provided!")
     for _, value in parser.parse_args()._get_kwargs():
         sensorID = value
 # Use default values
 else:
-    print("Sensor configuration not not provided. Default used!")
+    print("\nSensor configuration is not provided. Default used!")
     sensorID = [6, 2]
+    
+# # Measurement noise information
+# # Check if argument provided (from terminal) for Guassian noise
+# if len(sys.argv)>1:
+#     print("\nMeasurement noise information is provided!")
+#     for _, value in parser.parse_args()._get_kwargs():
+#         noiseInfo = value
+#         meanError = nosieInfo[0] # [g/kg]
+#         stdError = nosieInfo[1] # [g/kg]
+# # Use default values
+# else:
+#     print("\nMeasurement noise information is not provided!. Default used!")
+#     # Measurement noise (Guassian noise)
+#     meanError = 0. # [g/kg]
+#     stdError = 0.1 # [g/kg]
+    
+# # Multipler error combination
+# # Check if argument provided (from terminal)
+# if len(sys.argv)>1:
+#     print("\Multipler error information is provided!")
+#     for _, value in parser.parse_args()._get_kwargs():
+#         multiplierError = value
+# # Use default values
+# else:
+#     print("\nMultipler error information is not provided. Default used!")
+#     # Multipler error for the sensor measurement
+#     multiplierError = [5., 1.]
+    
+# Measurement noise (Guassian noise)
+meanError = 0. # [g/kg]
+stdError = 0.1 # [g/kg]
+
+# Multipler error for the sensor measurement
+multiplierError = [1., 1.]
 
 # Custom input mole fraction for gas 1
-meanMoleFracG1 = [0.90]
+meanMoleFracG1 = [0.001, 0.01, 0.1, 0.25, 0.50, 0.75, 0.90]
 diffMoleFracG1 = 0.00 # This plus/minus the mean is the bound for uniform dist.
 numberOfIterations = 100
 
 # Custom input mole fraction for gas 2 (for 3 gas system)
 meanMoleFracG2 = 0.20
-
-# Multipler error for the sensor measurement
-multiplierError = [1., 1.]
-
-# Measurement noise (Guassian noise)
-meanError = 0. # [g/kg]
-stdError = 0.1 # [g/kg]
 
 # Initialize mean and standard deviation of concentration estimates
 meanConcEstimate = np.zeros([len(meanMoleFracG1),numberOfGases])
