@@ -12,6 +12,7 @@
 # Plots the objective function used for concentration estimation
 #
 # Last modified:
+# - 2020-11-17, AK: Multisensor plotting capability
 # - 2020-11-11, AK: Cosmetic changes and add standard deviation plot
 # - 2020-11-05, AK: Initial creation
 #
@@ -39,13 +40,16 @@ os.chdir("..")
 saveFlag = False
 
 # Plot flag to show standard deviation of errors
-plotStdError = True
+plotStdError = False
 plotRaw = True
 plotBH = False
 plotNoise = True
 
 # Save file extension (png or pdf)
 saveFileExtension = ".png"
+
+# Plotting colors
+colorsForPlot = ["ff499e","d264b6","a480cf","779be7","49b6ff"]
 
 # Total pressure of the gas [Pa]
 pressureTotal = np.array([1.e5]);
@@ -64,10 +68,13 @@ numberOfGases = 2
 moleFrac = [0.1, 0.9]
 
 # Multiplier Error
-multiplierError = [1., 1.]
+multiplierError = [1., 1., 1.]
 
 # Sensor ID
-sensorID = np.array([6, 2])
+sensorID = np.array([17,15,16])
+
+# Acceptable SNR
+signalToNoise = 25*0.1
 
 # Get the commit ID of the current repository
 gitCommitID = auxiliaryFunctions.getCommitID()
@@ -89,7 +96,7 @@ elif numberOfGases == 3:
     moleFractionRangeTemp[:,2] = num3/sumNum
     moleFractionRange = moleFractionRangeTemp[moleFractionRangeTemp[:,0].argsort()]
 
-arraySimResponse = np.zeros([moleFractionRange.shape[0],numberOfGases])
+arraySimResponse = np.zeros([moleFractionRange.shape[0],sensorID.shape[0]])
 for ii in range(moleFractionRange.shape[0]):
     arraySimResponse[ii,:] = simulateSensorArray(sensorID, pressureTotal, 
                                                temperature, np.array([moleFractionRange[ii,:]])) * multiplierError
@@ -106,54 +113,36 @@ arrayTrueResponse = np.tile(arrayTrueResponse,(moleFractionRange.shape[0],1))
 # Compute the objective function over all the mole fractions
 objFunction = np.sum(np.power((arrayTrueResponse - arraySimResponse)/arrayTrueResponse,2),1)
 
-# Compute the first derivative and the elbow point of sensor 1
-firstDerivative = np.zeros([moleFractionRange.shape[0],numberOfGases])
-firstDerivative[:,0] = np.gradient(arraySimResponse[:,0])
-if all(i >= 0. for i in firstDerivative[:,0]):
-    slopeDir1 = "increasing"
-else:
-    slopeDir1 = "decreasing"
-kneedle = KneeLocator(moleFractionRange[:,0], arraySimResponse[:,0], 
-                          curve="concave", direction=slopeDir1)
-elbowPointS1 = list(kneedle.all_elbows)
+# Compute the first derivative, elbow point, and the fill regions for all
+# sensors
+xFill = np.zeros([arraySimResponse.shape[1],2])
+# Loop through all sensors
+for kk in range(arraySimResponse.shape[1]):
+    firstDerivative = np.zeros([arraySimResponse.shape[0],1])
+    firstDerivative[:,0] = np.gradient(arraySimResponse[:,kk])
+    if all(i >= 0. for i in firstDerivative[:,0]):
+        slopeDir = "increasing"
+    else:
+        slopeDir = "decreasing"
+    kneedle = KneeLocator(moleFractionRange[:,0], arraySimResponse[:,kk], 
+                              curve="concave", direction=slopeDir)
+    elbowPoint = list(kneedle.all_elbows)
 
-# Compute the first derivative and the elbow point of sensor 2
-firstDerivative[:,1] = np.gradient(arraySimResponse[:,1])
-if all(i >= 0. for i in firstDerivative[:,1]):
-    slopeDir2 = "increasing"
-else:
-    slopeDir2 = "decreasing"
-kneedle = KneeLocator(moleFractionRange[:,0], arraySimResponse[:,1], 
-                          curve="concave", direction=slopeDir2)
-elbowPointS2 = list(kneedle.all_elbows)
-
-# Plot the sensor response for all the conocentrations and highlight the 
-# working region
-# Obtain coordinates to fill working region
-if slopeDir1 == "increasing":
-    xFill1 = [0,elbowPointS1[0]]
-else:
-    xFill1 = [elbowPointS1[0], 1.0]
-    
-if slopeDir2 == "increasing":
-    xFill2 = [0,elbowPointS2[0]]
-else:
-    xFill2 = [elbowPointS2[0], 1.0]
+    # Plot the sensor response for all the conocentrations and highlight the 
+    # working region
+    # Obtain coordinates to fill working region
+    if slopeDir == "increasing":
+        xFill[kk,:] = [0,elbowPoint[0]]
+    else:
+        xFill[kk,:] = [elbowPoint[0], 1.0]
 
 fig = plt.figure
 ax = plt.gca()
-# Sensor 1
-ax.plot(moleFractionRange[:,0],arraySimResponse[:,0],color ='#1DBDE6', label = '$s_1$') # Simulated Response
-ax.fill_between(xFill1,1.1*np.max(arraySimResponse), facecolor='#1DBDE6', alpha=0.25)
-# Sensor 2
-ax.plot(moleFractionRange[:,0],arraySimResponse[:,1], color = '#F1515E', label = '$s_2$') # Simulated Response
-ax.fill_between(xFill2,1.1*np.max(arraySimResponse), facecolor='#F1515E', alpha=0.25)
-# Sensor 3
-if numberOfGases == 3:
-    ax.axhline(y=arrayTrueResponse[0,2], linewidth=1, linestyle='dotted', 
-           color = 'b', label = '$s_2$')
-    ax.plot(moleFractionRange[:,0],arraySimResponse[:,2],'g')
-
+# Loop through all sensors
+for kk in range(arraySimResponse.shape[1]):
+    ax.plot(moleFractionRange[:,0],arraySimResponse[:,kk],color='#'+colorsForPlot[kk], label = '$s_'+str(kk+1)+'$') # Simulated Response
+    ax.fill_between(xFill[kk,:],1.1*np.max(arraySimResponse), facecolor='#'+colorsForPlot[kk], alpha=0.25)
+ax.fill_between([0.,1.],[signalToNoise,signalToNoise], facecolor='#4a5759', alpha=0.25) 
 ax.locator_params(axis="x", nbins=4)
 ax.locator_params(axis="y", nbins=4)
 ax.set(xlabel='$y_1$ [-]', 
@@ -177,14 +166,11 @@ plt.show()
 # sensors and the total (sum)
 fig = plt.figure
 ax = plt.gca()
-ax.plot(moleFractionRange[:,0],np.power((arrayTrueResponse[:,0]
-                                         -arraySimResponse[:,0])/arrayTrueResponse[:,0],2), color = '#1DBDE6', label = '$J_1$') # Error first sensor
-ax.plot(moleFractionRange[:,0],np.power((arrayTrueResponse[:,1]
-                                         -arraySimResponse[:,1])/arrayTrueResponse[:,1],2), color = '#F1515E', label = '$J_2$')  # Error second sensor
-if numberOfGases == 3:
-    ax.plot(moleFractionRange[:,0],np.power((arrayTrueResponse[:,2]
-                                         -arraySimResponse[:,2])/arrayTrueResponse[:,2],2),'g', label = '$J_3$')  # Error third sensor
-ax.plot(moleFractionRange[:,0],objFunction,'k', label = '$\Sigma J_i$')  # Error all sensors
+for kk in range(arraySimResponse.shape[1]): 
+    ax.plot(moleFractionRange[:,0],np.power((arrayTrueResponse[:,kk]
+                                              -arraySimResponse[:,kk])/arrayTrueResponse[:,kk],2),
+            color='#'+colorsForPlot[kk], label = '$J_'+str(kk+1)+'$') 
+ax.plot(moleFractionRange[:,0],objFunction,color='#'+colorsForPlot[-1], label = '$\Sigma J_i$')  # Error all sensors
 ax.locator_params(axis="x", nbins=4)
 ax.locator_params(axis="y", nbins=4)
 ax.set(xlabel='$y_1$ [-]', 
@@ -205,96 +191,3 @@ if saveFlag:
     plt.savefig (savePath)
 
 plt.show()
-
-# Plot the objective function used to evaluate the concentration for individual
-# sensors and the total (sum)
-if plotStdError:
-    if set(sensorID) == set([17,15]):
-        loadedFileRaw = load("simulationResults/sensitivityAnalysis_17-15_20201109_1033_f7e470f.npz")
-        loadedFileBH = load("simulationResults/sensitivityAnalysis_17-15_20201109_1616_63f3499.npz")
-        loadedFileNoise = load("simulationResults/sensitivityAnalysis_17-15_20201110_1458_31e3947.npz")
-    elif set(sensorID) == set([6,2]):
-        loadedFileRaw = load("simulationResults/sensitivityAnalysis_6-2_20201109_1208_f7e470f.npz")
-        loadedFileBH = load("simulationResults/sensitivityAnalysis_6-2_20201110_0936_63f3499.npz")
-        loadedFileNoise = load("simulationResults/sensitivityAnalysis_6-2_20201110_1458_31e3947.npz")
-    elif set(sensorID) == set([17,16]):
-        loadedFileRaw = load("simulationResults/sensitivityAnalysis_17-16_20201109_1416_63f3499.npz")
-        loadedFileBH = load("simulationResults/sensitivityAnalysis_17-16_20201109_1938_63f3499.npz")
-        loadedFileNoise = load("simulationResults/sensitivityAnalysis_17-16_20201110_1458_31e3947.npz")
-    elif set(sensorID) == set([17,6]):
-        loadedFileRaw = load("simulationResults/sensitivityAnalysis_17-6_20201109_1651_63f3499.npz")
-        loadedFileBH = load("simulationResults/sensitivityAnalysis_17-6_20201110_1205_63f3499.npz")
-        loadedFileNoise = load("simulationResults/sensitivityAnalysis_17-6_20201110_1458_31e3947.npz")
-
-    # Parse raw data (no noise, default basin hopping iterations (50))
-    if plotRaw:
-        moleFractionG1_Raw = loadedFileRaw["moleFractionG1"]
-        meanConcEstimate_Raw = loadedFileRaw["meanConcEstimate"]
-        stdConcEstimate_Raw = loadedFileRaw["stdConcEstimate"]
-
-    # Parse data with higher number of iterations for BH (250)
-    if plotBH:
-        moleFractionG1_BH = loadedFileBH["moleFractionG1"]
-        meanConcEstimate_BH = loadedFileBH["meanConcEstimate"]
-        stdConcEstimate_BH = loadedFileBH["stdConcEstimate"]
-
-    # Parse data with noise and default iterations for BH (50)
-    if plotNoise:
-        moleFractionG1_Noise = loadedFileNoise["moleFractionG1"]
-        meanConcEstimate_Noise = loadedFileNoise["meanConcEstimate"]
-        stdConcEstimate_Noise = loadedFileNoise["stdConcEstimate"]
-
-    os.chdir("plotFunctions")
-    plt.style.use('doubleColumn.mplstyle') # Custom matplotlib style file
-    os.chdir("..")
-    
-    fig = plt.figure
-    ax1 = plt.subplot(1,2,1)
-    ax2 = plt.subplot(1,2,2)
-    
-    ax1.semilogy(np.linspace(0,1,100), np.linspace(0,1,100), 
-                 linewidth = 1, linestyle = '--', color = '#adb5bd')
-    if plotRaw:
-        ax1.semilogy(moleFractionG1_Raw,meanConcEstimate_Raw[:,0], marker='o', 
-                     linestyle='None', color='#4f772d', label = 'Reference') # Raw
-        ax2.semilogy(moleFractionG1_Raw,stdConcEstimate_Raw[:,0], marker='o', 
-                    linewidth = 1, linestyle = ':', color='#4f772d', label = 'Reference') # Raw
-    if plotBH:
-        ax1.semilogy(moleFractionG1_BH,meanConcEstimate_BH[:,0], marker='o', 
-                     linestyle='None', color='#90a955', label = 'More Iterations') # Basin hopping
-        ax2.semilogy(moleFractionG1_BH,stdConcEstimate_BH[:,0], marker='o', 
-                    linewidth = 1, linestyle = ':', color='#90a955', label = 'More Iterations') # Basin hopping
-    if plotNoise:
-        ax1.semilogy(moleFractionG1_Noise,meanConcEstimate_Noise[:,0], marker='o', 
-                     linestyle='None', color='#90a955', label = 'With Noise') # Noise
-        ax2.semilogy(moleFractionG1_Noise,stdConcEstimate_Noise[:,0], marker='o', 
-                    linewidth = 1, linestyle = ':', color='#90a955', label = 'With Noise') # Noise
-    
-    ax2.fill_between(xFill1,1.1*np.max(arraySimResponse), facecolor='#1DBDE6', alpha=0.25)
-    ax2.fill_between(xFill2,1.1*np.max(arraySimResponse), facecolor='#F1515E', alpha=0.25)
-    
-    ax1.locator_params(axis="x", nbins=4)
-    ax1.locator_params(axis="y")
-    ax1.set(xlabel='True $y_1$ [-]', 
-            ylabel='Estimated $y_1$ [-]',
-            xlim = [0,1.], ylim = [1e-4, 1.])
-    
-    ax2.locator_params(axis="x", nbins=4)
-    ax2.locator_params(axis="y")
-    ax2.set(xlabel='$y_1$ [-]', 
-            ylabel='$\sigma ({y_1})$ [-]',
-            xlim = [0,1.], ylim = [1e-10, 1.])
-    ax2.legend()
-    
-    #  Save the figure
-    if saveFlag:
-        # FileName: SensorObjFunc_<sensorID>_<noleFrac>_<currentDateTime>_<GitCommitID_Data>>
-        sensorText = str(sensorID).replace('[','').replace(']','').replace(' ','-')
-        saveFileName = "SensorSenAnalStd_" + sensorText + "_" + currentDT + "_" + gitCommitID + saveFileExtension
-        savePath = os.path.join('simulationFigures',saveFileName)
-        # Check if inputResources directory exists or not. If not, create the folder
-        if not os.path.exists(os.path.join('..','simulationFigures')):
-            os.mkdir(os.path.join('..','simulationFigures'))
-        plt.savefig (savePath)
-    
-    plt.show()

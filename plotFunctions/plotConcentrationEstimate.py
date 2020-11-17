@@ -12,6 +12,7 @@
 # Plots to visualize estimated concentration
 #
 # Last modified:
+# - 2020-11-17, AK: Cosmetic changes
 # - 2020-11-09, AK: Add functionality for .npz file
 # - 2020-11-09, AK: Cosmetic changes
 # - 2020-11-04, AK: Improve plotting capability for three gases/sensors
@@ -46,6 +47,9 @@ saveFileExtension = ".png"
 # Plot zoomed plot
 plotZoomDist = False
 
+# Mole frac ID (use this if only .npz is used - sensitivity studies)
+moleFracID = 0
+
 # Gas concentration
 molFracG1 = 0.90
 molFracG2 = 0.10
@@ -53,7 +57,7 @@ molFracG3 = 1 - molFracG1 - molFracG2
 
 # Xlimits and Ylimits
 xLimits = [0,1]
-yLimits = [0,300] 
+yLimits = [0,500] 
 xLimitsSum = [0,2]
 yLimitsSum = [0,300]
 
@@ -79,7 +83,7 @@ densityX = False
 # loadFileName = "arrayConcentration_20201030_1731_da1707b.npy" # 2 gases, 2 sensor [0.4, 0.6]
 # loadFileName = "arrayConcentration_20201104_1842_cc08dc4.npy" # 2 gases, 2 sensor [0.75, 0.25]
 # loadFileName = "arrayConcentration_20201104_2227_cc08dc4.npy" # 2 gases, 2 sensor [0.75, 0.25]
-loadFileName = "sensitivityAnalysis_17-15_20201112_1755_68f00ff.npz"
+loadFileName = "sensitivityAnalysis_17-16_20201114_2032_c9b2a41.npz"
 simResultsFile = os.path.join('..','simulationResults',loadFileName);
 
 # Get the commit ID of the current repository
@@ -101,10 +105,9 @@ else:
 # Check if the file with the adsorbent properties exist 
 if os.path.exists(simResultsFile):
     if fileNPZ:
-        resultOutput = load(simResultsFile)["arrayConcentration"]
+        resultOutput = load(simResultsFile)["arrayConcentration"][moleFracID,:,:]
     else:
         resultOutput = load(simResultsFile)
-    actualOutput = resultOutput    
     if numberOfGases == 2:
         if resultOutput.shape[1] == 3:
             resultOutput = np.delete(resultOutput,[0],1)
