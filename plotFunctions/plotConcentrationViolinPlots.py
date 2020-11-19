@@ -52,7 +52,7 @@ colorTemp = ["eac435","345995","03cea4","fb4d3d","ca1551"]
 colorForPlot = ["#" + counter for counter in colorTemp] 
 
 # Mole fraction ID
-moleFracID = 3
+moleFracID = 0
 meanMolFrac = [0.001,0.01,0.1,0.25,0.5,0.75,0.90]
 
 # Y limits for the plot
@@ -64,7 +64,7 @@ legendText = ["Without Noise", "With Noise"]
 legendFlag = False
 
 # Sensor ID
-sensorText = ["17/15/16", "17/15", "17/15/2", "17/6"]
+sensorText = ["1/1", "1/5", "1/10", "17/16"]
 
 # Initialize x, y, and type for the plotting
 concatenatedX = []
@@ -72,9 +72,9 @@ concatenatedY = []
 concatenatedType = []
 
 # File to be loaded for the left of violin plot
-loadFileName = ["sensitivityAnalysis_17-15-16_20201117_1135_c9b2a41.npz",
-                "sensitivityAnalysis_17-15_20201113_1450_c9b2a41.npz",
-                "sensitivityAnalysis_17-15-2_20201117_1135_c9b2a41.npz"]
+loadFileName = ["sensitivityAnalysis_6-2_20201113_1450_c9b2a41.npz",
+                "sensitivityAnalysis_6-2_20201116_1104_c9b2a41.npz",
+                "sensitivityAnalysis_6-2_20201116_1806_c9b2a41.npz"]
 saveFileSensorText = [17, 16]
 
 if flagComparison and len(loadFileName) != 2:
@@ -131,10 +131,10 @@ df = pd.DataFrame({'x':concatenatedX,
                    'dataType':concatenatedType})
 
 # Compute the mean, standard deviation, and the quantiles for each 
-meanData = df.groupby(['dataType','x'], as_index=False).mean() 
-stdData = df.groupby(['dataType','x'], as_index=False).std()
-maxData = df.groupby(['dataType','x'], as_index=False).max()
-minData = df.groupby(['dataType','x'], as_index=False).min()
+meanData = df.groupby(['dataType','x'], as_index=False, sort=False).mean() 
+stdData = df.groupby(['dataType','x'], as_index=False, sort=False).std()
+maxData = df.groupby(['dataType','x'], as_index=False, sort=False).max()
+minData = df.groupby(['dataType','x'], as_index=False, sort=False).min()
 rangeData = (df.groupby(['dataType','x'], as_index=False).agg(np.ptp))
 Q1Data = df.groupby(['dataType','x'], as_index=False).quantile(0.25)
 Q3Data = df.groupby(['dataType','x'], as_index=False).quantile(0.75)
@@ -164,8 +164,12 @@ else:
                    x="dataType", y="y", inner = "box", linewidth=1,
                    scale='width', palette = colorForPlot[0:len(loadFileName)])
     ax1.set(xlabel='Sensor ID [-]', ylabel='${\hat{y}_1}$ [-]', ylim = Y_LIMITS)
-for kk in range(len(meanMolFrac)):
-    ax1.axhline(meanMolFrac[kk], linestyle=':', linewidth=1, color = '#c0c0c0')
+if flagComparison:
+    for kk in range(len(meanMolFrac)):
+        ax1.axhline(meanMolFrac[kk], linestyle=':', linewidth=1, color = '#c0c0c0')
+else:
+    ax1.axhline(meanMolFrac[moleFracID], linestyle=':', linewidth=1, color = '#c0c0c0')
+
 ax1.locator_params(axis="y", nbins=4)
 #  Save the figure
 if saveFlag:
@@ -190,9 +194,9 @@ sns.lineplot(data=stdData, x='x', y='y', hue='dataType', style='dataType',
              palette = colorForPlot[0:len(loadFileName)])
 ax1.set(xlabel='$y_1$ [-]', 
         ylabel='$\sigma (\hat{y}_i)$ [-]',
-        xlim = [0.,1.], ylim = [0.,None])
+        xlim = [0.,1.], ylim = [1e-6,1.])
+ax1.set_yscale('log')
 ax1.locator_params(axis="x", nbins=4)
-ax1.locator_params(axis="y", nbins=4)
 plt.legend(loc='best')
 
 # Range
