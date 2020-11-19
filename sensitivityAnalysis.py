@@ -13,6 +13,7 @@
 # concentration estimate
 #
 # Last modified:
+# - 2020-11-19, AK: Modify for three gas system
 # - 2020-11-12, AK: Save arrayConcentration in output
 # - 2020-11-12, AK: Bug fix for multipler error
 # - 2020-11-11, AK: Add multipler nosie
@@ -58,7 +59,7 @@ num_cores = multiprocessing.cpu_count()
 numberOfAdsorbents = 30
 
 # Number of gases
-numberOfGases = 2
+numberOfGases = 3
 
 # Sensor combination
 # Check if argument provided (from terminal)
@@ -69,7 +70,7 @@ if len(sys.argv)>1:
 # Use default values
 else:
     print("\nSensor configuration not not provided. Default used!")
-    sensorID = [6, 2]
+    sensorID = [6, 2, 1]
 
 # Measurement noise (Guassian noise)
 meanError = 0. # [g/kg]
@@ -79,14 +80,21 @@ stdError = 0.1 # [g/kg]
 multiplierError = [1., 1.]
 
 # Custom input mole fraction for gas 1
-meanMoleFracG1 = [0.001, 0.01, 0.1, 0.25, 0.50, 0.75, 0.90]
-# meanMoleFracG1 = [0.90]
-        
+meanMoleFracG1 = np.array([0.001, 0.01, 0.1, 0.25, 0.50, 0.75, 0.90])
 diffMoleFracG1 = 0.00 # This plus/minus the mean is the bound for uniform dist.
-numberOfIterations = 100
 
-# Custom input mole fraction for gas 2 (for 3 gas system)
-meanMoleFracG2 = 0.20
+# Number of iterations for the estimator
+numberOfIterations = 1
+
+# Custom input mole fraction for gas 3 (for 3 gas system)
+# Mole fraction for the third gas is fixed. The mole fraction of the other 
+# two gases is then constrained as y1 + y2 = 1 - y3
+meanMoleFracG3 = 0.25
+
+# Remove elements from array that do no meet the mole fraction sum 
+# constraint for 3 gas system
+if numberOfGases == 3:
+    meanMoleFracG1 = meanMoleFracG1[meanMoleFracG1 <= 1-meanMoleFracG3]
 
 # Initialize mean and standard deviation of concentration estimates
 meanConcEstimate = np.zeros([len(meanMoleFracG1),numberOfGases])
@@ -96,6 +104,7 @@ stdConcEstimate = np.zeros([len(meanMoleFracG1),numberOfGases])
 arrayConcentration = np.zeros([len(meanMoleFracG1),numberOfIterations,
                                numberOfGases+len(sensorID)])
 
+# Loop through all mole fractions
 for ii in range(len(meanMoleFracG1)):
     # Generate a uniform distribution of mole fractions
     if numberOfGases == 2:
@@ -106,10 +115,11 @@ for ii in range(len(meanMoleFracG1)):
         inputMoleFrac[:,1] = 1. - inputMoleFrac[:,0]
     elif numberOfGases == 3:
         inputMoleFrac = np.zeros([numberOfIterations,3])
-        inputMoleFrac[:,0] = meanMoleFracG1
-        inputMoleFrac[:,1] = meanMoleFracG2
-        inputMoleFrac[:,2] = 1 - meanMoleFracG1 - meanMoleFracG2
-
+        inputMoleFrac[:,0] = np.random.uniform(meanMoleFracG1[ii]-diffMoleFracG1,
+                                          meanMoleFracG1[ii]+diffMoleFracG1,
+                                          numberOfIterations) # y1 is variable
+        inputMoleFrac[:,2] = meanMoleFracG3 # y3 is fixed to a constant
+        inputMoleFrac[:,1] = 1. - inputMoleFrac[:,2] - inputMoleFrac[:,0]  # y2 from mass balance
     
     # Loop over all the sorbents for a single material sensor
     # Using parallel processing to loop through all the materials
@@ -121,27 +131,7 @@ for ii in range(len(meanMoleFracG1)):
                                                                         for ii in tqdm(range(inputMoleFrac.shape[0])))
 
     # Convert the output list to a matrix
-    arrayConcentration[ii,:,:] = np.array(arrayConcentrationTemp)
-    
-    # Get the concentraiton mean and standard deviation for multiple concentrations
-    # For single concentration, get the true sensor response
-    # Compute the mean and the standard deviation of the concentration estimates
-    if numberOfGases == 2 and len(sensorID) == 2:
-        meanConcEstimate[ii,0] = np.mean(arrayConcentration[ii,:,2])
-        meanConcEstimate[ii,1] = np.mean(arrayConcentration[ii,:,3])
-        stdConcEstimate[ii,0] = np.std(arrayConcentration[ii,:,2])
-        stdConcEstimate[ii,1] = np.std(arrayConcentration[ii,:,3])
-    elif numberOfGases == 2 and len(sensorID) == 3:
-        meanConcEstimate[ii,0] = np.mean(arrayConcentration[ii,:,3])
-        meanConcEstimate[ii,1] = np.mean(arrayConcentration[ii,:,4])
-        stdConcEstimate[ii,0] = np.std(arrayConcentration[ii,:,3])
-        stdConcEstimate[ii,1] = np.std(arrayConcentration[ii,:,4])
-    elif numberOfGases == 2 and len(sensorID) == 4:
-        meanConcEstimate[ii,0] = np.mean(arrayConcentration[ii,:,4])
-        meanConcEstimate[ii,1] = np.mean(arrayConcentration[ii,:,5])
-        stdConcEstimate[ii,0] = np.std(arrayConcentration[ii,:,4])
-        stdConcEstimate[ii,1] = np.std(arrayConcentration[ii,:,5])        
-
+    arrayConcentration[ii,:,:] = np.array(arrayConcentrationTemp)   
 
 # Check if simulationResults directory exists or not. If not, create the folder
 if not os.path.exists('simulationResults'):
@@ -154,16 +144,11 @@ sensorText = str(sensorID).replace('[','').replace(']','').replace(' ','-').repl
 saveFileName = filePrefix + "_" + sensorText + "_" + simulationDT + "_" + gitCommitID;
 savePath = os.path.join('simulationResults',saveFileName)
 
-# Save mean and std. for multiple concentraiton and array concentration 
-# array for single concentration
-
-# Save the mean, standard deviation, and molefraction array    
+# Save the results as an array    
 savez (savePath, numberOfGases = numberOfGases,
        numberOfIterations = numberOfIterations,
        moleFractionG1 = meanMoleFracG1,
        multiplierError = multiplierError,
        meanError = meanError,
        stdError = stdError,
-       meanConcEstimate = meanConcEstimate,
-       stdConcEstimate = stdConcEstimate,
        arrayConcentration = arrayConcentration)
