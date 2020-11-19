@@ -12,6 +12,7 @@
 # Plots the objective function used for concentration estimation
 #
 # Last modified:
+# - 2020-11-19, AK: Add 3 gas knee calculator
 # - 2020-11-19, AK: Multigas plotting capability
 # - 2020-11-17, AK: Multisensor plotting capability
 # - 2020-11-11, AK: Cosmetic changes and add standard deviation plot
@@ -71,7 +72,7 @@ numberOfAdsorbents = 20
 numberOfGases = 3
 
 # Third gas mole fraction
-thirdGasMoleFrac = 0.25
+thirdGasMoleFrac = 0.5
 
 # Mole Fraction of interest
 moleFrac = [0.1, 0.9]
@@ -80,7 +81,7 @@ moleFrac = [0.1, 0.9]
 multiplierError = [1., 1., 1.]
 
 # Sensor ID
-sensorID = np.array([5,6,8])
+sensorID = np.array([18,6,8])
 
 # Acceptable SNR
 signalToNoise = 25*0.1
@@ -125,24 +126,47 @@ xFill = np.zeros([arraySimResponse.shape[1],2])
 for kk in range(arraySimResponse.shape[1]):
     firstDerivative = np.zeros([arraySimResponse.shape[0],1])
     firstDerivative[:,0] = np.gradient(arraySimResponse[:,kk])
+    secondDerivative = np.zeros([firstDerivative.shape[0],1])
+    secondDerivative[:,0] = np.gradient(firstDerivative[:,0])
+    # Get the sign of the first derivative for increasing/decreasing
     if all(i >= 0. for i in firstDerivative[:,0]):
         slopeDir = "increasing"
-    else:
+    elif all(i < 0. for i in firstDerivative[:,0]):
         slopeDir = "decreasing"
+    else:
+        print("Dangerous! I should not be here!!!")
+    # Get the sign of the second derivative for concavity/convexity
+    if all(i >= 0. for i in secondDerivative[:,0]):
+        secondDerDir = "convex"
+    elif all(i < 0. for i in secondDerivative[:,0]):
+        secondDerDir = "concave"
+    else:
+        print("Dangerous! I should not be here!!!")
+
+
     kneedle = KneeLocator(moleFractionRange[:,0], arraySimResponse[:,kk], 
-                          curve="concave", direction=slopeDir)
+                          curve=secondDerDir, direction=slopeDir)
     elbowPoint = list(kneedle.all_elbows)
     
     # Plot the sensor response for all the conocentrations and highlight the 
     # working region
     # Obtain coordinates to fill working region
-    if slopeDir == "increasing":
-        xFill[kk,:] = [0,elbowPoint[0]]
+    if secondDerDir == "concave":
+        if slopeDir == "increasing":
+            xFill[kk,:] = [0,elbowPoint[0]]
+        else:
+            if numberOfGases == 2:
+                xFill[kk,:] = [elbowPoint[0], 1.0]
+            elif numberOfGases == 3:
+                xFill[kk,:] = [elbowPoint[0], 1.-thirdGasMoleFrac]
+    elif secondDerDir == "convex":
+        if slopeDir == "increasing":
+            if numberOfGases == 3:
+                xFill[kk,:] = [elbowPoint[0],1.-thirdGasMoleFrac]
+        else:
+            xFill[kk,:] = [0,elbowPoint[0]]
     else:
-        if numberOfGases == 2:
-            xFill[kk,:] = [elbowPoint[0], 1.0]
-        elif numberOfGases == 3:
-            xFill[kk,:] = [elbowPoint[0], 1.-thirdGasMoleFrac]
+        print("Dangerous! I should not be here!!!")      
 
 fig = plt.figure
 ax = plt.gca()

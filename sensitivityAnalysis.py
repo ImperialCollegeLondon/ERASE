@@ -148,6 +148,7 @@ savePath = os.path.join('simulationResults',saveFileName)
 savez (savePath, numberOfGases = numberOfGases,
        numberOfIterations = numberOfIterations,
        moleFractionG1 = meanMoleFracG1,
+       meanMoleFracG3 = meanMoleFracG3,
        multiplierError = multiplierError,
        meanError = meanError,
        stdError = stdError,
