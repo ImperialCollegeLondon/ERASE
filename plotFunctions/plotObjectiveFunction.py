@@ -12,6 +12,7 @@
 # Plots the objective function used for concentration estimation
 #
 # Last modified:
+# - 2020-11-20, AK: Introduce ternary plots
 # - 2020-11-19, AK: Add 3 gas knee calculator
 # - 2020-11-19, AK: Multigas plotting capability
 # - 2020-11-17, AK: Multisensor plotting capability
@@ -32,22 +33,18 @@ from kneed import KneeLocator # To compute the knee/elbow of a curve
 from generateTrueSensorResponse import generateTrueSensorResponse
 from simulateSensorArray import simulateSensorArray
 import os
+import pandas as pd
+import plotly.express as px
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-plt.style.use('singleColumn.mplstyle') # Custom matplotlib style file
+plt.style.use('doubleColumn.mplstyle') # Custom matplotlib style file
 import auxiliaryFunctions
 
 os.chdir("..")
 
 # Save flag for figure
 saveFlag = False
-
-# Plot flag to show standard deviation of errors
-plotStdError = False
-plotRaw = True
-plotBH = False
-plotNoise = True
 
 # Save file extension (png or pdf)
 saveFileExtension = ".png"
@@ -72,7 +69,8 @@ numberOfAdsorbents = 20
 numberOfGases = 3
 
 # Third gas mole fraction
-thirdGasMoleFrac = 0.5
+thirdGasMoleFrac = 0.25
+fixOneGas = False # Flag that says if third composition is fixed
 
 # Mole Fraction of interest
 moleFrac = [0.1, 0.9]
@@ -81,7 +79,7 @@ moleFrac = [0.1, 0.9]
 multiplierError = [1., 1., 1.]
 
 # Sensor ID
-sensorID = np.array([18,6,8])
+sensorID = np.array([0,6,8])
 
 # Acceptable SNR
 signalToNoise = 25*0.1
@@ -96,11 +94,15 @@ currentDT = auxiliaryFunctions.getCurrentDateTime()
 if numberOfGases == 2:
     moleFractionRange = np.array([np.linspace(0,1,numMolFrac), 1 - np.linspace(0,1,numMolFrac)]).T
 elif numberOfGases == 3:
-    remainingMoleFrac = 1. - thirdGasMoleFrac
-    moleFractionRange = np.array([np.linspace(0,remainingMoleFrac,numMolFrac), 
+    if fixOneGas:
+        remainingMoleFrac = 1. - thirdGasMoleFrac
+        moleFractionRange = np.array([np.linspace(0,remainingMoleFrac,numMolFrac), 
                                   remainingMoleFrac - np.linspace(0,remainingMoleFrac,numMolFrac),
                                   np.tile(thirdGasMoleFrac,numMolFrac)]).T
-
+    else:
+        moleFractionRangeTemp = np.random.dirichlet((1,1,1),numMolFrac)
+        moleFractionRange = moleFractionRangeTemp[moleFractionRangeTemp[:,0].argsort()]
+        
 arraySimResponse = np.zeros([moleFractionRange.shape[0],sensorID.shape[0]])
 for ii in range(moleFractionRange.shape[0]):
     arraySimResponse[ii,:] = simulateSensorArray(sensorID, pressureTotal, 
@@ -120,84 +122,125 @@ objFunction = np.sum(np.power((arrayTrueResponse - arraySimResponse)/arrayTrueRe
 
 # Compute the first derivative, elbow point, and the fill regions for all
 # sensors for 2 gases
-
-xFill = np.zeros([arraySimResponse.shape[1],2])
-# Loop through all sensors
-for kk in range(arraySimResponse.shape[1]):
-    firstDerivative = np.zeros([arraySimResponse.shape[0],1])
-    firstDerivative[:,0] = np.gradient(arraySimResponse[:,kk])
-    secondDerivative = np.zeros([firstDerivative.shape[0],1])
-    secondDerivative[:,0] = np.gradient(firstDerivative[:,0])
-    # Get the sign of the first derivative for increasing/decreasing
-    if all(i >= 0. for i in firstDerivative[:,0]):
-        slopeDir = "increasing"
-    elif all(i < 0. for i in firstDerivative[:,0]):
-        slopeDir = "decreasing"
-    else:
-        print("Dangerous! I should not be here!!!")
-    # Get the sign of the second derivative for concavity/convexity
-    if all(i >= 0. for i in secondDerivative[:,0]):
-        secondDerDir = "convex"
-    elif all(i < 0. for i in secondDerivative[:,0]):
-        secondDerDir = "concave"
-    else:
-        print("Dangerous! I should not be here!!!")
-
-
-    kneedle = KneeLocator(moleFractionRange[:,0], arraySimResponse[:,kk], 
-                          curve=secondDerDir, direction=slopeDir)
-    elbowPoint = list(kneedle.all_elbows)
+if numberOfGases == 2 or (numberOfGases == 3 and fixOneGas == True):
+    xFill = np.zeros([arraySimResponse.shape[1],2])
+    # Loop through all sensors
+    for kk in range(arraySimResponse.shape[1]):
+        firstDerivative = np.zeros([arraySimResponse.shape[0],1])
+        firstDerivative[:,0] = np.gradient(arraySimResponse[:,kk])
+        secondDerivative = np.zeros([firstDerivative.shape[0],1])
+        secondDerivative[:,0] = np.gradient(firstDerivative[:,0])
+        # Get the sign of the first derivative for increasing/decreasing
+        if all(i >= 0. for i in firstDerivative[:,0]):
+            slopeDir = "increasing"
+        elif all(i < 0. for i in firstDerivative[:,0]):
+            slopeDir = "decreasing"
+        else:
+            print("Dangerous! I should not be here!!!")
+        # Get the sign of the second derivative for concavity/convexity
+        if all(i >= 0. for i in secondDerivative[:,0]):
+            secondDerDir = "convex"
+        elif all(i < 0. for i in secondDerivative[:,0]):
+            secondDerDir = "concave"
+        else:
+            print("Dangerous! I should not be here!!!")
     
-    # Plot the sensor response for all the conocentrations and highlight the 
-    # working region
-    # Obtain coordinates to fill working region
-    if secondDerDir == "concave":
-        if slopeDir == "increasing":
-            xFill[kk,:] = [0,elbowPoint[0]]
+    
+        kneedle = KneeLocator(moleFractionRange[:,0], arraySimResponse[:,kk], 
+                              curve=secondDerDir, direction=slopeDir)
+        elbowPoint = list(kneedle.all_elbows)
+        
+        # Plot the sensor response for all the conocentrations and highlight the 
+        # working region
+        # Obtain coordinates to fill working region
+        if secondDerDir == "concave":
+            if slopeDir == "increasing":
+                xFill[kk,:] = [0,elbowPoint[0]]
+            else:
+                if numberOfGases == 2:
+                    xFill[kk,:] = [elbowPoint[0], 1.0]
+                elif numberOfGases == 3:
+                    if fixOneGas:
+                        xFill[kk,:] = [elbowPoint[0], 1.-thirdGasMoleFrac]
+        elif secondDerDir == "convex":
+            if slopeDir == "increasing":
+                if numberOfGases == 3:
+                    if fixOneGas:
+                        xFill[kk,:] = [elbowPoint[0],1.-thirdGasMoleFrac]
+            else:
+                    xFill[kk,:] = [0,elbowPoint[0]]
         else:
-            if numberOfGases == 2:
-                xFill[kk,:] = [elbowPoint[0], 1.0]
-            elif numberOfGases == 3:
-                xFill[kk,:] = [elbowPoint[0], 1.-thirdGasMoleFrac]
-    elif secondDerDir == "convex":
-        if slopeDir == "increasing":
-            if numberOfGases == 3:
-                xFill[kk,:] = [elbowPoint[0],1.-thirdGasMoleFrac]
-        else:
-            xFill[kk,:] = [0,elbowPoint[0]]
-    else:
-        print("Dangerous! I should not be here!!!")      
+            print("Dangerous! I should not be here!!!")      
 
-fig = plt.figure
-ax = plt.gca()
-# Loop through all sensors
-for kk in range(arraySimResponse.shape[1]):
-    ax.plot(moleFractionRange[:,0],arraySimResponse[:,kk],color='#'+colorsForPlot[kk], label = '$s_'+str(kk+1)+'$') # Simulated Response
-    ax.fill_between(xFill[kk,:],1.1*np.max(arraySimResponse), facecolor='#'+colorsForPlot[kk], alpha=0.25)
-    if numberOfGases == 2:
-        ax.fill_between([0.,1.],signalToNoise, facecolor='#4a5759', alpha=0.25) 
-    elif numberOfGases == 3:
-        mpl.rcParams['hatch.linewidth'] = 0.1 
-        ax.fill_between([0.,1.-thirdGasMoleFrac],signalToNoise, facecolor='#4a5759', alpha=0.25)
-        ax.fill_between([1.-thirdGasMoleFrac,1.],1.1*np.max(arraySimResponse), facecolor='#555b6e', alpha=0.25, hatch = 'x') 
-ax.set(xlabel='$y_1$ [-]', 
-       ylabel='$m_i$ [g kg$^{-1}$]',
-       xlim = [0,1], ylim = [0, 1.1*np.max(arraySimResponse)])     
-ax.locator_params(axis="x", nbins=4)
-ax.locator_params(axis="y", nbins=4)
-ax.legend()
+if numberOfGases == 2 or (numberOfGases == 3 and fixOneGas == True):
+    fig = plt.figure
+    ax = plt.gca()
+    # Loop through all sensors
+    for kk in range(arraySimResponse.shape[1]):
+        ax.plot(moleFractionRange[:,0],arraySimResponse[:,kk],color='#'+colorsForPlot[kk], label = '$s_'+str(kk+1)+'$') # Simulated Response
+        ax.fill_between(xFill[kk,:],1.1*np.max(arraySimResponse), facecolor='#'+colorsForPlot[kk], alpha=0.25)
+        if numberOfGases == 2:
+            ax.fill_between([0.,1.],signalToNoise, facecolor='#4a5759', alpha=0.25) 
+        elif numberOfGases == 3:
+            if fixOneGas:
+                mpl.rcParams['hatch.linewidth'] = 0.1 
+                ax.fill_between([0.,1.-thirdGasMoleFrac],signalToNoise, facecolor='#4a5759', alpha=0.25)
+                ax.fill_between([1.-thirdGasMoleFrac,1.],1.1*np.max(arraySimResponse), facecolor='#555b6e', alpha=0.25, hatch = 'x') 
+    ax.set(xlabel='$y_1$ [-]', 
+           ylabel='$m_i$ [g kg$^{-1}$]',
+           xlim = [0,1], ylim = [0, 1.1*np.max(arraySimResponse)])     
+    ax.locator_params(axis="x", nbins=4)
+    ax.locator_params(axis="y", nbins=4)
+    ax.legend()
+    
+    #  Save the figure
+    if saveFlag:
+        # FileName: SensorResponse_<sensorID>_<currentDateTime>_<GitCommitID_Current>
+        sensorText = str(sensorID).replace('[','').replace(']','').replace(' ','-')
+        saveFileName = "SensorResponse_" + sensorText + "_" + currentDT + "_" + gitCommitID + saveFileExtension
+        savePath = os.path.join('simulationFigures',saveFileName)
+        # Check if inputResources directory exists or not. If not, create the folder
+        if not os.path.exists(os.path.join('..','simulationFigures')):
+            os.mkdir(os.path.join('..','simulationFigures'))
+        plt.savefig (savePath)
+    plt.show()
 
-#  Save the figure
-if saveFlag:
-    # FileName: SensorResponse_<sensorID>_<currentDateTime>_<GitCommitID_Current>
-    sensorText = str(sensorID).replace('[','').replace(']','').replace(' ','-')
-    saveFileName = "SensorResponse_" + sensorText + "_" + currentDT + "_" + gitCommitID + saveFileExtension
-    savePath = os.path.join('simulationFigures',saveFileName)
-    # Check if inputResources directory exists or not. If not, create the folder
-    if not os.path.exists(os.path.join('..','simulationFigures')):
-        os.mkdir(os.path.join('..','simulationFigures'))
-    plt.savefig (savePath)
-plt.show()
+# Make ternanry/ternary equivalent plots
+if numberOfGases == 3 and fixOneGas == False:
+    fig = plt.figure()
+    for ii in range(len(sensorID)):
+        ax = plt.subplot(1,3,ii+1)
+        s1 = ax.scatter(moleFractionRange[:,0],moleFractionRange[:,1], 
+                        c = arraySimResponse[:,ii], s = 2,
+                        alpha=0.75, cmap = "PuOr",
+                        vmin = 0.9*np.min(arraySimResponse[:,ii]),
+                        vmax = 1.1*np.max(arraySimResponse[:,ii]))
+        ax.plot([0.,0.25],[0.25,0.],linewidth = 1, linestyle = ':', color = 'k')
+        ax.plot([0.,0.50],[0.50,0.],linewidth = 1, linestyle = ':', color = 'k')
+        ax.plot([0.,0.75],[0.75,0.],linewidth = 1, linestyle = ':', color = 'k')
+        ax.plot([0.,1.],[1.,0.],linewidth = 1, linestyle = ':', color = 'k')
+        ax.set(xlabel='$y_1$ [-]', 
+                ylabel='$y_2$ [-]',
+                xlim = [0,1.], ylim = [0, 1.])
+        ax.locator_params(axis="x", nbins=4)
+        ax.locator_params(axis="y", nbins=4)
+        if ii == 3:
+            cbar = plt.colorbar(s1,ax=ax,label="$m_i$ [g kg$^{-1}$]")
+            cbar.ax.locator_params(nbins=4)
+    plt.show()
+
+    # TERNARY PLOT - WIP
+    for ii in range(len(sensorID)):
+        df = pd.DataFrame({'y1':moleFractionRange[:,0],
+                       'y2':moleFractionRange[:,1],
+                       'y3':moleFractionRange[:,2],
+                       'sensorResponse':arraySimResponse[:,ii]})
+    
+        fig = px.scatter_ternary(df, a = 'y1', 
+                                 b = 'y2',  
+                                 c = 'y3',  
+                                 color = 'sensorResponse') 
+        fig.show(renderer="png")
 
 # Plot the objective function used to evaluate the concentration for individual
 # sensors and the total (sum)

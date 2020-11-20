@@ -12,6 +12,7 @@
 # Plots to visualize different sensor responses
 #
 # Last modified:
+# - 2020-11-20, AK: Introduce 3 gas capability
 # - 2020-11-18, AK: Changes to data reconciliation and new plots
 # - 2020-11-13, AK: Initial creation
 #
@@ -68,13 +69,15 @@ sensorText = ["1/1", "1/5", "1/10", "17/16"]
 
 # Initialize x, y, and type for the plotting
 concatenatedX = []
-concatenatedY = []
+concatenatedY1 = []
+concatenatedY2 = []
+concatenatedY3 = []
 concatenatedType = []
 
 # File to be loaded for the left of violin plot
-loadFileName = ["sensitivityAnalysis_6-2_20201113_1450_c9b2a41.npz",
-                "sensitivityAnalysis_6-2_20201116_1104_c9b2a41.npz",
-                "sensitivityAnalysis_6-2_20201116_1806_c9b2a41.npz"]
+loadFileName = ["sensitivityAnalysis_0-6-8_20201119_1516_fc5b327.npz",
+                "sensitivityAnalysis_1-6-8_20201119_1516_fc5b327.npz",
+                "sensitivityAnalysis_2-6-8_20201119_1516_fc5b327.npz"]
 saveFileSensorText = [17, 16]
 
 if flagComparison and len(loadFileName) != 2:
@@ -87,6 +90,7 @@ for kk in range(len(loadFileName)):
     xVar = []
     y1Var = []
     y2Var = []
+    y3Var = []
     typeVar = []
 
     simResultsFile = os.path.join('..','simulationResults',loadFileName[kk]);
@@ -94,42 +98,60 @@ for kk in range(len(loadFileName)):
     numberOfGases = load(simResultsFile)["numberOfGases"]
     moleFrac = load(simResultsFile)["moleFractionG1"]
 
-    # For the cases where there are two gases 
-    if numberOfGases == 2:
-        # Loop through all the molefractions
-        for ii in range(resultOutput.shape[0]):
+    # Loop through all the molefractions
+    for ii in range(resultOutput.shape[0]):
+        # For the cases where there are two gases 
+        if numberOfGases == 2:
             if resultOutput.shape[2] == 4:
                 counterInd = 0
             elif resultOutput.shape[2] == 5:
                 counterInd = 1
-            y1Var = np.concatenate((y1Var,resultOutput[ii,:,counterInd+2])) # y1
-            y2Var = np.concatenate((y2Var,resultOutput[ii,:,counterInd+3])) # y2
-            xVar = xVar + ([str(moleFrac[ii])] * len(resultOutput[ii,:,counterInd+2])) # x (true mole fraction)
-            if not flagComparison:
-                typeVar = typeVar+[sensorText[kk]] * len(resultOutput[ii,:,counterInd+2])
+        # For the cases where there are two gases 
+        elif numberOfGases == 3:
+            if resultOutput.shape[2] == 6:
+                counterInd = 1
+
+        y1Var = np.concatenate((y1Var,resultOutput[ii,:,counterInd+2])) # y1
+        y2Var = np.concatenate((y2Var,resultOutput[ii,:,counterInd+3])) # y2
+        if numberOfGases == 3:
+            y3Var = np.concatenate((y3Var,resultOutput[ii,:,counterInd+4])) # y3
+        xVar = xVar + ([str(moleFrac[ii])] * len(resultOutput[ii,:,counterInd+2])) # x (true mole fraction)
+        if not flagComparison:
+            typeVar = typeVar+[sensorText[kk]] * len(resultOutput[ii,:,counterInd+2])
     # Generate type for comparison
     if flagComparison:
         typeVar = [legendText[kk]] * len(y1Var) # Type - string
 
     # Concatenate all the data to form a data frame with x, y, and type
     concatenatedX = concatenatedX + xVar
-    concatenatedY = np.concatenate((concatenatedY,y1Var))
+    concatenatedY1 = np.concatenate((concatenatedY1,y1Var))
+    concatenatedY2 = np.concatenate((concatenatedY2,y2Var))
+    if numberOfGases == 3:
+        concatenatedY3 = np.concatenate((concatenatedY3,y3Var))
     concatenatedType = concatenatedType + typeVar
     
     # Reinitialize all the loaded values to empty variable
     simResultsFile = []
     resultOutput = []
-    numberOfGases = []
     moleFrac = []
 
 # Generate panda data frame
 # x = molefraction (true)
 # y = molefraction (estimated)
 # dataType = either sensor id/comparison type
-df = pd.DataFrame({'x':concatenatedX,
-                   'y':concatenatedY,
-                   'dataType':concatenatedType})
+if numberOfGases == 2: 
+    df = pd.DataFrame({'x':concatenatedX,
+                       'y1':concatenatedY1,
+                       'y2':concatenatedY2,
+                       'dataType':concatenatedType})
+elif numberOfGases == 3:
+    df = pd.DataFrame({'x':concatenatedX,
+                       'y1':concatenatedY1,
+                       'y2':concatenatedY2,
+                       'y3':concatenatedY3,
+                       'dataType':concatenatedType})
 
+    
 # Compute the mean, standard deviation, and the quantiles for each 
 meanData = df.groupby(['dataType','x'], as_index=False, sort=False).mean() 
 stdData = df.groupby(['dataType','x'], as_index=False, sort=False).std()
@@ -140,7 +162,10 @@ Q1Data = df.groupby(['dataType','x'], as_index=False).quantile(0.25)
 Q3Data = df.groupby(['dataType','x'], as_index=False).quantile(0.75)
 # Coefficient of variation
 cvData = stdData.copy()
-cvData['y'] = stdData['y']/meanData['y']
+cvData['y1'] = stdData['y1']/meanData['y1']
+cvData['y2'] = stdData['y2']/meanData['y2']
+if numberOfGases == 3:
+    cvData['y3'] = stdData['y3']/meanData['y3']
 
 # Plot the figure
 sns.set(style="ticks", palette="pastel", color_codes=True)
@@ -150,7 +175,7 @@ ax1 = plt.subplot(1,1,1)
 if flagComparison:
     if scaleLog:
         ax1.set_yscale('log')
-    sns.violinplot(data=df, x="x", y="y", hue="dataType", inner = "box",
+    sns.violinplot(data=df, x="x", y="y1", hue="dataType", inner = "box",
                    split=True, linewidth=1, palette={legendText[0]: colorForPlot[0],
                                                      legendText[1]: colorForPlot[1]},
                    scale='width')
@@ -161,7 +186,7 @@ if flagComparison:
 # Draw violin plot for compaison of different sensors
 else:
     sns.violinplot(data=df[df.x == str(meanMolFrac[moleFracID])], 
-                   x="dataType", y="y", inner = "box", linewidth=1,
+                   x="dataType", y="y1", inner = "box", linewidth=1,
                    scale='width', palette = colorForPlot[0:len(loadFileName)])
     ax1.set(xlabel='Sensor ID [-]', ylabel='${\hat{y}_1}$ [-]', ylim = Y_LIMITS)
 if flagComparison:
@@ -189,11 +214,11 @@ fig = plt.figure
 # Standard deviation
 ax1 = plt.subplot(1,2,1)
 stdData["x"] = pd.to_numeric(stdData["x"], downcast="float")
-sns.lineplot(data=stdData, x='x', y='y', hue='dataType', style='dataType',
+sns.lineplot(data=stdData, x='x', y='y1', hue='dataType', style='dataType',
              dashes = False, markers = ['o']*len(loadFileName),
              palette = colorForPlot[0:len(loadFileName)])
 ax1.set(xlabel='$y_1$ [-]', 
-        ylabel='$\sigma (\hat{y}_i)$ [-]',
+        ylabel='$\sigma (\hat{y}_1)$ [-]',
         xlim = [0.,1.], ylim = [1e-6,1.])
 ax1.set_yscale('log')
 ax1.locator_params(axis="x", nbins=4)
@@ -202,11 +227,11 @@ plt.legend(loc='best')
 # Range
 ax2 = plt.subplot(1,2,2)
 cvData["x"] = pd.to_numeric(cvData["x"], downcast="float")
-sns.lineplot(data=cvData, x='x', y='y', hue='dataType', style='dataType',
+sns.lineplot(data=cvData, x='x', y='y1', hue='dataType', style='dataType',
              dashes = False, markers = ['o']*len(loadFileName),
              palette = colorForPlot[0:len(loadFileName)])
 ax2.set(xlabel='$y_1$ [-]', 
-        ylabel='$CV (\hat{y}_i)$ [-]',
+        ylabel='$CV (\hat{y}_1)$ [-]',
         xlim = [0.,1.], ylim = [1e-5,1.])
 ax2.locator_params(axis="x", nbins=4)
 ax2.set_yscale('log')
