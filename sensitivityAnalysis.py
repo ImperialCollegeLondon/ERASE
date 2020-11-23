@@ -87,16 +87,6 @@ diffMoleFracG1 = 0.00 # This plus/minus the mean is the bound for uniform dist.
 # Number of iterations for the estimator
 numberOfIterations = 1000
 
-# Custom input mole fraction for gas 3 (for 3 gas system)
-# Mole fraction for the third gas is fixed. The mole fraction of the other 
-# two gases is then constrained as y1 + y2 = 1 - y3
-meanMoleFracG3 = 0.25
-
-# Remove elements from array that do no meet the mole fraction sum 
-# constraint for 3 gas system
-if numberOfGases == 3:
-    meanMoleFracG1 = meanMoleFracG1[meanMoleFracG1 <= 1-meanMoleFracG3]
-
 # Initialize mean and standard deviation of concentration estimates
 meanConcEstimate = np.zeros([len(meanMoleFracG1),numberOfGases])
 stdConcEstimate = np.zeros([len(meanMoleFracG1),numberOfGases])
@@ -119,6 +109,7 @@ for ii in range(len(meanMoleFracG1)):
         inputMoleFrac[:,0] = np.random.uniform(meanMoleFracG1[ii]-diffMoleFracG1,
                                           meanMoleFracG1[ii]+diffMoleFracG1,
                                           numberOfIterations) # y1 is variable
+        # Generate random numbers between 0 and 1 and scaled to get y2 and y3
         tempMoleFrac = (np.random.dirichlet((1,1),numberOfIterations)
                                 *(1.-meanMoleFracG1[ii]))
         inputMoleFrac[:,1] = tempMoleFrac[:,0]
@@ -151,7 +142,6 @@ savePath = os.path.join('simulationResults',saveFileName)
 savez (savePath, numberOfGases = numberOfGases,
        numberOfIterations = numberOfIterations,
        moleFractionG1 = meanMoleFracG1,
-       meanMoleFracG3 = meanMoleFracG3,
        multiplierError = multiplierError,
        meanError = meanError,
        stdError = stdError,
