@@ -13,6 +13,7 @@
 # concentration estimate
 #
 # Last modified:
+# - 2020-11-23, AK: Fix for 3 gas mole fraction
 # - 2020-11-19, AK: Modify for three gas system
 # - 2020-11-12, AK: Save arrayConcentration in output
 # - 2020-11-12, AK: Bug fix for multipler error
@@ -77,14 +78,14 @@ meanError = 0. # [g/kg]
 stdError = 0.1 # [g/kg]
 
 # Multipler error for the sensor measurement
-multiplierError = [1., 1.]
+multiplierError = [1., 1., 1.]
 
 # Custom input mole fraction for gas 1
 meanMoleFracG1 = np.array([0.001, 0.01, 0.1, 0.25, 0.50, 0.75, 0.90])
 diffMoleFracG1 = 0.00 # This plus/minus the mean is the bound for uniform dist.
 
 # Number of iterations for the estimator
-numberOfIterations = 1
+numberOfIterations = 1000
 
 # Custom input mole fraction for gas 3 (for 3 gas system)
 # Mole fraction for the third gas is fixed. The mole fraction of the other 
@@ -118,8 +119,10 @@ for ii in range(len(meanMoleFracG1)):
         inputMoleFrac[:,0] = np.random.uniform(meanMoleFracG1[ii]-diffMoleFracG1,
                                           meanMoleFracG1[ii]+diffMoleFracG1,
                                           numberOfIterations) # y1 is variable
-        inputMoleFrac[:,2] = meanMoleFracG3 # y3 is fixed to a constant
-        inputMoleFrac[:,1] = 1. - inputMoleFrac[:,2] - inputMoleFrac[:,0]  # y2 from mass balance
+        tempMoleFrac = (np.random.dirichlet((1,1),numberOfIterations)
+                                *(1.-meanMoleFracG1[ii]))
+        inputMoleFrac[:,1] = tempMoleFrac[:,0]
+        inputMoleFrac[:,2] = tempMoleFrac[:,1]
     
     # Loop over all the sorbents for a single material sensor
     # Using parallel processing to loop through all the materials
