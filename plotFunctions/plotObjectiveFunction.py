@@ -12,6 +12,7 @@
 # Plots the objective function used for concentration estimation
 #
 # Last modified:
+# - 2020-11-23, AK: Change ternary plots
 # - 2020-11-20, AK: Introduce ternary plots
 # - 2020-11-19, AK: Add 3 gas knee calculator
 # - 2020-11-19, AK: Multigas plotting capability
@@ -33,8 +34,9 @@ from kneed import KneeLocator # To compute the knee/elbow of a curve
 from generateTrueSensorResponse import generateTrueSensorResponse
 from simulateSensorArray import simulateSensorArray
 import os
+from sklearn.cluster import KMeans
 import pandas as pd
-import plotly.express as px
+import ternary
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
@@ -53,7 +55,7 @@ saveFileExtension = ".png"
 colorsForPlot = ["ff499e","d264b6","a480cf","779be7","49b6ff"]
 
 # Number of molefractions
-numMolFrac= 1001
+numMolFrac= 10001
 
 # Total pressure of the gas [Pa]
 pressureTotal = np.array([1.e5]);
@@ -229,45 +231,64 @@ if numberOfGases == 3 and fixOneGas == False:
             cbar.ax.locator_params(nbins=4)
     plt.show()
 
-    # TERNARY PLOT - WIP
+    # Loop through all the materials in the array
     for ii in range(len(sensorID)):
-        df = pd.DataFrame({'y1':moleFractionRange[:,0],
-                       'y2':moleFractionRange[:,1],
-                       'y3':moleFractionRange[:,2],
-                       'sensorResponse':arraySimResponse[:,ii]})
-    
-        fig = px.scatter_ternary(df, a = 'y1', 
-                                 b = 'y2',  
-                                 c = 'y3',  
-                                 color = 'sensorResponse') 
-        fig.show(renderer="png")
+        # Reshape the response for k-means clustering
+        reshapedArraySimResponse = np.reshape(arraySimResponse[:,ii],[-1,1])
+        # Obtain the group of the sensor (sensitive/non sensitive)
+        predictionGroup = KMeans(n_clusters=2,random_state=None).fit_predict(reshapedArraySimResponse)
+        
+        # Plot raw response in a ternary plot
+        fig, tax = ternary.figure(scale=1)
+        fig.set_size_inches(4,3.3)
+        tax.boundary(linewidth=1.0)
+        tax.gridlines(multiple=.2, color="gray")
+        tax.scatter(moleFractionRange, marker='o', s=2, c=arraySimResponse[:,ii],
+                    vmax=max(arraySimResponse[:,ii]), colorbar=True,
+                    colormap=plt.cm.PuOr, cmap=plt.cm.PuOr,
+                    cbarlabel = '$m_i$ [g kg$^{-1}$]')
+        tax.left_axis_label("$y_2$ [-]",offset=0.20,fontsize=10)
+        tax.right_axis_label("$y_1$ [-]",offset=0.20,fontsize=10)
+        tax.bottom_axis_label("$y_3$ [-]",offset=0.20,fontsize=10)
+        tax.ticks(axis='lbr', linewidth=1, multiple=0.2, tick_formats="%.1f",
+                  offset=0.035,clockwise=True,fontsize=10)
+        tax.clear_matplotlib_ticks()
+        tax._redraw_labels()
+        plt.axis('off')
+        if saveFlag:
+            # FileName: SensorResponse_<sensorID>_<currentDateTime>_<GitCommitID_Current>
+            sensorText = str(sensorID[ii]).replace('[','').replace(']','').replace(' ','-')
+            saveFileName = "SensorResponse_" + sensorText + "_" + currentDT + "_" + gitCommitID + saveFileExtension
+            savePath = os.path.join('simulationFigures',saveFileName)
+            # Check if inputResources directory exists or not. If not, create the folder
+            if not os.path.exists(os.path.join('..','simulationFigures')):
+                os.mkdir(os.path.join('..','simulationFigures'))
+            plt.savefig (savePath)
+        tax.show()
 
-# Plot the objective function used to evaluate the concentration for individual
-# sensors and the total (sum)
-if numberOfGases == 2:
-    fig = plt.figure
-    ax = plt.gca()
-    for kk in range(arraySimResponse.shape[1]): 
-        ax.plot(moleFractionRange[:,0],np.power((arrayTrueResponse[:,kk]
-                                                  -arraySimResponse[:,kk])/arrayTrueResponse[:,kk],2),
-                color='#'+colorsForPlot[kk], label = '$J_'+str(kk+1)+'$') 
-    ax.plot(moleFractionRange[:,0],objFunction,color='#'+colorsForPlot[-1], label = '$\Sigma J_i$')  # Error all sensors
-    ax.locator_params(axis="x", nbins=4)
-    ax.locator_params(axis="y", nbins=4)
-    ax.set(xlabel='$y_1$ [-]', 
-            ylabel='$J$ [-]',
-            xlim = [0,1.], ylim = [0, None])
-    ax.legend()
-    
-    #  Save the figure
-    if saveFlag:
-        # FileName: SensorObjFunc_<sensorID>_<noleFrac>_<currentDateTime>_<GitCommitID_Current>
-        sensorText = str(sensorID).replace('[','').replace(']','').replace(' ','-')
-        moleFrac = str(moleFrac).replace('[','').replace(']','').replace(' ','').replace(',','-').replace('.','')
-        saveFileName = "SensorObjFunc_" + sensorText + "_" + moleFrac + "_" + currentDT + "_" + gitCommitID + saveFileExtension
-        savePath = os.path.join('simulationFigures',saveFileName)
-        # Check if simulationFigures directory exists or not. If not, create the folder
-        if not os.path.exists(os.path.join('..','simulationFigures')):
-            os.mkdir(os.path.join('..','simulationFigures'))
-        plt.savefig (savePath)
-    plt.show()
+        # Plot prediceted group in a ternary plot        
+        fig, tax = ternary.figure(scale=1)
+        fig.set_size_inches(4,3.3)
+        tax.boundary(linewidth=1.0)
+        tax.gridlines(multiple=.2, color="gray")
+        tax.scatter(moleFractionRange, marker='o', s=2, c=predictionGroup,
+                    colormap=plt.cm.RdYlGn, cmap=plt.cm.RdYlGn,
+                    cbarlabel = '$m_i$ [g kg$^{-1}$]')
+        tax.left_axis_label("$y_2$ [-]",offset=0.20,fontsize=10)
+        tax.right_axis_label("$y_1$ [-]",offset=0.20,fontsize=10)
+        tax.bottom_axis_label("$y_3$ [-]",offset=0.20,fontsize=10)
+        tax.ticks(axis='lbr', linewidth=1, multiple=0.2, tick_formats="%.1f",
+                  offset=0.035,clockwise=True,fontsize=10)
+        tax.clear_matplotlib_ticks()
+        tax._redraw_labels()
+        plt.axis('off')
+        if saveFlag:
+            # FileName: SensorResponse_<sensorID>_<currentDateTime>_<GitCommitID_Current>
+            sensorText = str(sensorID[ii]).replace('[','').replace(']','').replace(' ','-')
+            saveFileName = "SensorRegion_" + sensorText + "_" + currentDT + "_" + gitCommitID + saveFileExtension
+            savePath = os.path.join('simulationFigures',saveFileName)
+            # Check if inputResources directory exists or not. If not, create the folder
+            if not os.path.exists(os.path.join('..','simulationFigures')):
+                os.mkdir(os.path.join('..','simulationFigures'))
+            plt.savefig (savePath)
+        tax.show()

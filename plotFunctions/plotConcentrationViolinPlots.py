@@ -12,6 +12,7 @@
 # Plots to visualize different sensor responses
 #
 # Last modified:
+# - 2020-11-23, AK: Add standard deviation/CV plotting
 # - 2020-11-20, AK: Introduce 3 gas capability
 # - 2020-11-18, AK: Changes to data reconciliation and new plots
 # - 2020-11-13, AK: Initial creation
@@ -53,7 +54,7 @@ colorTemp = ["eac435","345995","03cea4","fb4d3d","ca1551"]
 colorForPlot = ["#" + counter for counter in colorTemp] 
 
 # Mole fraction ID
-moleFracID = 0
+moleFracID = 6
 meanMolFrac = [0.001,0.01,0.1,0.25,0.5,0.75,0.90]
 
 # Y limits for the plot
@@ -65,7 +66,7 @@ legendText = ["Without Noise", "With Noise"]
 legendFlag = False
 
 # Sensor ID
-sensorText = ["1/1", "1/5", "1/10", "17/16"]
+sensorText = ["17/15", "17/15/16", "17/15/6"]
 
 # Initialize x, y, and type for the plotting
 concatenatedX = []
@@ -75,10 +76,10 @@ concatenatedY3 = []
 concatenatedType = []
 
 # File to be loaded for the left of violin plot
-loadFileName = ["sensitivityAnalysis_0-6-8_20201119_1516_fc5b327.npz",
-                "sensitivityAnalysis_1-6-8_20201119_1516_fc5b327.npz",
-                "sensitivityAnalysis_2-6-8_20201119_1516_fc5b327.npz"]
-saveFileSensorText = [17, 16]
+loadFileName = ["sensitivityAnalysis_17-15_20201113_1450_c9b2a41.npz",
+                "sensitivityAnalysis_17-15-16_20201117_1135_c9b2a41.npz",
+                "sensitivityAnalysis_17-15-6_20201117_1135_c9b2a41.npz"]
+saveFileSensorText = [17,15,16,6]
 
 if flagComparison and len(loadFileName) != 2:
     errorString = "When flagComparison is True, only two files can be loaded for comparison."
@@ -222,9 +223,12 @@ ax1.set(xlabel='$y_1$ [-]',
         xlim = [0.,1.], ylim = [1e-6,1.])
 ax1.set_yscale('log')
 ax1.locator_params(axis="x", nbins=4)
-plt.legend(loc='best')
+if len(loadFileName) > 1:
+    plt.legend(loc='best')
+else:
+    plt.legend([],[], frameon=False)
 
-# Range
+# CV
 ax2 = plt.subplot(1,2,2)
 cvData["x"] = pd.to_numeric(cvData["x"], downcast="float")
 sns.lineplot(data=cvData, x='x', y='y1', hue='dataType', style='dataType',
@@ -237,4 +241,13 @@ ax2.locator_params(axis="x", nbins=4)
 ax2.set_yscale('log')
 if not legendFlag:
     plt.legend([],[], frameon=False)
+if saveFlag:
+    # FileName: SensorViolinPlot_<sensorID>_<noleFrac>_<currentDateTime>_<GitCommitID_Data>>
+    saveFileSensorText = str(saveFileSensorText).replace('[','').replace(']','').replace(' ','-').replace(',','')
+    saveFileName = "SensorStdCV_" + saveFileSensorText + "_" + currentDT + "_" + gitCommitID + saveFileExtension
+    savePath = os.path.join('..','simulationFigures',saveFileName)
+    # Check if inputResources directory exists or not. If not, create the folder
+    if not os.path.exists(os.path.join('..','simulationFigures')):
+        os.mkdir(os.path.join('..','simulationFigures'))
+    plt.savefig (savePath)
 plt.show()
