@@ -83,9 +83,18 @@ multiplierError = [1., 1., 1.]
 # Custom input mole fraction for gas 1
 meanMoleFracG1 = np.array([0.001, 0.01, 0.1, 0.25, 0.50, 0.75, 0.90])
 diffMoleFracG1 = 0.00 # This plus/minus the mean is the bound for uniform dist.
+# For three gases generate the input concentration from a drichlet distribution
+if numberOfGases == 3:
+    inputMoleFracALL = np.array([[0.05, 0.15, 0.80],
+                                  [0.15, 0.25, 0.60],
+                                  [0.40, 0.35, 0.25],
+                                  [0.50, 0.30, 0.20],
+                                  [0.75, 0.10, 0.15],
+                                  [0.90, 0.05, 0.05],
+                                  [0.999, 0.0009, 0.0001]]) 
 
 # Number of iterations for the estimator
-numberOfIterations = 1000
+numberOfIterations = 2
 
 # Initialize mean and standard deviation of concentration estimates
 meanConcEstimate = np.zeros([len(meanMoleFracG1),numberOfGases])
@@ -106,14 +115,9 @@ for ii in range(len(meanMoleFracG1)):
         inputMoleFrac[:,1] = 1. - inputMoleFrac[:,0]
     elif numberOfGases == 3:
         inputMoleFrac = np.zeros([numberOfIterations,3])
-        inputMoleFrac[:,0] = np.random.uniform(meanMoleFracG1[ii]-diffMoleFracG1,
-                                          meanMoleFracG1[ii]+diffMoleFracG1,
-                                          numberOfIterations) # y1 is variable
-        # Generate random numbers between 0 and 1 and scaled to get y2 and y3
-        tempMoleFrac = (np.random.dirichlet((1,1),numberOfIterations)
-                                *(1.-meanMoleFracG1[ii]))
-        inputMoleFrac[:,1] = tempMoleFrac[:,0]
-        inputMoleFrac[:,2] = tempMoleFrac[:,1]
+        inputMoleFrac[:,0] = inputMoleFracALL[ii,0]
+        inputMoleFrac[:,1] = inputMoleFracALL[ii,1]
+        inputMoleFrac[:,2] = inputMoleFracALL[ii,2]    
     
     # Loop over all the sorbents for a single material sensor
     # Using parallel processing to loop through all the materials
@@ -139,10 +143,19 @@ saveFileName = filePrefix + "_" + sensorText + "_" + simulationDT + "_" + gitCom
 savePath = os.path.join('simulationResults',saveFileName)
 
 # Save the results as an array    
-savez (savePath, numberOfGases = numberOfGases,
-       numberOfIterations = numberOfIterations,
-       moleFractionG1 = meanMoleFracG1,
-       multiplierError = multiplierError,
-       meanError = meanError,
-       stdError = stdError,
-       arrayConcentration = arrayConcentration)
+if numberOfGases == 2:
+    savez (savePath, numberOfGases = numberOfGases,
+            numberOfIterations = numberOfIterations,
+            trueMoleFrac = meanMoleFracG1,
+            multiplierError = multiplierError,
+            meanError = meanError,
+            stdError = stdError,
+            arrayConcentration = arrayConcentration)
+if numberOfGases == 3:
+    savez (savePath, numberOfGases = numberOfGases,
+            numberOfIterations = numberOfIterations,
+            trueMoleFrac = inputMoleFracALL,
+            multiplierError = multiplierError,
+            meanError = meanError,
+            stdError = stdError,
+            arrayConcentration = arrayConcentration)
