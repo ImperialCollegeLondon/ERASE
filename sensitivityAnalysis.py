@@ -13,6 +13,7 @@
 # concentration estimate
 #
 # Last modified:
+# - 2020-11-24, AK: More fix for 3 gas mole fraction
 # - 2020-11-23, AK: Fix for 3 gas mole fraction
 # - 2020-11-19, AK: Modify for three gas system
 # - 2020-11-12, AK: Save arrayConcentration in output
@@ -94,7 +95,7 @@ if numberOfGases == 3:
                                   [0.999, 0.0009, 0.0001]]) 
 
 # Number of iterations for the estimator
-numberOfIterations = 2
+numberOfIterations = 1000
 
 # Initialize mean and standard deviation of concentration estimates
 meanConcEstimate = np.zeros([len(meanMoleFracG1),numberOfGases])
