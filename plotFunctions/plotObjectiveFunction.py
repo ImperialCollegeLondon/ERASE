@@ -12,6 +12,7 @@
 # Plots the objective function used for concentration estimation
 #
 # Last modified:
+# - 2020-11-24, AK: Fix for 3 gas system
 # - 2020-11-23, AK: Change ternary plots
 # - 2020-11-20, AK: Introduce ternary plots
 # - 2020-11-19, AK: Add 3 gas knee calculator
@@ -37,6 +38,7 @@ import os
 from sklearn.cluster import KMeans
 import pandas as pd
 import ternary
+import scipy
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
@@ -53,6 +55,8 @@ saveFileExtension = ".png"
 
 # Plotting colors
 colorsForPlot = ["ff499e","d264b6","a480cf","779be7","49b6ff"]
+colorGroup = ["#f94144","#43aa8b"]
+colorIntersection = ["ff595e","ffca3a","8ac926","1982c4","6a4c93"]
 
 # Number of molefractions
 numMolFrac= 10001
@@ -72,7 +76,6 @@ numberOfGases = 3
 
 # Third gas mole fraction
 thirdGasMoleFrac = 0.25
-fixOneGas = False # Flag that says if third composition is fixed
 
 # Mole Fraction of interest
 moleFrac = [0.1, 0.9]
@@ -96,14 +99,8 @@ currentDT = auxiliaryFunctions.getCurrentDateTime()
 if numberOfGases == 2:
     moleFractionRange = np.array([np.linspace(0,1,numMolFrac), 1 - np.linspace(0,1,numMolFrac)]).T
 elif numberOfGases == 3:
-    if fixOneGas:
-        remainingMoleFrac = 1. - thirdGasMoleFrac
-        moleFractionRange = np.array([np.linspace(0,remainingMoleFrac,numMolFrac), 
-                                  remainingMoleFrac - np.linspace(0,remainingMoleFrac,numMolFrac),
-                                  np.tile(thirdGasMoleFrac,numMolFrac)]).T
-    else:
-        moleFractionRangeTemp = np.random.dirichlet((1,1,1),numMolFrac)
-        moleFractionRange = moleFractionRangeTemp[moleFractionRangeTemp[:,0].argsort()]
+    moleFractionRangeTemp = np.random.dirichlet((1,1,1),numMolFrac)
+    moleFractionRange = moleFractionRangeTemp[moleFractionRangeTemp[:,0].argsort()]
         
 arraySimResponse = np.zeros([moleFractionRange.shape[0],sensorID.shape[0]])
 for ii in range(moleFractionRange.shape[0]):
@@ -124,7 +121,7 @@ objFunction = np.sum(np.power((arrayTrueResponse - arraySimResponse)/arrayTrueRe
 
 # Compute the first derivative, elbow point, and the fill regions for all
 # sensors for 2 gases
-if numberOfGases == 2 or (numberOfGases == 3 and fixOneGas == True):
+if numberOfGases == 2:
     xFill = np.zeros([arraySimResponse.shape[1],2])
     # Loop through all sensors
     for kk in range(arraySimResponse.shape[1]):
@@ -159,11 +156,7 @@ if numberOfGases == 2 or (numberOfGases == 3 and fixOneGas == True):
             if slopeDir == "increasing":
                 xFill[kk,:] = [0,elbowPoint[0]]
             else:
-                if numberOfGases == 2:
-                    xFill[kk,:] = [elbowPoint[0], 1.0]
-                elif numberOfGases == 3:
-                    if fixOneGas:
-                        xFill[kk,:] = [elbowPoint[0], 1.-thirdGasMoleFrac]
+                xFill[kk,:] = [elbowPoint[0], 1.0]
         elif secondDerDir == "convex":
             if slopeDir == "increasing":
                 if numberOfGases == 3:
@@ -174,20 +167,14 @@ if numberOfGases == 2 or (numberOfGases == 3 and fixOneGas == True):
         else:
             print("Dangerous! I should not be here!!!")      
 
-if numberOfGases == 2 or (numberOfGases == 3 and fixOneGas == True):
+if numberOfGases == 2:
     fig = plt.figure
     ax = plt.gca()
     # Loop through all sensors
     for kk in range(arraySimResponse.shape[1]):
         ax.plot(moleFractionRange[:,0],arraySimResponse[:,kk],color='#'+colorsForPlot[kk], label = '$s_'+str(kk+1)+'$') # Simulated Response
         ax.fill_between(xFill[kk,:],1.1*np.max(arraySimResponse), facecolor='#'+colorsForPlot[kk], alpha=0.25)
-        if numberOfGases == 2:
-            ax.fill_between([0.,1.],signalToNoise, facecolor='#4a5759', alpha=0.25) 
-        elif numberOfGases == 3:
-            if fixOneGas:
-                mpl.rcParams['hatch.linewidth'] = 0.1 
-                ax.fill_between([0.,1.-thirdGasMoleFrac],signalToNoise, facecolor='#4a5759', alpha=0.25)
-                ax.fill_between([1.-thirdGasMoleFrac,1.],1.1*np.max(arraySimResponse), facecolor='#555b6e', alpha=0.25, hatch = 'x') 
+        ax.fill_between([0.,1.],signalToNoise, facecolor='#4a5759', alpha=0.25) 
     ax.set(xlabel='$y_1$ [-]', 
            ylabel='$m_i$ [g kg$^{-1}$]',
            xlim = [0,1], ylim = [0, 1.1*np.max(arraySimResponse)])     
@@ -208,7 +195,7 @@ if numberOfGases == 2 or (numberOfGases == 3 and fixOneGas == True):
     plt.show()
 
 # Make ternanry/ternary equivalent plots
-if numberOfGases == 3 and fixOneGas == False:
+if numberOfGases == 3:
     fig = plt.figure()
     for ii in range(len(sensorID)):
         ax = plt.subplot(1,3,ii+1)
@@ -232,20 +219,43 @@ if numberOfGases == 3 and fixOneGas == False:
     plt.show()
 
     # Loop through all the materials in the array
+    sensitiveGroup = {}
+    skewnessResponse = np.zeros(len(sensorID))
     for ii in range(len(sensorID)):
+        # Key for dictionary entry
+        tempDictKey = 's_{}'.format(ii)
         # Reshape the response for k-means clustering
         reshapedArraySimResponse = np.reshape(arraySimResponse[:,ii],[-1,1])
+        # Get the skewness of the sensor resposne
+        skewnessResponse = scipy.stats.skew(reshapedArraySimResponse)
+        # Perform k-means clustering to separate out the data
+        kMeansStruct = KMeans(n_clusters=2,random_state=None).fit(reshapedArraySimResponse)
         # Obtain the group of the sensor (sensitive/non sensitive)
-        predictionGroup = KMeans(n_clusters=2,random_state=None).fit_predict(reshapedArraySimResponse)
-        
+        predictionGroup = kMeansStruct.predict(reshapedArraySimResponse)
+        if kMeansStruct.cluster_centers_[0] <= kMeansStruct.cluster_centers_[1]:
+            if skewnessResponse < 0.0:
+                sensitiveGroup[tempDictKey] = moleFractionRange[predictionGroup==0,:]
+                colorGroup = ["#43aa8b","#f94144"]
+            else:
+                sensitiveGroup[tempDictKey] = moleFractionRange[predictionGroup==1,:]
+                colorGroup = ["#f94144","#43aa8b"]
+                
+        else:
+            if skewnessResponse < 0.0:
+                sensitiveGroup[tempDictKey] = moleFractionRange[predictionGroup==1,:]
+                colorGroup = ["#f94144","#43aa8b"]
+            else:
+                sensitiveGroup[tempDictKey] = moleFractionRange[predictionGroup==0,:]
+                colorGroup = ["#43aa8b","#f94144"]
+                
         # Plot raw response in a ternary plot
         fig, tax = ternary.figure(scale=1)
         fig.set_size_inches(4,3.3)
         tax.boundary(linewidth=1.0)
         tax.gridlines(multiple=.2, color="gray")
         tax.scatter(moleFractionRange, marker='o', s=2, c=arraySimResponse[:,ii],
-                    vmax=max(arraySimResponse[:,ii]), colorbar=True,
-                    colormap=plt.cm.PuOr, cmap=plt.cm.PuOr,
+                    vmin=min(arraySimResponse[:,ii]),vmax=max(arraySimResponse[:,ii]),
+                    colorbar=True,colormap=plt.cm.PuOr, cmap=plt.cm.PuOr,
                     cbarlabel = '$m_i$ [g kg$^{-1}$]')
         tax.left_axis_label("$y_2$ [-]",offset=0.20,fontsize=10)
         tax.right_axis_label("$y_1$ [-]",offset=0.20,fontsize=10)
@@ -266,13 +276,14 @@ if numberOfGases == 3 and fixOneGas == False:
             plt.savefig (savePath)
         tax.show()
 
-        # Plot prediceted group in a ternary plot        
+        # Plot prediceted group in a ternary plot
+        customColorMap = mpl.colors.ListedColormap(colorGroup)        
         fig, tax = ternary.figure(scale=1)
         fig.set_size_inches(4,3.3)
         tax.boundary(linewidth=1.0)
         tax.gridlines(multiple=.2, color="gray")
         tax.scatter(moleFractionRange, marker='o', s=2, c=predictionGroup,
-                    colormap=plt.cm.RdYlGn, cmap=plt.cm.RdYlGn,
+                    colormap=customColorMap, cmap=customColorMap,
                     cbarlabel = '$m_i$ [g kg$^{-1}$]')
         tax.left_axis_label("$y_2$ [-]",offset=0.20,fontsize=10)
         tax.right_axis_label("$y_1$ [-]",offset=0.20,fontsize=10)
@@ -292,3 +303,39 @@ if numberOfGases == 3 and fixOneGas == False:
                 os.mkdir(os.path.join('..','simulationFigures'))
             plt.savefig (savePath)
         tax.show()
+        
+        # Histogram for the sensor response
+        fig = plt.figure
+        ax = plt.subplot(1,1,1)
+        ax.hist(arraySimResponse[:,ii], bins = 100,
+             linewidth=1.5, histtype = 'stepfilled', color='k', alpha = 0.25)
+        plt.show()
+    
+    # Plot the region of sensitivity in a ternary plot overlayed for all the
+    # sensors     
+    fig, tax = ternary.figure(scale=1)
+    fig.set_size_inches(4,3.3)
+    tax.boundary(linewidth=1.0)
+    tax.gridlines(multiple=.2, color="gray")
+    for ii in range(len(sensitiveGroup)):
+        tempDictKey = 's_{}'.format(ii)
+        tax.scatter(sensitiveGroup[tempDictKey], marker='o', s=2,
+                    color = '#'+colorIntersection[ii], alpha = 0.15)
+    tax.left_axis_label("$y_2$ [-]",offset=0.20,fontsize=10)
+    tax.right_axis_label("$y_1$ [-]",offset=0.20,fontsize=10)
+    tax.bottom_axis_label("$y_3$ [-]",offset=0.20,fontsize=10)
+    tax.ticks(axis='lbr', linewidth=1, multiple=0.2, tick_formats="%.1f",
+              offset=0.035,clockwise=True,fontsize=10)
+    tax.clear_matplotlib_ticks()
+    tax._redraw_labels()
+    plt.axis('off')
+    if saveFlag:
+        # FileName: SensorResponse_<sensorID>_<currentDateTime>_<GitCommitID_Current>
+        sensorText = str(sensorID[ii]).replace('[','').replace(']','').replace(' ','-')
+        saveFileName = "SensorRegion_" + sensorText + "_" + currentDT + "_" + gitCommitID + saveFileExtension
+        savePath = os.path.join('simulationFigures',saveFileName)
+        # Check if inputResources directory exists or not. If not, create the folder
+        if not os.path.exists(os.path.join('..','simulationFigures')):
+            os.mkdir(os.path.join('..','simulationFigures'))
+        plt.savefig (savePath)
+    tax.show()
