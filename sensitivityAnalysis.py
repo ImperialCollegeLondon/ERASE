@@ -85,6 +85,7 @@ multiplierError = [1., 1., 1.]
 # Custom input mole fraction for gas 1
 meanMoleFracG1 = np.array([0.001, 0.01, 0.1, 0.25, 0.50, 0.75, 0.90])
 diffMoleFracG1 = 0.00 # This plus/minus the mean is the bound for uniform dist.
+numberOfMoleFrac = len(meanMoleFracG1)
 # For three gases generate the input concentration from a drichlet distribution
 if numberOfGases == 3:
     inputMoleFracALL = np.array([[0.00, 0.20, 0.80],
@@ -92,7 +93,8 @@ if numberOfGases == 3:
                                   [0.30, 0.20, 0.50],
                                   [0.45, 0.20, 0.35],
                                   [0.60, 0.20, 0.20],
-                                  [0.80, 0.20, 0.00]]) 
+                                  [0.80, 0.20, 0.00]])
+    numberOfMoleFrac = inputMoleFracALL.shape[0]
 
 # Number of iterations for the estimator
 numberOfIterations = 1000
@@ -106,7 +108,7 @@ arrayConcentration = np.zeros([len(meanMoleFracG1),numberOfIterations,
                                numberOfGases+len(sensorID)])
 
 # Loop through all mole fractions
-for ii in range(len(meanMoleFracG1)):
+for ii in range(numberOfMoleFrac):
     # Generate a uniform distribution of mole fractions
     if numberOfGases == 2:
         inputMoleFrac = np.zeros([numberOfIterations,2])
