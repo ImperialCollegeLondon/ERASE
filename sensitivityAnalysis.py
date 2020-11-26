@@ -12,7 +12,8 @@
 # Script to perform a sensitivity analysis on the sensor response and 
 # concentration estimate
 #
-# Last modified:
+# Last modified:]
+# - 2020-11-26, AK: Parallel processing fix
 # - 2020-11-24, AK: More fix for 3 gas mole fraction
 # - 2020-11-23, AK: Fix for 3 gas mole fraction
 # - 2020-11-19, AK: Modify for three gas system
@@ -86,13 +87,12 @@ meanMoleFracG1 = np.array([0.001, 0.01, 0.1, 0.25, 0.50, 0.75, 0.90])
 diffMoleFracG1 = 0.00 # This plus/minus the mean is the bound for uniform dist.
 # For three gases generate the input concentration from a drichlet distribution
 if numberOfGases == 3:
-    inputMoleFracALL = np.array([[0.05, 0.15, 0.80],
-                                  [0.15, 0.25, 0.60],
-                                  [0.40, 0.35, 0.25],
-                                  [0.50, 0.30, 0.20],
-                                  [0.75, 0.10, 0.15],
-                                  [0.90, 0.05, 0.05],
-                                  [0.999, 0.0009, 0.0001]]) 
+    inputMoleFracALL = np.array([[0.00, 0.20, 0.80],
+                                  [0.15, 0.20, 0.65],
+                                  [0.30, 0.20, 0.50],
+                                  [0.45, 0.20, 0.35],
+                                  [0.60, 0.20, 0.20],
+                                  [0.80, 0.20, 0.00]]) 
 
 # Number of iterations for the estimator
 numberOfIterations = 1000
@@ -122,7 +122,7 @@ for ii in range(len(meanMoleFracG1)):
     
     # Loop over all the sorbents for a single material sensor
     # Using parallel processing to loop through all the materials
-    arrayConcentrationTemp = Parallel(n_jobs=num_cores, prefer="threads")(delayed(estimateConcentration)
+    arrayConcentrationTemp = Parallel(n_jobs=num_cores)(delayed(estimateConcentration)
                                                                         (numberOfAdsorbents,numberOfGases,None,sensorID,
                                                                         moleFraction = inputMoleFrac[ii],
                                                                         multiplierError = multiplierError,
