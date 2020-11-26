@@ -100,11 +100,11 @@ if numberOfGases == 3:
 numberOfIterations = 1000
 
 # Initialize mean and standard deviation of concentration estimates
-meanConcEstimate = np.zeros([len(meanMoleFracG1),numberOfGases])
-stdConcEstimate = np.zeros([len(meanMoleFracG1),numberOfGases])
+meanConcEstimate = np.zeros([numberOfMoleFrac,numberOfGases])
+stdConcEstimate = np.zeros([numberOfMoleFrac,numberOfGases])
 
 # Initialize the arrayConcentration matrix
-arrayConcentration = np.zeros([len(meanMoleFracG1),numberOfIterations,
+arrayConcentration = np.zeros([numberOfMoleFrac,numberOfIterations,
                                numberOfGases+len(sensorID)])
 
 # Loop through all mole fractions
