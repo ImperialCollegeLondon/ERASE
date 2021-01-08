@@ -67,7 +67,7 @@ legendText = ["Without Noise", "With Noise"]
 legendFlag = False
 
 # Sensor ID
-sensorText = ["12/13/14", "3/4/1", "2/6/8", "0/1/2"]
+sensorText = ["y1", "y2", "y3", "0/1/2"]
 
 # Initialize x, y, and type for the plotting
 concatenatedX = []
@@ -79,9 +79,10 @@ concatenatedY3 = []
 concatenatedType = []
 
 # File to be loaded for the left of violin plot
-loadFileName = ["sensitivityAnalysis_0-6-5_20201127_1217_50a3ed7.npz",
-                "sensitivityAnalysis_3-4-1_20201127_1220_50a3ed7.npz"]
-saveFileSensorText = [17,15,16,6]
+loadFileName = ["sensitivityAnalysis_3-4-1_20201204_1710_50a3ed7.npz",
+                "sensitivityAnalysis_3-4-1_20201204_1831_50a3ed7.npz"]
+
+saveFileSensorText = [3,4,1]
 
 if flagComparison and len(loadFileName) != 2:
     errorString = "When flagComparison is True, only two files can be loaded for comparison."
@@ -146,7 +147,7 @@ for kk in range(len(loadFileName)):
         concatenatedX3 = concatenatedX3 + x3Var
 
     concatenatedType = concatenatedType + typeVar
-    
+
     # Reinitialize all the loaded values to empty variable
     simResultsFile = []
     resultOutput = []
@@ -254,7 +255,7 @@ if numberOfGases == 2:
                  palette = colorForPlot[0:len(loadFileName)])
     ax2.set(xlabel='$y_1$ [-]', 
             ylabel='$CV (\hat{y}_1)$ [-]',
-            xlim = [0.,1.], ylim = [1e-5,1.])
+            xlim = [0.,1.], ylim = [1e-5,None])
     ax2.locator_params(axis="x", nbins=4)
     ax2.set_yscale('log')
     if not legendFlag:
@@ -281,7 +282,7 @@ if numberOfGases == 3:
                  palette = colorForPlot[0:len(loadFileName)])
     ax1.set(xlabel='$y_1$ [-]', 
             ylabel='$CV (\hat{y}_1)$ [-]',
-            xlim = [0.,1.], ylim = [1e-5,1.])
+            xlim = [0.,1.], ylim = [1e-8,100.])
     ax1.locator_params(axis="x", nbins=4)
     ax1.set_yscale('log')
     if not legendFlag:
@@ -293,7 +294,7 @@ if numberOfGases == 3:
                  palette = colorForPlot[0:len(loadFileName)])
     ax2.set(xlabel='$y_2$ [-]', 
             ylabel='$CV (\hat{y}_2)$ [-]',
-            xlim = [0.,1.], ylim = [1e-5,1.])
+            xlim = [0.,1.], ylim = [1e-8,100.])
     ax2.locator_params(axis="x", nbins=4)
     ax2.set_yscale('log')
     if not legendFlag:
@@ -303,9 +304,9 @@ if numberOfGases == 3:
     sns.lineplot(data=cvData, x='x3', y='y3', hue='dataType', style='dataType',
                  dashes = False, markers = ['o']*len(loadFileName),
                  palette = colorForPlot[0:len(loadFileName)])
-    ax3.set(xlabel='$y_1$ [-]', 
+    ax3.set(xlabel='$y_3$ [-]', 
             ylabel='$CV (\hat{y}_3)$ [-]',
-            xlim = [0.,1.], ylim = [1e-5,1.])
+            xlim = [-0.1,1], ylim = [1e-8,100.])
     ax3.locator_params(axis="x", nbins=4)
     ax3.set_yscale('log')
     if not legendFlag:

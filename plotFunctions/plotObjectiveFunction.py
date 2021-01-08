@@ -12,6 +12,7 @@
 # Plots the objective function used for concentration estimation
 #
 # Last modified:
+# - 2020-11-27, AK: More plotting fix for 3 gas system
 # - 2020-11-24, AK: Fix for 3 gas system
 # - 2020-11-23, AK: Change ternary plots
 # - 2020-11-20, AK: Introduce ternary plots
@@ -28,7 +29,7 @@
 #
 #
 ############################################################################
-
+import pdb
 import numpy as np
 from numpy import load
 from kneed import KneeLocator # To compute the knee/elbow of a curve
@@ -55,6 +56,7 @@ saveFileExtension = ".png"
 
 # Plotting colors
 colorsForPlot = ["ff499e","d264b6","a480cf","779be7","49b6ff"]
+colorsForPlot = ["eac435","345995","03cea4","fb4d3d","ca1551"]
 colorGroup = ["#f94144","#43aa8b"]
 colorIntersection = ["ff595e","ffca3a","8ac926","1982c4","6a4c93"]
 
@@ -69,31 +71,49 @@ pressureTotal = np.array([1.e5]);
 temperature = np.array([298.15]);
 
 # Number of Adsorbents
-numberOfAdsorbents = 30
+numberOfAdsorbents = 20
 
 # Number of Gases
-numberOfGases = 3
+numberOfGases = 2
+
 # Experimental mole fraction for 3 gases
 if numberOfGases == 3:
-    inputMoleFracALL = np.array([[0.05, 0.95, 0.00],
-                                  [0.20, 0.80, 0.00],
-                                  [0.35, 0.65, 0.00],
-                                  [0.50, 0.50, 0.00],
-                                  [0.75, 0.25, 0.00],
-                                  [0.90, 0.10, 0.00]])
+    inputMoleFracALL = np.array([[0.01, 0.99, 0.00],
+                                 [0.10, 0.90, 0.00],
+                                 [0.25, 0.75, 0.00],
+                                 [0.50, 0.50, 0.00],
+                                 [0.75, 0.25, 0.00],
+                                 [0.90, 0.10, 0.00],
+                                 [0.99, 0.01, 0.00]])
+    # inputMoleFracALL1 = np.array([[0.01, 0.59, 0.40],
+    #                             [0.10, 0.50, 0.40],
+    #                             [0.20, 0.40, 0.40],
+    #                             [0.30, 0.30, 0.40],
+    #                             [0.40, 0.20, 0.40],
+    #                             [0.50, 0.10, 0.40],
+    #                             [0.59, 0.01, 0.40]])
+    inputMoleFracALL1 = np.array([[0.01, 0.19, 0.80],
+                                 [0.05, 0.15, 0.80],
+                                 [0.10, 0.10, 0.80],
+                                 [0.15, 0.05, 0.80],
+                                 [0.19, 0.01, 0.80]])
+    inputMoleFracALL2 = np.array([[0.01, 0.09, 0.90],
+                                 [0.05, 0.05, 0.90],
+                                 [0.09, 0.01, 0.90]])
+
     # Fix one gas
-    fixOneGas = True
+    fixOneGas = False
     # Third gas mole fraction
-    thirdGasMoleFrac = 0.00
+    thirdGasMoleFrac = 0.
 
 # Mole Fraction of interest
-moleFrac = [0.1, 0.9]
+moleFrac = [0.3, 0.7]
 
 # Multiplier Error
-multiplierError = [1., 1., 1.]
+multiplierError = [1, 1.]
 
 # Sensor ID
-sensorID = np.array([0,4,1])
+sensorID = np.array([6,5])
 
 # Acceptable SNR
 signalToNoise = 25*0.1
@@ -138,22 +158,26 @@ objFunction = np.sum(np.power((arrayTrueResponse - arraySimResponse)/arrayTrueRe
 if numberOfGases == 2 or (numberOfGases == 3 and fixOneGas == True):
     xFill = np.zeros([arraySimResponse.shape[1],2])
     # Loop through all sensors
+    firstDerivative = np.zeros([arraySimResponse.shape[0],arraySimResponse.shape[1]])
+    firstDerivativeSimResponse_y1 = np.zeros([moleFractionRange.shape[0],arraySimResponse.shape[1]])
+    firstDerivativeSimResponse_y2 = np.zeros([moleFractionRange.shape[0],arraySimResponse.shape[1]])
+    secondDerivative = np.zeros([firstDerivative.shape[0],firstDerivative.shape[1]])
     for kk in range(arraySimResponse.shape[1]):
-        firstDerivative = np.zeros([arraySimResponse.shape[0],1])
-        firstDerivative[:,0] = np.gradient(arraySimResponse[:,kk])
-        secondDerivative = np.zeros([firstDerivative.shape[0],1])
-        secondDerivative[:,0] = np.gradient(firstDerivative[:,0])
+        firstDerivative[:,kk] = np.gradient(arraySimResponse[:,kk],moleFractionRange[1,0]-moleFractionRange[0,0])
+        secondDerivative[:,kk] = np.gradient(firstDerivative[:,kk],moleFractionRange[1,0]-moleFractionRange[0,0])
+        firstDerivativeSimResponse_y1[:,kk] = np.gradient(moleFractionRange[:,0],arraySimResponse[:,kk])
+        firstDerivativeSimResponse_y2[:,kk] = np.gradient(moleFractionRange[:,1],arraySimResponse[:,kk])
         # Get the sign of the first derivative for increasing/decreasing
-        if all(i >= 0. for i in firstDerivative[:,0]):
+        if all(i >= 0. for i in firstDerivative[:,kk]):
             slopeDir = "increasing"
-        elif all(i < 0. for i in firstDerivative[:,0]):
+        elif all(i < 0. for i in firstDerivative[:,kk]):
             slopeDir = "decreasing"
         else:
             print("Dangerous! I should not be here!!!")
         # Get the sign of the second derivative for concavity/convexity
-        if all(i >= 0. for i in secondDerivative[:,0]):
+        if all(i >= 0. for i in secondDerivative[:,kk]):
             secondDerDir = "convex"
-        elif all(i < 0. for i in secondDerivative[:,0]):
+        elif all(i < 0. for i in secondDerivative[:,kk]):
             secondDerDir = "concave"
         else:
             print("Dangerous! I should not be here!!!")
@@ -162,7 +186,7 @@ if numberOfGases == 2 or (numberOfGases == 3 and fixOneGas == True):
         kneedle = KneeLocator(moleFractionRange[:,0], arraySimResponse[:,kk], 
                               curve=secondDerDir, direction=slopeDir)
         elbowPoint = list(kneedle.all_elbows)
-        
+
         # Obtain coordinates to fill working region
         if secondDerDir == "concave":
             if slopeDir == "increasing":
@@ -305,6 +329,12 @@ if numberOfGases == 3 and fixOneGas == False:
         tempDictKey = 's_{}'.format(ii)
         tax.scatter(sensitiveGroup[tempDictKey], marker='o', s=2,
                     color = '#'+colorIntersection[ii], alpha = 0.15)
+    # tax.scatter(inputMoleFracALL, marker='o', s=20,
+    #         color = '#'+colorsForPlot[0])
+    # tax.scatter(inputMoleFracALL1, marker='o', s=20,
+    #         color = '#'+colorsForPlot[1])
+    # tax.scatter(inputMoleFracALL2, marker='o', s=20,
+    #         color = '#'+colorsForPlot[2])
     tax.scatter(inputMoleFracALL, marker='o', s=20,
             color = 'k')
     tax.left_axis_label("$y_2$ [-]",offset=0.20,fontsize=10)
@@ -325,3 +355,46 @@ if numberOfGases == 3 and fixOneGas == False:
             os.mkdir(os.path.join('..','simulationFigures'))
         plt.savefig (savePath)
     tax.show()
+    
+# Plot the objective function used to evaluate the concentration for individual
+# sensors and the total (sum)
+if numberOfGases == 3 and fixOneGas == True:
+    fig = plt.figure
+    ax = plt.subplot(1,3,1)
+    for kk in range(arraySimResponse.shape[1]): 
+        ax.plot(moleFractionRange[:,0],np.power((arrayTrueResponse[:,kk]
+                                                 -arraySimResponse[:,kk])/arrayTrueResponse[:,kk],2),
+                color='#'+colorsForPlot[kk], label = '$J_'+str(kk+1)+'$') 
+    ax.plot(moleFractionRange[:,0],objFunction,color='#'+colorsForPlot[-1], label = '$\Sigma J_i$')  # Error all sensors
+    ax.locator_params(axis="x", nbins=4)
+    ax.locator_params(axis="y", nbins=4)
+    ax.set(xlabel='$y_1$ [-]', 
+           ylabel='$J$ [-]',
+           xlim = [0,1.], ylim = [0, 5])
+    ax.legend()
+    
+    ax = plt.subplot(1,3,2)
+    for kk in range(arraySimResponse.shape[1]): 
+        ax.plot(moleFractionRange[:,1],np.power((arrayTrueResponse[:,kk]
+                                                 -arraySimResponse[:,kk])/arrayTrueResponse[:,kk],2),
+                color='#'+colorsForPlot[kk], label = '$J_'+str(kk+1)+'$') 
+    ax.plot(moleFractionRange[:,1],objFunction,color='#'+colorsForPlot[-1], label = '$\Sigma J_i$')  # Error all sensors
+    ax.locator_params(axis="x", nbins=4)
+    ax.locator_params(axis="y", nbins=4)
+    ax.set(xlabel='$y_2$ [-]', 
+           ylabel='$J$ [-]',
+           xlim = [0,1.], ylim = [0, 5])
+    
+    ax = plt.subplot(1,3,3)
+    for kk in range(arraySimResponse.shape[1]): 
+        ax.plot(moleFractionRange[:,2],np.power((arrayTrueResponse[:,kk]
+                                                 -arraySimResponse[:,kk])/arrayTrueResponse[:,kk],2),
+                color='#'+colorsForPlot[kk], label = '$J_'+str(kk+1)+'$') 
+    ax.plot(moleFractionRange[:,2],objFunction,color='#'+colorsForPlot[-1], label = '$\Sigma J_i$')  # Error all sensors
+    ax.locator_params(axis="x", nbins=4)
+    ax.locator_params(axis="y", nbins=4)
+    ax.set(xlabel='$y_3$ [-]', 
+           ylabel='$J$ [-]',
+           xlim = [0,1.], ylim = [0, None])
+    
+    plt.show()
