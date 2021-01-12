@@ -12,6 +12,7 @@
 # Plots to visualize different sensor responses
 #
 # Last modified:
+# - 2021-01-11, AK: Cosmetic changes
 # - 2020-11-27, AK: Major modification for 3 gas system
 # - 2020-11-23, AK: Add standard deviation/CV plotting
 # - 2020-11-20, AK: Introduce 3 gas capability
@@ -79,8 +80,9 @@ concatenatedY3 = []
 concatenatedType = []
 
 # File to be loaded for the left of violin plot
-loadFileName = ["sensitivityAnalysis_3-4-1_20201204_1710_50a3ed7.npz",
-                "sensitivityAnalysis_3-4-1_20201204_1831_50a3ed7.npz"]
+loadFileName = ["sensitivityAnalysis_6-12-55_20210112_1859_50a3ed7.npz",
+                "sensitivityAnalysis_6-12-55_20210112_1924_50a3ed7.npz",
+                "sensitivityAnalysis_6-12-55_20210112_1939_50a3ed7.npz"]
 
 saveFileSensorText = [3,4,1]
 
@@ -239,7 +241,7 @@ if numberOfGases == 2:
                  palette = colorForPlot[0:len(loadFileName)])
     ax1.set(xlabel='$y_1$ [-]', 
             ylabel='$\sigma (\hat{y}_1)$ [-]',
-            xlim = [0.,1.], ylim = [1e-6,1.])
+            xlim = [0.,1.], ylim = [1e-10,1.])
     ax1.set_yscale('log')
     ax1.locator_params(axis="x", nbins=4)
     if len(loadFileName) > 1:
@@ -255,7 +257,7 @@ if numberOfGases == 2:
                  palette = colorForPlot[0:len(loadFileName)])
     ax2.set(xlabel='$y_1$ [-]', 
             ylabel='$CV (\hat{y}_1)$ [-]',
-            xlim = [0.,1.], ylim = [1e-5,None])
+            xlim = [0.,1.], ylim = [1e-10,None])
     ax2.locator_params(axis="x", nbins=4)
     ax2.set_yscale('log')
     if not legendFlag:

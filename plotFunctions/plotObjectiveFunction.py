@@ -12,6 +12,7 @@
 # Plots the objective function used for concentration estimation
 #
 # Last modified:
+# - 2021-01-11, AK: Cosmetic changes
 # - 2020-11-27, AK: More plotting fix for 3 gas system
 # - 2020-11-24, AK: Fix for 3 gas system
 # - 2020-11-23, AK: Change ternary plots
@@ -61,7 +62,7 @@ colorGroup = ["#f94144","#43aa8b"]
 colorIntersection = ["ff595e","ffca3a","8ac926","1982c4","6a4c93"]
 
 # Number of molefractions
-numMolFrac= 1001
+numMolFrac= 10001
 
 # Total pressure of the gas [Pa]
 pressureTotal = np.array([1.e5]);
@@ -71,10 +72,10 @@ pressureTotal = np.array([1.e5]);
 temperature = np.array([298.15]);
 
 # Number of Adsorbents
-numberOfAdsorbents = 20
+numberOfAdsorbents = 60
 
 # Number of Gases
-numberOfGases = 2
+numberOfGases = 3
 
 # Experimental mole fraction for 3 gases
 if numberOfGases == 3:
@@ -85,21 +86,6 @@ if numberOfGases == 3:
                                  [0.75, 0.25, 0.00],
                                  [0.90, 0.10, 0.00],
                                  [0.99, 0.01, 0.00]])
-    # inputMoleFracALL1 = np.array([[0.01, 0.59, 0.40],
-    #                             [0.10, 0.50, 0.40],
-    #                             [0.20, 0.40, 0.40],
-    #                             [0.30, 0.30, 0.40],
-    #                             [0.40, 0.20, 0.40],
-    #                             [0.50, 0.10, 0.40],
-    #                             [0.59, 0.01, 0.40]])
-    inputMoleFracALL1 = np.array([[0.01, 0.19, 0.80],
-                                 [0.05, 0.15, 0.80],
-                                 [0.10, 0.10, 0.80],
-                                 [0.15, 0.05, 0.80],
-                                 [0.19, 0.01, 0.80]])
-    inputMoleFracALL2 = np.array([[0.01, 0.09, 0.90],
-                                 [0.05, 0.05, 0.90],
-                                 [0.09, 0.01, 0.90]])
 
     # Fix one gas
     fixOneGas = False
@@ -110,10 +96,11 @@ if numberOfGases == 3:
 moleFrac = [0.3, 0.7]
 
 # Multiplier Error
-multiplierError = [1, 1.]
+multiplierError = [1, 1.,1.]
 
 # Sensor ID
-sensorID = np.array([6,5])
+sensorID = np.array([6,12,55])
+saveFileSensorText = [6,12,55]
 
 # Acceptable SNR
 signalToNoise = 25*0.1
@@ -329,14 +316,14 @@ if numberOfGases == 3 and fixOneGas == False:
         tempDictKey = 's_{}'.format(ii)
         tax.scatter(sensitiveGroup[tempDictKey], marker='o', s=2,
                     color = '#'+colorIntersection[ii], alpha = 0.15)
-    # tax.scatter(inputMoleFracALL, marker='o', s=20,
-    #         color = '#'+colorsForPlot[0])
-    # tax.scatter(inputMoleFracALL1, marker='o', s=20,
-    #         color = '#'+colorsForPlot[1])
-    # tax.scatter(inputMoleFracALL2, marker='o', s=20,
-    #         color = '#'+colorsForPlot[2])
     tax.scatter(inputMoleFracALL, marker='o', s=20,
-            color = 'k')
+            color = '#'+colorsForPlot[0])
+    inputMoleFracALL[:,[1,2]]=inputMoleFracALL[:,[2,1]]
+    tax.scatter(inputMoleFracALL, marker='o', s=20,
+            color = '#'+colorsForPlot[1])
+    inputMoleFracALL[:,[0,1]]=inputMoleFracALL[:,[1,0]]
+    tax.scatter(inputMoleFracALL, marker='o', s=20,
+            color = '#'+colorsForPlot[2])
     tax.left_axis_label("$y_2$ [-]",offset=0.20,fontsize=10)
     tax.right_axis_label("$y_1$ [-]",offset=0.20,fontsize=10)
     tax.bottom_axis_label("$y_3$ [-]",offset=0.20,fontsize=10)
@@ -346,8 +333,8 @@ if numberOfGases == 3 and fixOneGas == False:
     tax._redraw_labels()
     plt.axis('off')
     if saveFlag:
-        # FileName: SensorResponse_<sensorID>_<currentDateTime>_<GitCommitID_Current>
-        sensorText = str(sensorID[ii]).replace('[','').replace(']','').replace(' ','-')
+        # FileName: SensorRegion_<saveFileSensorText>_<currentDateTime>_<GitCommitID_Current>
+        sensorText = str(saveFileSensorText).replace('[','').replace(']','').replace(' ','-')
         saveFileName = "SensorRegion_" + sensorText + "_" + currentDT + "_" + gitCommitID + saveFileExtension
         savePath = os.path.join('simulationFigures',saveFileName)
         # Check if inputResources directory exists or not. If not, create the folder
