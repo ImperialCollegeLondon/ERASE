@@ -47,10 +47,11 @@ def simulateSensorArray(sensorID, pressureTotal, temperature, moleFraction, **kw
 
     # Load a given adsorbent isotherm material file based on full model flag
     if flagFullModel:
-        if moleFraction.shape[1] == 2:
-            loadFileName = "isothermParameters_20201020_1756_5f263af.npz" # Two gases
-        elif moleFraction.shape[1] == 3:
-            loadFileName = "isothermParameters_20201022_1056_782efa3.npz" # Three gases    
+        if moleFraction.shape[1] == 3:
+            loadFileName = "isothermParameters_20210120_1722_fb57143.npz" # Two gases + Inert
+        elif moleFraction.shape[1] == 4:
+            print('yes')
+            loadFileName = "isothermParameters_20210120_1724_fb57143.npz" # Three gases + Inert    
     else:
         if moleFraction.shape[1] == 2:
             loadFileName = "isothermParameters_20201020_1756_5f263af.npz" # Two gases
