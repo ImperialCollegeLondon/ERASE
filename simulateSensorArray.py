@@ -14,6 +14,7 @@
 # n sorbents. 
 #
 # Last modified:
+# - 2021-01-19, AK: Add flag for full model
 # - 2020-10-30, AK: Fix to find number of gases
 # - 2020-10-22, AK: Add two/three gases
 # - 2020-10-21, AK: Cosmetic changes and make it a function
@@ -28,7 +29,7 @@
 #
 ############################################################################
 
-def simulateSensorArray(sensorID, pressureTotal, temperature, moleFraction):
+def simulateSensorArray(sensorID, pressureTotal, temperature, moleFraction, **kwargs):
     import numpy as np
     from numpy import load
     import os
@@ -68,4 +69,11 @@ def simulateSensorArray(sensorID, pressureTotal, temperature, moleFraction):
     # Obtain the sensor finger print # [g of total gas adsorbed/kg of sorbent]
     sensorFingerPrint = np.dot(sensorLoadingPerGasMass,molecularWeight) # [g/kg]
     
-    return sensorFingerPrint
+    # Flag to check if simulation full model or not
+    if 'fullModel' in kwargs:
+        if kwargs["fullModel"]:
+            return sensorFingerPrint, sensorLoadingPerGasVol
+        else:
+            return sensorFingerPrint
+    else:
+        return sensorFingerPrint
