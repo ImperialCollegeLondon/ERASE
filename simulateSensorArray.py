@@ -14,6 +14,7 @@
 # n sorbents. 
 #
 # Last modified:
+# - 2021-01-20, AK: Structure change and add material file for full model
 # - 2021-01-19, AK: Add flag for full model
 # - 2020-10-30, AK: Fix to find number of gases
 # - 2020-10-22, AK: Add two/three gases
@@ -35,11 +36,26 @@ def simulateSensorArray(sensorID, pressureTotal, temperature, moleFraction, **kw
     import os
     from simulateSSL import simulateSSL
 
-    # For now load a given adsorbent isotherm material file
-    if moleFraction.shape[1] == 2:
-        loadFileName = "isothermParameters_20201020_1756_5f263af.npz" # Two gases
-    elif moleFraction.shape[1] == 3:
-        loadFileName = "isothermParameters_20201022_1056_782efa3.npz" # Three gases
+    # Flag to check if simulation full model or not
+    if 'fullModel' in kwargs:
+        if kwargs["fullModel"]:
+            flagFullModel = True
+        else:
+            flagFullModel = False
+    else:
+        flagFullModel = False
+
+    # Load a given adsorbent isotherm material file based on full model flag
+    if flagFullModel:
+        if moleFraction.shape[1] == 2:
+            loadFileName = "isothermParameters_20201020_1756_5f263af.npz" # Two gases
+        elif moleFraction.shape[1] == 3:
+            loadFileName = "isothermParameters_20201022_1056_782efa3.npz" # Three gases    
+    else:
+        if moleFraction.shape[1] == 2:
+            loadFileName = "isothermParameters_20201020_1756_5f263af.npz" # Two gases
+        elif moleFraction.shape[1] == 3:
+            loadFileName = "isothermParameters_20201022_1056_782efa3.npz" # Three gases
     hypoAdsorbentFile = os.path.join('inputResources',loadFileName);
     
     # Check if the file with the adsorbent properties exist 
@@ -70,10 +86,7 @@ def simulateSensorArray(sensorID, pressureTotal, temperature, moleFraction, **kw
     sensorFingerPrint = np.dot(sensorLoadingPerGasMass,molecularWeight) # [g/kg]
     
     # Flag to check if simulation full model or not
-    if 'fullModel' in kwargs:
-        if kwargs["fullModel"]:
-            return sensorFingerPrint, sensorLoadingPerGasVol
-        else:
-            return sensorFingerPrint
+    if flagFullModel:
+        return sensorFingerPrint, sensorLoadingPerGasVol
     else:
         return sensorFingerPrint
