@@ -24,15 +24,12 @@
 #
 ############################################################################
 
-def addInertGasToMaterials():
+def addInertGasToMaterials(numberOfGases):
     import numpy as np
     from numpy import load
     from numpy import savez
     import os
     import auxiliaryFunctions
-    
-    # Specify the number of gases
-    numberOfGases = 2
     
     # Get the commit ID of the current repository
     gitCommitID = auxiliaryFunctions.getCommitID()
