@@ -9,7 +9,8 @@
 # Authors:  Ashwin Kumar Rajagopalan (AK)
 #
 # Purpose:
-# Simulates the sensor chamber as a CSTR incorporating kinetic effects
+# Wrapper function for sensor full model to check the impact of different 
+# variables
 #
 # Last modified:
 # - 2021-01-20, AK: Initial creation
