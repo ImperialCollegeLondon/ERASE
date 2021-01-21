@@ -88,6 +88,6 @@ def simulateSensorArray(sensorID, pressureTotal, temperature, moleFraction, **kw
     
     # Flag to check if simulation full model or not
     if flagFullModel:
-        return sensorFingerPrint, sensorLoadingPerGasVol
+        return sensorLoadingPerGasVol, adsorbentDensity, molecularWeight
     else:
         return sensorFingerPrint
