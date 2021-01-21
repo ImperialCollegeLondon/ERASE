@@ -50,7 +50,6 @@ def simulateSensorArray(sensorID, pressureTotal, temperature, moleFraction, **kw
         if moleFraction.shape[1] == 3:
             loadFileName = "isothermParameters_20210120_1722_fb57143.npz" # Two gases + Inert
         elif moleFraction.shape[1] == 4:
-            print('yes')
             loadFileName = "isothermParameters_20210120_1724_fb57143.npz" # Three gases + Inert    
     else:
         if moleFraction.shape[1] == 2:

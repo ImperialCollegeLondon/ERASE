@@ -12,6 +12,7 @@
 # Simulates the sensor chamber as a CSTR incorporating kinetic effects
 #
 # Last modified:
+# - 2021-01-21, AK: Cosmetic changes
 # - 2021-01-20, AK: Change to output time and plot function
 # - 2021-01-20, AK: Cosmetic changes
 # - 2021-01-19, AK: Initial creation
@@ -41,7 +42,7 @@ def simulateFullModel(**kwargs):
     
     # Sensor ID
     if 'sensorID' in kwargs:
-        sensorID = np.array(kwargs["sensorID"])
+        sensorID = np.array([kwargs["sensorID"]])
     else:
         sensorID = np.array([6])
 
@@ -61,7 +62,7 @@ def simulateFullModel(**kwargs):
     if 'feedMoleFrac' in kwargs:
         feedMoleFrac = np.array(kwargs["feedMoleFrac"])
     else:
-        feedMoleFrac = np.array([1.,0.,0.])
+        feedMoleFrac = np.array([1.0,0.,0.])
 
     # Initial Gas Mole Fraction [-]
     if 'initMoleFrac' in kwargs:
@@ -83,11 +84,17 @@ def simulateFullModel(**kwargs):
         numberOfGases = len(feedMoleFrac)
 
     # Total pressure of the gas [Pa]
-    pressureTotal = np.array([1.e5]);
-    
+    if 'pressureTotal' in kwargs:
+        pressureTotal = np.array(kwargs["pressureTotal"]);
+    else:
+        pressureTotal = np.array([1.e5]);
+        
     # Temperature of the gas [K]
     # Can be a vector of temperatures
-    temperature = np.array([298.15]);
+    if 'temperature' in kwargs:
+        temperature = np.array(kwargs["temperature"]);
+    else:
+        temperature = np.array([298.15]);
     
     # Volume of sorbent material [m3]
     volSorbent = 5e-7
@@ -114,7 +121,7 @@ def simulateFullModel(**kwargs):
     # Stiff solver used for the problem: BDF or Radau
     # The output is print out every second 
     outputSol = solve_ivp(solveSorptionEquation, timeInt, initialConditions, method='Radau', 
-                          t_eval = np.linspace(timeInt[0],timeInt[1],int(timeInt[1]-timeInt[0])),
+                          t_eval = np.linspace(timeInt[0],timeInt[1],int((timeInt[1]-timeInt[0])/5)),
                           args = inputParameters)
     
     # Parse out the time and the output matrix

@@ -14,6 +14,7 @@
 # "estimated" differences in the change of mass of the sensor array
 #
 # Last modified:
+# - 2021-01-21, AK: Add full model functionality
 # - 2020-11-12, AK: Bug fix for multipler error
 # - 2020-11-11, AK: Add multiplier error to true sensor response
 # - 2020-11-10, AK: Add measurement noise to true sensor response
@@ -38,29 +39,32 @@ def estimateConcentration(numberOfAdsorbents, numberOfGases, moleFracID, sensorI
     from scipy.optimize import basinhopping
 
     # Total pressure of the gas [Pa]
-    pressureTotal = np.array([1.e5]);
+    if 'pressureTotal' in kwargs:
+        pressureTotal = np.array(kwargs["pressureTotal"]);
+    else:
+        pressureTotal = np.array([1.e5]);
     
     # Temperature of the gas [K]
     # Can be a vector of temperatures
-    temperature = np.array([298.15]);
+    if 'temperature' in kwargs:
+        temperature = np.array(kwargs["temperature"]);
+    else:
+        temperature = np.array([298.15]);
     
     # Sensor combinations used in the array. This is a [gx1] vector that maps to
     # the sorbent/material ID generated using the 
     # generateHypotheticalAdsorbents.py function
     sensorID = np.array(sensorID)
-    
-    # Get the individual sensor reponse for all the given "experimental/test" concentrations
-    if 'moleFraction' in kwargs:
-        sensorTrueResponse = generateTrueSensorResponse(numberOfAdsorbents,numberOfGases,
-                                                    pressureTotal,temperature, moleFraction = kwargs["moleFraction"])
-        moleFracID = 0 # Index becomes a scalar quantity
-    else:
-        sensorTrueResponse = generateTrueSensorResponse(numberOfAdsorbents,numberOfGases,
-                                                    pressureTotal,temperature)
-        # True mole fraction index (provide the index corresponding to the true
-        # experimental mole fraction (0-4, check generateTrueSensorResponse.py)
-        moleFracID = moleFracID
 
+    # Get the individual sensor reponse for all the given "experimental/test" concentrations
+    if 'fullModel' in kwargs:
+        if kwargs["fullModel"]:
+            fullModelFlag = True   
+        else:
+            fullModelFlag = False
+    else:
+        fullModelFlag = False
+        
     # Add measurement noise for the true measurement if the user wants it
     measurementNoise = np.zeros(sensorID.shape[0])
     if 'addMeasurementNoise' in kwargs:
@@ -69,20 +73,53 @@ def estimateConcentration(numberOfAdsorbents, numberOfGases, moleFracID, sensorI
         measurementNoise = np.random.normal(kwargs["addMeasurementNoise"][0],
                                             kwargs["addMeasurementNoise"][1],
                                             sensorID.shape[0])
-
-    # Add a multiplier error for the true measurement if the user wants it
-    multiplierError = np.ones(sensorID.shape[0])
-    if 'multiplierError' in kwargs:
-        # The mean and the standard deviation of the Gaussian error is an 
-        # input from the user
-            multiplierErrorTemp = kwargs["multiplierError"]
-            multiplierError[0:len(multiplierErrorTemp)] = multiplierErrorTemp
-    # Parse out the true sensor response for a sensor array with n number of
-    # sensors given by sensorID
-    arrayTrueResponse = np.zeros(sensorID.shape[0])
-    for ii in range(sensorID.shape[0]):
-        arrayTrueResponse[ii] = (multiplierError[ii]*sensorTrueResponse[sensorID[ii],moleFracID]
-                                 + measurementNoise[ii])
+    
+    # Check if it is for full model or not
+    # Full model condition
+    if fullModelFlag:
+        # Parse out the true sensor response from the input (time resolved)
+        # and add measurement noise if asked for. There is no multipler error for 
+        # full model simualtions
+        # Note that using the full model here is only for comparison purposes
+        # When kinetics are available the other estimateConcentration function
+        # should be used
+        if 'fullModelResponse' in kwargs:
+            fullModelResponse = kwargs["fullModelResponse"]
+            multiplierError = np.ones(sensorID.shape[0]) # Always set to 1.
+            arrayTrueResponse = np.zeros(sensorID.shape[0])
+            for ii in range(sensorID.shape[0]):
+                arrayTrueResponse[ii] = (multiplierError[ii]*fullModelResponse[ii] 
+                                         + measurementNoise[ii])
+        else:
+            errorString = "Sensor response from full model not available. You should not be here!"
+            raise Exception(errorString)
+    # Equilibrium condition
+    else:
+        # Get the individual sensor reponse for all the given "experimental/test" concentrations
+        if 'moleFraction' in kwargs:
+            sensorTrueResponse = generateTrueSensorResponse(numberOfAdsorbents,numberOfGases,
+                                                        pressureTotal,temperature, moleFraction = kwargs["moleFraction"])
+            moleFracID = 0 # Index becomes a scalar quantity
+        else:
+            sensorTrueResponse = generateTrueSensorResponse(numberOfAdsorbents,numberOfGases,
+                                                        pressureTotal,temperature)
+            # True mole fraction index (provide the index corresponding to the true
+            # experimental mole fraction (0-4, check generateTrueSensorResponse.py)
+            moleFracID = moleFracID
+    
+        # Add a multiplier error for the true measurement if the user wants it
+        multiplierError = np.ones(sensorID.shape[0])
+        if 'multiplierError' in kwargs:
+            # The mean and the standard deviation of the Gaussian error is an 
+            # input from the user
+                multiplierErrorTemp = kwargs["multiplierError"]
+                multiplierError[0:len(multiplierErrorTemp)] = multiplierErrorTemp
+        # Parse out the true sensor response for a sensor array with n number of
+        # sensors given by sensorID
+        arrayTrueResponse = np.zeros(sensorID.shape[0])
+        for ii in range(sensorID.shape[0]):
+            arrayTrueResponse[ii] = (multiplierError[ii]*sensorTrueResponse[sensorID[ii],moleFracID]
+                                     + measurementNoise[ii])
 
     # Replace all negative values to eps (for physical consistency). Set to 
     # eps to avoid division by zero        

@@ -43,12 +43,9 @@ gitCommitID = auxiliaryFunctions.getCommitID()
 currentDT = auxiliaryFunctions.getCurrentDateTime()
 
 # Define the variable to be looped
-loopVariable = ([0.0001,0.0001,0.0001],
-                [0.0005,0.0005,0.0005],
-                [0.001,0.001,0.001],
-                [0.005,0.005,0.005],
-                [0.01,0.01,0.01],
-                [10000.0,10000.0,10000.0])
+# This has to be a be a tuple. For on condition write the values followed by a 
+# comma to say its a tuple
+loopVariable = ([0.001,0.001,0.001],)
     
 # Define a dictionary
 outputStruct = {}
