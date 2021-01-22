@@ -62,7 +62,7 @@ def simulateFullModel(**kwargs):
     if 'feedMoleFrac' in kwargs:
         feedMoleFrac = np.array(kwargs["feedMoleFrac"])
     else:
-        feedMoleFrac = np.array([1.0,0.,0.])
+        feedMoleFrac = np.array([1.,0.,0.])
 
     # Initial Gas Mole Fraction [-]
     if 'initMoleFrac' in kwargs:
@@ -236,27 +236,36 @@ def plotFullModelResult(timeSim, resultMat, sensorFingerPrint, inputParameters,
             
         plt.show()
             
-        # Plot the pressure drop and the flow rate
+        # Plot the pressure drop, the flow rate, and the mole fraction
         plt.style.use('doubleColumn.mplstyle') # Custom matplotlib style file
         fig = plt.figure
-        ax = plt.subplot(1,2,1)
+        ax = plt.subplot(1,3,1)
         ax.plot(timeSim, resultMat[5,:],
                  linewidth=1.5,color='r')
         ax.set(xlabel='$t$ [s]', 
            ylabel='$P$ [Pa]',
            xlim = [timeSim[0], timeSim[-1]], ylim = [0, 1.1*np.max(resultMat[5,:])])
-        ax = plt.subplot(1,2,2)
-        ax.plot(timeSim, resultMat[5,:]*(flowIn/temperature/8.314),
+       
+        ax = plt.subplot(1,3,2)
+        ax.plot(timeSim, flowIn*resultMat[5,:]/(temperature*8.314),
                  linewidth=1.5,color='k')
-        ax.plot(timeSim, resultMat[5,:]*resultMat[0,:]*(flowIn/temperature/8.314),
+        ax.plot(timeSim, flowIn*resultMat[5,:]*resultMat[0,:]/(temperature*8.314),
                  linewidth=1.5,color='r')
-        ax.plot(timeSim, resultMat[5,:]*(resultMat[1,:])*(flowIn/temperature/8.314),
+        ax.plot(timeSim, flowIn*resultMat[5,:]*resultMat[1,:]/(temperature*8.314),
                  linewidth=1.5,color='b')
-        ax.plot(timeSim, resultMat[5,:]*(1-resultMat[0,:]-resultMat[1,:])*(flowIn/temperature/8.314),
+        ax.plot(timeSim, flowIn*resultMat[5,:]*(1-resultMat[0,:]-resultMat[1,:])/(temperature*8.314),
                  linewidth=1.5,color='g')
         ax.set(xlabel='$t$ [s]', 
            ylabel='$Q$ [mol s$^{\mathregular{-1}}$]',
            xlim = [timeSim[0], timeSim[-1]], ylim = [0, 1.1*np.max(resultMat[5,:])*(flowIn/temperature/8.314)])
+       
+        ax = plt.subplot(1,3,3)
+        ax.plot(timeSim, resultMat[0,:],linewidth=1.5,color='r')
+        ax.plot(timeSim, resultMat[1,:],linewidth=1.5,color='b')        
+        ax.plot(timeSim, 1-resultMat[0,:]-resultMat[1,:],linewidth=1.5,color='g')
+        ax.set(xlabel='$t$ [s]', 
+           ylabel='$y$ [-]',
+           xlim = [timeSim[0], timeSim[-1]], ylim = [0, 1.])
         plt.show()
         
         # Plot the sensor finger print
