@@ -49,14 +49,17 @@ sensorID = [6,2] # [-]
 numberOfGases = 2 # [-]
 
 # Rate Constant
-rateConstant = ([0.1,1.0,10000.0],
-                [0.1,1.0,10000.0]) # [1/s]
+rateConstant = ([10000.0,10000.0,10000.0],
+                [10000.0,10000.0,10000.0]) # [1/s]
 
 # Feed mole fraction
-feedMoleFrac = [0.5,0.5,0.0] # äö[-]
+feedMoleFrac = [1.0,0.0,0.0] # [-]
 
 # Time span for integration [tuple with t0 and tf] [s]
 timeInt = (0,500) # [s]
+
+# Volumetric flow rate [m3/s]
+flowIn = 5e-7 # [s]
 
 # Loop over all rate constants
 outputStruct = {}
@@ -65,7 +68,8 @@ for ii in tqdm(range(len(sensorID))):
     timeSim, _ , sensorFingerPrint, inputParameters = simulateFullModel(sensorID = sensorID[ii],
                                                                         rateConstant = rateConstant[ii],
                                                                         feedMoleFrac = feedMoleFrac,
-                                                                        timeInt = timeInt)
+                                                                        timeInt = timeInt,
+                                                                        flowIn = flowIn)
     outputStruct[ii] = {'timeSim':timeSim,
                         'sensorFingerPrint':sensorFingerPrint,
                         'inputParameters':inputParameters} # Check simulateFullModel.py for entries
@@ -85,7 +89,7 @@ arrayConcentrationTemp = Parallel(n_jobs=num_cores)(delayed(estimateConcentratio
                             fullModel = True,
                             fullModelResponse = sensorFingerPrint[ii,:])
                            for ii in tqdm(range(len(timeSim))))
-
+# Convert the list to array
 arrayConcentration = np.array(arrayConcentrationTemp)
 
 # Check if simulationResults directory exists or not. If not, create the folder
@@ -98,6 +102,5 @@ filePrefix = "fullModelConcentrationEstimate"
 sensorText = str(sensorID).replace('[','').replace(']','').replace(' ','-').replace(',','')
 saveFileName = filePrefix + "_" + sensorText + "_" + currentDT + "_" + gitCommitID;
 savePath = os.path.join('simulationResults',saveFileName)
-
 savez (savePath, outputStruct = outputStruct,
         arrayConcentration = arrayConcentration)
