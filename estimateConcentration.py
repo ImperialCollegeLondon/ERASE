@@ -14,6 +14,7 @@
 # "estimated" differences in the change of mass of the sensor array
 #
 # Last modified:
+# - 2021-01-25, AK: Add zero response to avoid division by zero (IMP!)
 # - 2021-01-21, AK: Add full model functionality
 # - 2020-11-12, AK: Bug fix for multipler error
 # - 2020-11-11, AK: Add multiplier error to true sensor response
@@ -126,7 +127,7 @@ def estimateConcentration(numberOfAdsorbents, numberOfGases, moleFracID, sensorI
     # Print if any of the responses are negative
     if any(ii<=0. for ii in arrayTrueResponse):       
         print("Number of negative response: " + str(sum(arrayTrueResponse<0)))
-    arrayTrueResponse[arrayTrueResponse<0.] = np.finfo(float).eps
+    arrayTrueResponse[arrayTrueResponse<=0.] = np.finfo(float).eps
     
     # Pack the input parameters/arguments useful to compute the objective
     # function to estimate the mole fraction as a tuple
