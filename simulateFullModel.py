@@ -12,6 +12,7 @@
 # Simulates the sensor chamber as a CSTR incorporating kinetic effects
 #
 # Last modified:
+# - 2021-01-25, AK: Change the time interval definition
 # - 2021-01-21, AK: Cosmetic changes
 # - 2021-01-20, AK: Change to output time and plot function
 # - 2021-01-20, AK: Cosmetic changes
@@ -109,7 +110,7 @@ def simulateFullModel(**kwargs):
     
     # Prepare tuple of input parameters for the ode solver
     inputParameters = (sensorID, rateConstant, numberOfGases, flowIn, feedMoleFrac,
-                       pressureTotal, temperature, volSorbent, volGas)
+                       initMoleFrac, pressureTotal, temperature, volSorbent, volGas)
         
     # Prepare initial conditions vector
     initialConditions = np.zeros([2*numberOfGases])
@@ -119,9 +120,9 @@ def simulateFullModel(**kwargs):
     
     # Solve the system of ordinary differential equations
     # Stiff solver used for the problem: BDF or Radau
-    # The output is print out every second 
+    # The output is print out every 5 s
     outputSol = solve_ivp(solveSorptionEquation, timeInt, initialConditions, method='Radau', 
-                          t_eval = np.linspace(timeInt[0],timeInt[1],int((timeInt[1]-timeInt[0])/5)),
+                          t_eval = np.arange(timeInt[0],timeInt[1],5),
                           args = inputParameters)
     
     # Parse out the time and the output matrix
@@ -152,7 +153,7 @@ def solveSorptionEquation(t, f, *inputParameters):
     Rg = 8.314; # [J/mol K]
     
     # Unpack the tuple of input parameters used to solve equations
-    sensorID, rateConstant, numberOfGases, flowIn, feedMoleFrac, pressureTotal, temperature, volSorbent, volGas = inputParameters
+    sensorID, rateConstant, numberOfGases, flowIn, feedMoleFrac, _ , pressureTotal, temperature, volSorbent, volGas = inputParameters
 
     # Initialize the derivatives to zero
     df = np.zeros([2*numberOfGases])
@@ -196,7 +197,7 @@ def plotFullModelResult(timeSim, resultMat, sensorFingerPrint, inputParameters,
     saveFileExtension = ".png"
     
     # Unpack the tuple of input parameters used to solve equations
-    sensorID, _, _, flowIn, _, _, temperature, _, _ = inputParameters
+    sensorID, _, _, flowIn, _, _, _, temperature, _, _ = inputParameters
 
     os.chdir("plotFunctions")
     if resultMat.shape[0] == 6:
