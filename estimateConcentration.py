@@ -126,7 +126,7 @@ def estimateConcentration(numberOfAdsorbents, numberOfGases, moleFracID, sensorI
     # eps to avoid division by zero        
     # Print if any of the responses are negative
     if any(ii<=0. for ii in arrayTrueResponse):       
-        print("Number of negative response: " + str(sum(arrayTrueResponse<0)))
+        print("Number of negative response: " + str(sum(arrayTrueResponse<=0)))
     arrayTrueResponse[arrayTrueResponse<=0.] = np.finfo(float).eps
     
     # Pack the input parameters/arguments useful to compute the objective

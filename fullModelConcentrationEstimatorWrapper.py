@@ -13,6 +13,7 @@
 # measurement from the full model
 #
 # Last modified:
+# - 2021-01-26, AK: Add noise to true measurement
 # - 2021-01-25, AK: Integrate full model concentration estimator
 # - 2021-01-21, AK: Initial creation
 #
@@ -64,10 +65,14 @@ rateConstant = ([.01,.01,10000.0],
 feedMoleFrac = [0.1,0.9,0.0] # [-]
 
 # Time span for integration [tuple with t0 and tf] [s]
-timeInt = (0,35) # [s]
+timeInt = (0,1000) # [s]
 
 # Volumetric flow rate [m3/s]
 flowIn = 5e-7 # [s]
+
+# Measurement noise characteristics
+meanNoise = 0.0 # [g/kg]
+stdNoise = 0.1 # [g/kg]
 
 # Loop over all rate constants
 outputStruct = {}
@@ -78,8 +83,17 @@ for ii in tqdm(range(len(sensorID))):
                                                                         feedMoleFrac = feedMoleFrac,
                                                                         timeInt = timeInt,
                                                                         flowIn = flowIn)
+    
+    # Generate the noise data for all time instants and all materials
+    measurementNoise = np.random.normal(meanNoise, stdNoise, len(timeSim))
+    sensorFingerPrintRaw = sensorFingerPrint # Raw sensor finger print
+    # Add measurement noise to the sensor finger print
+    sensorFingerPrint = sensorFingerPrint + measurementNoise
+
     outputStruct[ii] = {'timeSim':timeSim,
                         'sensorFingerPrint':sensorFingerPrint,
+                        'sensorFingerPrintRaw':sensorFingerPrintRaw, # Without noise
+                        'measurementNoise':measurementNoise,
                         'inputParameters':inputParameters} # Check simulateFullModel.py for entries
         
 # Prepare time-resolved sendor finger print
@@ -154,5 +168,6 @@ savePath = os.path.join('simulationResults',saveFileName)
 savez (savePath, outputStruct = outputStruct, # True response
         arrayConcentration = arrayConcentration, # Estimated response
         eqbmModelFlag = flagIndTime, # Flag to tell whether eqbm. or full model used 
+        noiseCharacteristics = [meanNoise, stdNoise], # Noise characteristics
         timeElapsed = timeElapsed, # Time elapsed for the simulation
         hostName = socket.gethostname()) # Hostname of the computer
