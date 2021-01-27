@@ -12,6 +12,7 @@
 # Simulates the sensor chamber as a CSTR incorporating kinetic effects
 #
 # Last modified:
+# - 2021-01-27, AK: Add volSorbent and volGas to inputs
 # - 2021-01-25, AK: Change the time interval definition
 # - 2021-01-21, AK: Cosmetic changes
 # - 2021-01-20, AK: Change to output time and plot function
@@ -77,6 +78,18 @@ def simulateFullModel(**kwargs):
         timeInt = kwargs["timeInt"]
     else:
         timeInt = (0.0,2000)
+                    
+    # Volume of sorbent material [m3]
+    if 'volSorbent' in kwargs:
+        volSorbent = kwargs["volSorbent"]
+    else:
+        volSorbent = 5e-7
+        
+    # Volume of gas chamber (dead volume) [m3]
+    if 'volGas' in kwargs:
+        volGas = kwargs["volGas"]
+    else:
+        volGas = 5e-7
 
     if (len(feedMoleFrac) != len(initMoleFrac) 
         or len(feedMoleFrac) != len(rateConstant)):
@@ -96,12 +109,6 @@ def simulateFullModel(**kwargs):
         temperature = np.array(kwargs["temperature"]);
     else:
         temperature = np.array([298.15]);
-    
-    # Volume of sorbent material [m3]
-    volSorbent = 5e-7
-        
-    # Volume of gas chamber (dead volume) [m3]
-    volGas = 5e-7
         
     # Compute the initial sensor loading [mol/m3] @ initMoleFrac
     sensorLoadingPerGasVol, adsorbentDensity, molecularWeight  = simulateSensorArray(sensorID, pressureTotal,

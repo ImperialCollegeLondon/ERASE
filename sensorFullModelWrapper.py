@@ -50,7 +50,7 @@ loopVariable = ([0.001,0.001,0.001],)
 # Define a dictionary
 outputStruct = {}
 
-# Loop over all rate constants
+# Loop over all the individual elements of the loop variable
 for ii in tqdm(range(len(loopVariable))):
     # Call the full model with a given rate constant
     timeSim, _ , sensorFingerPrint, inputParameters = simulateFullModel(rateConstant = loopVariable[ii])
