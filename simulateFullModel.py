@@ -12,6 +12,7 @@
 # Simulates the sensor chamber as a CSTR incorporating kinetic effects
 #
 # Last modified:
+# - 2021-01-30, AK: Add constant pressure model
 # - 2021-01-27, AK: Add volSorbent and volGas to inputs
 # - 2021-01-25, AK: Change the time interval definition
 # - 2021-01-21, AK: Cosmetic changes
@@ -41,6 +42,13 @@ def simulateFullModel(**kwargs):
     
     # Get the current date and time for saving purposes    
     currentDT = auxiliaryFunctions.getCurrentDateTime()
+       
+    # Model flag (constant pressure or constant flow rate)
+    # Default is constant pressure
+    if 'sensorID' in kwargs:
+        modelConstF = kwargs["modelConstF"]
+    else:
+        modelConstF = False
     
     # Sensor ID
     if 'sensorID' in kwargs:
@@ -52,7 +60,7 @@ def simulateFullModel(**kwargs):
     if 'rateConstant' in kwargs:
         rateConstant = np.array(kwargs["rateConstant"])
     else:
-        rateConstant = np.array([10000.0,10000.0,10000.0])
+        rateConstant = np.array([.01,.01,.01])
 
     # Feed flow rate [m3/s]
     if 'flowIn' in kwargs:
@@ -118,20 +126,31 @@ def simulateFullModel(**kwargs):
     # Prepare tuple of input parameters for the ode solver
     inputParameters = (sensorID, rateConstant, numberOfGases, flowIn, feedMoleFrac,
                        initMoleFrac, pressureTotal, temperature, volSorbent, volGas)
-        
-    # Prepare initial conditions vector
-    initialConditions = np.zeros([2*numberOfGases])
-    initialConditions[0:numberOfGases-1] = initMoleFrac[0:numberOfGases-1] # Gas mole fraction
-    initialConditions[numberOfGases-1:2*numberOfGases-1] = sensorLoadingPerGasVol # Initial Loading
-    initialConditions[2*numberOfGases-1] = pressureTotal # Outlet pressure the same as inlet pressure
-    
+            
     # Solve the system of ordinary differential equations
     # Stiff solver used for the problem: BDF or Radau
     # The output is print out every 5 s
-    outputSol = solve_ivp(solveSorptionEquation, timeInt, initialConditions, method='Radau', 
-                          t_eval = np.arange(timeInt[0],timeInt[1],5),
-                          args = inputParameters)
-    
+    # Solves the model assuming constant flow rate at the inlet and outlet
+    if modelConstF:
+        # Prepare initial conditions vector
+        initialConditions = np.zeros([2*numberOfGases])
+        initialConditions[0:numberOfGases-1] = initMoleFrac[0:numberOfGases-1] # Gas mole fraction
+        initialConditions[numberOfGases-1:2*numberOfGases-1] = sensorLoadingPerGasVol # Initial Loading
+        initialConditions[2*numberOfGases-1] = pressureTotal # Outlet pressure the same as inlet pressure
+        outputSol = solve_ivp(solveSorptionEquationConstF, timeInt, initialConditions, 
+                              method='Radau', t_eval = np.arange(timeInt[0],timeInt[1],5),
+                              args = inputParameters)
+
+    # Solves the model assuming constant/negligible pressure across the sensor
+    else:
+        # Prepare initial conditions vector
+        initialConditions = np.zeros([2*numberOfGases])
+        initialConditions[0:numberOfGases-1] = initMoleFrac[0:numberOfGases-1] # Gas mole fraction
+        initialConditions[numberOfGases-1:2*numberOfGases-1] = sensorLoadingPerGasVol # Initial Loading
+        outputSol = solve_ivp(solveSorptionEquationConstP, timeInt, initialConditions, 
+                              method='Radau', t_eval = np.arange(timeInt[0],timeInt[1],5),
+                              args = inputParameters)
+        
     # Parse out the time and the output matrix
     timeSim = outputSol.t
     resultMat = outputSol.y
@@ -145,14 +164,14 @@ def simulateFullModel(**kwargs):
     # Call the plotting function
     if plotFlag:
         plotFullModelResult(timeSim, resultMat, sensorFingerPrint, inputParameters,
-                            gitCommitID, currentDT)
+                            gitCommitID, currentDT, modelConstF)
     
     # Return time and the output matrix
     return timeSim, resultMat, sensorFingerPrint, inputParameters
 
-# func: solveSorptionEquation
+# func: solveSorptionEquationConstF - Constant flow rate model
 # Solves the system of ODEs to evaluate the gas composition, loadings, and pressure
-def solveSorptionEquation(t, f, *inputParameters):  
+def solveSorptionEquationConstF(t, f, *inputParameters):  
     import numpy as np
     from simulateSensorArray import simulateSensorArray
 
@@ -176,6 +195,7 @@ def solveSorptionEquation(t, f, *inputParameters):
     df[numberOfGases-1:2*numberOfGases-1] = np.multiply(rateConstant,(sensorLoadingPerGasVol-f[numberOfGases-1:2*numberOfGases-1]))
 
     # Total mass balance
+    # Assumes constant flow rate, so pressure evalauted
     term1 = 1/volGas
     term2 = ((flowIn*pressureTotal) - (flowIn*f[2*numberOfGases-1])
              - ((volSorbent*(Rg*temperature))*(np.sum(df[numberOfGases-1:2*numberOfGases-1]))))
@@ -191,10 +211,50 @@ def solveSorptionEquation(t, f, *inputParameters):
     # Return the derivatives for the solver
     return df
 
+# func: solveSorptionEquationConstP - Constant pressure model
+# Solves the system of ODEs to evaluate the gas composition and loadings
+def solveSorptionEquationConstP(t, f, *inputParameters):  
+    import numpy as np
+    from simulateSensorArray import simulateSensorArray
+
+    # Gas constant
+    Rg = 8.314; # [J/mol K]
+    
+    # Unpack the tuple of input parameters used to solve equations
+    sensorID, rateConstant, numberOfGases, flowIn, feedMoleFrac, _ , pressureTotal, temperature, volSorbent, volGas = inputParameters
+
+    # Initialize the derivatives to zero
+    df = np.zeros([2*numberOfGases])
+    
+    # Compute the equilbirium loading at the current gas composition
+    currentGasComposition = np.concatenate((f[0:numberOfGases-1],
+                                            np.array([1.-np.sum(f[0:numberOfGases-1])])))
+    sensorLoadingPerGasVol, _ , _ = simulateSensorArray(sensorID, pressureTotal,
+                                                        temperature, np.array([currentGasComposition]),
+                                                        fullModel = True)
+    
+    # Linear driving force model (derivative of solid phase loadings)
+    df[numberOfGases-1:2*numberOfGases-1] = np.multiply(rateConstant,(sensorLoadingPerGasVol-f[numberOfGases-1:2*numberOfGases-1]))
+
+    # Total mass balance
+    # Assumes constant pressure, so flow rate evalauted
+    flowOut = flowIn - ((volSorbent*(Rg*temperature)/pressureTotal)*(np.sum(df[numberOfGases-1:2*numberOfGases-1])))
+    
+    # Component mass balance
+    term1 = 1/volGas
+    for ii in range(numberOfGases-1):
+        term2 = ((flowIn*feedMoleFrac[ii] - flowOut*f[ii])
+                 - (volSorbent*(Rg*temperature)/pressureTotal)*df[ii+numberOfGases-1])
+        df[ii] = term1*term2
+    
+    # Return the derivatives for the solver
+    return df
+
+
 # func: plotFullModelResult
 # Plots the model output for the conditions simulated locally
 def plotFullModelResult(timeSim, resultMat, sensorFingerPrint, inputParameters,
-                        gitCommitID, currentDT):
+                        gitCommitID, currentDT, modelConstF):
     import numpy as np
     import os
     import matplotlib.pyplot as plt
@@ -248,25 +308,27 @@ def plotFullModelResult(timeSim, resultMat, sensorFingerPrint, inputParameters,
         plt.style.use('doubleColumn.mplstyle') # Custom matplotlib style file
         fig = plt.figure
         ax = plt.subplot(1,3,1)
-        ax.plot(timeSim, resultMat[5,:],
-                 linewidth=1.5,color='r')
+        if modelConstF:
+            ax.plot(timeSim, resultMat[5,:],
+                     linewidth=1.5,color='r')
         ax.set(xlabel='$t$ [s]', 
            ylabel='$P$ [Pa]',
            xlim = [timeSim[0], timeSim[-1]], ylim = [0, 1.1*np.max(resultMat[5,:])])
        
         ax = plt.subplot(1,3,2)
-        ax.plot(timeSim, flowIn*resultMat[5,:]/(temperature*8.314),
-                 linewidth=1.5,color='k')
-        ax.plot(timeSim, flowIn*resultMat[5,:]*resultMat[0,:]/(temperature*8.314),
-                 linewidth=1.5,color='r')
-        ax.plot(timeSim, flowIn*resultMat[5,:]*resultMat[1,:]/(temperature*8.314),
-                 linewidth=1.5,color='b')
-        ax.plot(timeSim, flowIn*resultMat[5,:]*(1-resultMat[0,:]-resultMat[1,:])/(temperature*8.314),
-                 linewidth=1.5,color='g')
-        ax.set(xlabel='$t$ [s]', 
-           ylabel='$Q$ [mol s$^{\mathregular{-1}}$]',
-           xlim = [timeSim[0], timeSim[-1]], ylim = [0, 1.1*np.max(resultMat[5,:])*(flowIn/temperature/8.314)])
-       
+        if modelConstF:
+            ax.plot(timeSim, flowIn*resultMat[5,:]/(temperature*8.314),
+                     linewidth=1.5,color='k')
+            ax.plot(timeSim, flowIn*resultMat[5,:]*resultMat[0,:]/(temperature*8.314),
+                     linewidth=1.5,color='r')
+            ax.plot(timeSim, flowIn*resultMat[5,:]*resultMat[1,:]/(temperature*8.314),
+                     linewidth=1.5,color='b')
+            ax.plot(timeSim, flowIn*resultMat[5,:]*(1-resultMat[0,:]-resultMat[1,:])/(temperature*8.314),
+                     linewidth=1.5,color='g')
+            ax.set(xlabel='$t$ [s]', 
+               ylabel='$Q$ [mol s$^{\mathregular{-1}}$]',
+               xlim = [timeSim[0], timeSim[-1]], ylim = [0, 1.1*np.max(resultMat[5,:])*(flowIn/temperature/8.314)])
+           
         ax = plt.subplot(1,3,3)
         ax.plot(timeSim, resultMat[0,:],linewidth=1.5,color='r')
         ax.plot(timeSim, resultMat[1,:],linewidth=1.5,color='b')        
