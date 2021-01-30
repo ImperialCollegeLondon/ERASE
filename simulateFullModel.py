@@ -45,7 +45,7 @@ def simulateFullModel(**kwargs):
        
     # Model flag (constant pressure or constant flow rate)
     # Default is constant pressure
-    if 'sensorID' in kwargs:
+    if 'modelConstF' in kwargs:
         modelConstF = kwargs["modelConstF"]
     else:
         modelConstF = False
@@ -144,7 +144,7 @@ def simulateFullModel(**kwargs):
     # Solves the model assuming constant/negligible pressure across the sensor
     else:
         # Prepare initial conditions vector
-        initialConditions = np.zeros([2*numberOfGases])
+        initialConditions = np.zeros([2*numberOfGases-1])
         initialConditions[0:numberOfGases-1] = initMoleFrac[0:numberOfGases-1] # Gas mole fraction
         initialConditions[numberOfGases-1:2*numberOfGases-1] = sensorLoadingPerGasVol # Initial Loading
         outputSol = solve_ivp(solveSorptionEquationConstP, timeInt, initialConditions, 
@@ -224,7 +224,7 @@ def solveSorptionEquationConstP(t, f, *inputParameters):
     sensorID, rateConstant, numberOfGases, flowIn, feedMoleFrac, _ , pressureTotal, temperature, volSorbent, volGas = inputParameters
 
     # Initialize the derivatives to zero
-    df = np.zeros([2*numberOfGases])
+    df = np.zeros([2*numberOfGases-1])
     
     # Compute the equilbirium loading at the current gas composition
     currentGasComposition = np.concatenate((f[0:numberOfGases-1],
@@ -267,7 +267,7 @@ def plotFullModelResult(timeSim, resultMat, sensorFingerPrint, inputParameters,
     sensorID, _, _, flowIn, _, _, _, temperature, _, _ = inputParameters
 
     os.chdir("plotFunctions")
-    if resultMat.shape[0] == 6:
+    if resultMat.shape[0] == 5 or resultMat.shape[0] == 6:
         # Plot the solid phase compositions
         plt.style.use('doubleColumn.mplstyle') # Custom matplotlib style file
         fig = plt.figure        
@@ -311,9 +311,9 @@ def plotFullModelResult(timeSim, resultMat, sensorFingerPrint, inputParameters,
         if modelConstF:
             ax.plot(timeSim, resultMat[5,:],
                      linewidth=1.5,color='r')
-        ax.set(xlabel='$t$ [s]', 
-           ylabel='$P$ [Pa]',
-           xlim = [timeSim[0], timeSim[-1]], ylim = [0, 1.1*np.max(resultMat[5,:])])
+            ax.set(xlabel='$t$ [s]', 
+               ylabel='$P$ [Pa]',
+               xlim = [timeSim[0], timeSim[-1]], ylim = [0, 1.1*np.max(resultMat[5,:])])
        
         ax = plt.subplot(1,3,2)
         if modelConstF:
