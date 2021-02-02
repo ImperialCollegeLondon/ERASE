@@ -12,6 +12,7 @@
 # Simulates the sensor chamber as a CSTR incorporating kinetic effects
 #
 # Last modified:
+# - 2021-02-02, AK: Add flow rate to output
 # - 2021-01-30, AK: Add constant pressure model
 # - 2021-01-27, AK: Add volSorbent and volGas to inputs
 # - 2021-01-25, AK: Change the time interval definition
@@ -141,6 +142,12 @@ def simulateFullModel(**kwargs):
                               method='Radau', t_eval = np.arange(timeInt[0],timeInt[1],5),
                               args = inputParameters)
 
+        # Flow out vector in output
+        flowOutVec =  flowIn * np.ones(len(outputSol.t)) # Constant flow rate
+
+        # Parse out the output matrix and add flow rate
+        resultMat = np.row_stack((outputSol.y,flowOutVec))
+
     # Solves the model assuming constant/negligible pressure across the sensor
     else:
         # Prepare initial conditions vector
@@ -151,16 +158,27 @@ def simulateFullModel(**kwargs):
                               method='Radau', t_eval = np.arange(timeInt[0],timeInt[1],5),
                               args = inputParameters)
         
-    # Parse out the time and the output matrix
+        # Presure vector in output
+        pressureVec =  pressureTotal * np.ones(len(outputSol.t)) # Constant pressure
+
+        # Compute the outlet flow rate
+        dqdt = np.gradient(outputSol.y[numberOfGases-1:2*numberOfGases-1,:],
+                           outputSol.t, axis=1) # Compute gradient of loading
+        sum_dqdt = np.sum(dqdt, axis=0) # Time resolved sum of gradient
+        flowOut = flowIn - ((volSorbent*(8.314*temperature)/pressureTotal)*(sum_dqdt))
+        
+        # Parse out the output matrix and add flow rate
+        resultMat = np.row_stack((outputSol.y,pressureVec,flowOut))
+
+    # Parse out the time
     timeSim = outputSol.t
-    resultMat = outputSol.y
     
     # Compute the time resolved sensor response
     sensorFingerPrint = np.zeros([len(timeSim)])
     for ii in range(len(timeSim)):
         loadingTemp = resultMat[numberOfGases-1:2*numberOfGases-1,ii]
         sensorFingerPrint[ii] = np.dot(loadingTemp,molecularWeight)/adsorbentDensity
-    
+        
     # Call the plotting function
     if plotFlag:
         plotFullModelResult(timeSim, resultMat, sensorFingerPrint, inputParameters,
@@ -267,7 +285,7 @@ def plotFullModelResult(timeSim, resultMat, sensorFingerPrint, inputParameters,
     sensorID, _, _, flowIn, _, _, _, temperature, _, _ = inputParameters
 
     os.chdir("plotFunctions")
-    if resultMat.shape[0] == 5 or resultMat.shape[0] == 6:
+    if resultMat.shape[0] == 7:
         # Plot the solid phase compositions
         plt.style.use('doubleColumn.mplstyle') # Custom matplotlib style file
         fig = plt.figure        
@@ -308,26 +326,35 @@ def plotFullModelResult(timeSim, resultMat, sensorFingerPrint, inputParameters,
         plt.style.use('doubleColumn.mplstyle') # Custom matplotlib style file
         fig = plt.figure
         ax = plt.subplot(1,3,1)
-        if modelConstF:
-            ax.plot(timeSim, resultMat[5,:],
-                     linewidth=1.5,color='r')
-            ax.set(xlabel='$t$ [s]', 
-               ylabel='$P$ [Pa]',
-               xlim = [timeSim[0], timeSim[-1]], ylim = [0, 1.1*np.max(resultMat[5,:])])
-       
+        ax.plot(timeSim, resultMat[5,:],
+                 linewidth=1.5,color='r')
+        ax.set_xlabel('$t$ [s]') 
+        ax.set_ylabel('$P$ [Pa]', color='r')
+        ax.tick_params(axis='y', labelcolor='r')
+        ax.set(xlim = [timeSim[0], timeSim[-1]], 
+               ylim = [0, 1.1*np.max(resultMat[5,:])])
+
+        ax2 = plt.twinx()
+        ax2.plot(timeSim, resultMat[6,:],
+                 linewidth=1.5,color='b')
+        ax2.set_ylabel('$F$ [m$^{\mathregular{3}}$ s$^{\mathregular{-1}}$]', color='b')
+        ax2.tick_params(axis='y', labelcolor='b')
+        ax2.set(xlim = [timeSim[0], timeSim[-1]], 
+               ylim = [0, 1.1*np.max(resultMat[6,:])])
+        
         ax = plt.subplot(1,3,2)
-        if modelConstF:
-            ax.plot(timeSim, flowIn*resultMat[5,:]/(temperature*8.314),
-                     linewidth=1.5,color='k')
-            ax.plot(timeSim, flowIn*resultMat[5,:]*resultMat[0,:]/(temperature*8.314),
-                     linewidth=1.5,color='r')
-            ax.plot(timeSim, flowIn*resultMat[5,:]*resultMat[1,:]/(temperature*8.314),
-                     linewidth=1.5,color='b')
-            ax.plot(timeSim, flowIn*resultMat[5,:]*(1-resultMat[0,:]-resultMat[1,:])/(temperature*8.314),
-                     linewidth=1.5,color='g')
-            ax.set(xlabel='$t$ [s]', 
-               ylabel='$Q$ [mol s$^{\mathregular{-1}}$]',
-               xlim = [timeSim[0], timeSim[-1]], ylim = [0, 1.1*np.max(resultMat[5,:])*(flowIn/temperature/8.314)])
+        ax.plot(timeSim, resultMat[5,:]*resultMat[6,:]/(temperature*8.314),
+                 linewidth=1.5,color='k')
+        ax.plot(timeSim, resultMat[5,:]*resultMat[6,:]*resultMat[0,:]/(temperature*8.314),
+                 linewidth=1.5,color='r')
+        ax.plot(timeSim, resultMat[5,:]*resultMat[6,:]*resultMat[1,:]/(temperature*8.314),
+                 linewidth=1.5,color='b')
+        ax.plot(timeSim, resultMat[5,:]*resultMat[6,:]*(1-resultMat[0,:]-resultMat[1,:])/(temperature*8.314),
+                 linewidth=1.5,color='g')
+        ax.set(xlabel='$t$ [s]', 
+           ylabel='$Q$ [mol s$^{\mathregular{-1}}$]',
+           xlim = [timeSim[0], timeSim[-1]], ylim = [0, 1.1*np.max(resultMat[5,:])*np.max(resultMat[6,:])
+                                                     /temperature/8.314])
            
         ax = plt.subplot(1,3,3)
         ax.plot(timeSim, resultMat[0,:],linewidth=1.5,color='r')

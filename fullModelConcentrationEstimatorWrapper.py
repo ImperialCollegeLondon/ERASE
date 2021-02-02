@@ -51,6 +51,11 @@ currentDT = auxiliaryFunctions.getCurrentDateTime()
 # (False) or not (True)
 flagIndTime = True
 
+# Flag to determine whether constant pressure or constant flow rate model to 
+# be used
+# (False) or not (True)
+flagIndTime = True
+
 # Sensor ID
 sensorID = [6,2] # [-]
 
