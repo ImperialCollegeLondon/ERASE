@@ -13,6 +13,7 @@
 # variables
 #
 # Last modified:
+# - 2021-02-03, AK: Change output plot response to absolute values
 # - 2021-01-20, AK: Initial creation
 #
 # Input arguments:
@@ -45,7 +46,8 @@ currentDT = auxiliaryFunctions.getCurrentDateTime()
 # Define the variable to be looped
 # This has to be a be a tuple. For on condition write the values followed by a 
 # comma to say its a tuple
-loopVariable = ([0.001,0.001,0.001],)
+volTotal = 5e-7
+loopVariable = (0.001,0.25,0.5,0.75,0.9)
     
 # Define a dictionary
 outputStruct = {}
@@ -53,7 +55,8 @@ outputStruct = {}
 # Loop over all the individual elements of the loop variable
 for ii in tqdm(range(len(loopVariable))):
     # Call the full model with a given rate constant
-    timeSim, _ , sensorFingerPrint, inputParameters = simulateFullModel(rateConstant = loopVariable[ii])
+    timeSim, _ , sensorFingerPrint, inputParameters = simulateFullModel(volTotal = volTotal,
+                                                                        voidFrac = loopVariable[ii])
     outputStruct[ii] = {'timeSim':timeSim,
                 'sensorFingerPrint':sensorFingerPrint,
                 'inputParameters':inputParameters}
@@ -65,13 +68,15 @@ fig = plt.figure
 ax = plt.subplot(1,1,1)
 for ii in range(len(loopVariable)):
     timeTemp = outputStruct[ii]["timeSim"]
-    fingerPrintTemp = outputStruct[ii]["sensorFingerPrint"]
+    fingerPrintTemp = (outputStruct[ii]["sensorFingerPrint"]
+                       *outputStruct[ii]["inputParameters"][1]
+                       *outputStruct[ii]["inputParameters"][9]) # Compute true response [g]
     ax.plot(timeTemp, fingerPrintTemp,
              linewidth=1.5,color="#"+colorsForPlot[ii],
-             label = str(loopVariable[ii][0]))
+             label = str(loopVariable[ii]))
 ax.set(xlabel='$t$ [s]', 
-   ylabel='$m_i$ [g kg$^{\mathregular{-1}}$]',
-   xlim = [timeSim[0], timeSim[-1]], ylim = [0, 150])
+   ylabel='$m_i$ [g]',
+   xlim = [timeSim[0], timeSim[-1]], ylim = [0, None])
 ax.locator_params(axis="x", nbins=4)
 ax.locator_params(axis="y", nbins=4)
 #  Save the figure

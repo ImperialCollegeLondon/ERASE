@@ -12,6 +12,7 @@
 # Simulates the sensor chamber as a CSTR incorporating kinetic effects
 #
 # Last modified:
+# - 2021-02-03, AK: Add total volume and void fraction
 # - 2021-02-02, AK: Add flow rate to output
 # - 2021-01-30, AK: Add constant pressure model
 # - 2021-01-27, AK: Add volSorbent and volGas to inputs
@@ -99,6 +100,16 @@ def simulateFullModel(**kwargs):
         volGas = kwargs["volGas"]
     else:
         volGas = 5e-7
+        
+    # Total volume of the system [m3]
+    if 'volTotal' in kwargs:
+        volTotal = kwargs["volTotal"]
+        if 'voidFrac' in kwargs:
+            voidFrac = kwargs["voidFrac"]
+        else:
+            raise Exception("You should provide void fraction if you provide total volume!")
+        volGas = voidFrac * volTotal # Volume of gas chamber (dead volume) [m3]
+        volSorbent = (1-voidFrac) * volTotal # Volume of solid sorbent [m3]
 
     if (len(feedMoleFrac) != len(initMoleFrac) 
         or len(feedMoleFrac) != len(rateConstant)):
@@ -125,8 +136,8 @@ def simulateFullModel(**kwargs):
                                                                                      fullModel = True)
     
     # Prepare tuple of input parameters for the ode solver
-    inputParameters = (sensorID, rateConstant, numberOfGases, flowIn, feedMoleFrac,
-                       initMoleFrac, pressureTotal, temperature, volSorbent, volGas)
+    inputParameters = (sensorID, adsorbentDensity, rateConstant, numberOfGases, flowIn, 
+                       feedMoleFrac, initMoleFrac, pressureTotal, temperature, volSorbent, volGas)
             
     # Solve the system of ordinary differential equations
     # Stiff solver used for the problem: BDF or Radau
@@ -197,7 +208,7 @@ def solveSorptionEquationConstF(t, f, *inputParameters):
     Rg = 8.314; # [J/mol K]
     
     # Unpack the tuple of input parameters used to solve equations
-    sensorID, rateConstant, numberOfGases, flowIn, feedMoleFrac, _ , pressureTotal, temperature, volSorbent, volGas = inputParameters
+    sensorID, _ , rateConstant, numberOfGases, flowIn, feedMoleFrac, _ , pressureTotal, temperature, volSorbent, volGas = inputParameters
 
     # Initialize the derivatives to zero
     df = np.zeros([2*numberOfGases])
@@ -239,7 +250,7 @@ def solveSorptionEquationConstP(t, f, *inputParameters):
     Rg = 8.314; # [J/mol K]
     
     # Unpack the tuple of input parameters used to solve equations
-    sensorID, rateConstant, numberOfGases, flowIn, feedMoleFrac, _ , pressureTotal, temperature, volSorbent, volGas = inputParameters
+    sensorID, _ , rateConstant, numberOfGases, flowIn, feedMoleFrac, _ , pressureTotal, temperature, volSorbent, volGas = inputParameters
 
     # Initialize the derivatives to zero
     df = np.zeros([2*numberOfGases-1])
@@ -282,7 +293,7 @@ def plotFullModelResult(timeSim, resultMat, sensorFingerPrint, inputParameters,
     saveFileExtension = ".png"
     
     # Unpack the tuple of input parameters used to solve equations
-    sensorID, _, _, flowIn, _, _, _, temperature, _, _ = inputParameters
+    sensorID, _ , _ , _ , flowIn, _ , _ , _ , temperature, _ , _ = inputParameters
 
     os.chdir("plotFunctions")
     if resultMat.shape[0] == 7:

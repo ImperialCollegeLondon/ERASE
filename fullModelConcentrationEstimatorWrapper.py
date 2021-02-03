@@ -13,6 +13,7 @@
 # measurement from the full model
 #
 # Last modified:
+# - 2021-02-03, AK: Change inputParameters (add adsorbent density)
 # - 2021-01-26, AK: Add noise to true measurement
 # - 2021-01-25, AK: Integrate full model concentration estimator
 # - 2021-01-21, AK: Initial creation
@@ -153,7 +154,7 @@ else:
     # Convert the list to array
     arrayConcentration = np.array(arrayConcentrationTemp)
     # Add dummy row to be consistent (intialized to init condition)
-    firstRow = np.concatenate((np.array(sensorID), inputParameters[5]))
+    firstRow = np.concatenate((np.array(sensorID), inputParameters[6]))
     arrayConcentration = np.vstack([firstRow,arrayConcentration])
     # Stop time for time elapsed
     stopTime = time.time()    
