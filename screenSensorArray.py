@@ -13,6 +13,7 @@
 # sorbents are assumed to exhibit Langmuirian behavior.
 #
 # Last modified:
+# - 2021-02-11, AK: Fix for parallel computing
 # - 2020-10-29, AK: Add 3 sorbent sensor
 # - 2020-10-28, AK: Add auxiliary functions as a module
 # - 2020-10-22, AK: Initial creation
@@ -61,7 +62,7 @@ if numSensors == 1:
     # Loop over all the sorbents for a single material sensor
     # Using parallel processing to loop through all the materials
     arrayConcentration = np.zeros(numberOfAdsorbents)
-    arrayConcentration = Parallel(n_jobs=num_cores, prefer="threads")(delayed(estimateConcentration)
+    arrayConcentration = Parallel(n_jobs=num_cores)(delayed(estimateConcentration)
                                                                       (numberOfAdsorbents,numberOfGases,moleFracID,[ii])
                                                                       for ii in tqdm(range(numberOfAdsorbents)))
     
@@ -90,7 +91,7 @@ elif numSensors == 2:
     # Using parallel processing to loop through all the materials
     arrayConcentration = np.zeros(numberOfAdsorbents)
     for jj in range(numberOfAdsorbents-1):
-        arrayConcentrationTemp = Parallel(n_jobs=num_cores, prefer="threads")(delayed(estimateConcentration)
+        arrayConcentrationTemp = Parallel(n_jobs=num_cores)(delayed(estimateConcentration)
                                                                       (numberOfAdsorbents,numberOfGases,moleFracID,[ii,jj])
                                                                       for ii in tqdm(range(jj+1,numberOfAdsorbents)))
         # Convert the output list to a matrix
@@ -124,7 +125,7 @@ elif numSensors == 3:
 
     for kk in range(numberOfAdsorbents-1):    
         for jj in range(kk+1,numberOfAdsorbents-1):
-            arrayConcentrationTemp = Parallel(n_jobs=num_cores, prefer="threads")(delayed(estimateConcentration)
+            arrayConcentrationTemp = Parallel(n_jobs=num_cores)(delayed(estimateConcentration)
                                                                           (numberOfAdsorbents,numberOfGases,moleFracID,[ii,jj,kk])
                                                                           for ii in tqdm(range(jj+1,numberOfAdsorbents)))
             # Convert the output list to a matrix
