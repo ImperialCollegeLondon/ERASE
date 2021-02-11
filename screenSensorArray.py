@@ -70,16 +70,6 @@ if numSensors == 1:
     # Convert the output list to a matrix
     arrayConcentration = np.array(arrayConcentration)
     
-    # Save the array concentration into a native numpy file
-    # The .npy file is saved in a folder called simulationResults (hardcoded)
-    filePrefix = "arrayConcentration"
-    saveFileName = filePrefix + "_" + simulationDT + "_" + gitCommitID;
-    savePath = os.path.join('simulationResults',saveFileName)
-    
-    # Check if inputResources directory exists or not. If not, create the folder
-    if not os.path.exists('simulationResults'):
-        os.mkdir('simulationResults')
-    
 elif numSensors == 2:
     ##### FOR 2 SORBENT SENSOR ARRAY #####
     # Get the current date and time for saving purposes    
@@ -119,6 +109,16 @@ elif numSensors == 3:
                 arrayConcentration = arrayConcentrationTemp
             else:
                 arrayConcentration = np.append(arrayConcentration,arrayConcentrationTemp, axis=0)
+
+# Save the array concentration into a native numpy file
+# The .npy file is saved in a folder called simulationResults (hardcoded)
+filePrefix = "arrayConcentration"
+saveFileName = filePrefix + "_" + simulationDT + "_" + gitCommitID;
+savePath = os.path.join('simulationResults',saveFileName)
+
+# Check if inputResources directory exists or not. If not, create the folder
+if not os.path.exists('simulationResults'):
+    os.mkdir('simulationResults')
                 
 # Save the array ceoncentration obtained from estimateConcentration
 savez (savePath, arrayConcentration = arrayConcentration, # Estimated Concentration
