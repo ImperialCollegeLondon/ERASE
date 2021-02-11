@@ -13,6 +13,7 @@
 # sorbents are assumed to exhibit Langmuirian behavior.
 #
 # Last modified:
+# - 2021-02-11, AK: Minor fixes
 # - 2021-02-11, AK: Fix for parallel computing
 # - 2020-10-29, AK: Add 3 sorbent sensor
 # - 2020-10-28, AK: Add auxiliary functions as a module
@@ -27,7 +28,7 @@
 ############################################################################
 
 import numpy as np
-from numpy import save
+from numpy import savez
 import auxiliaryFunctions
 import multiprocessing # For parallel processing
 from joblib import Parallel, delayed  # For parallel processing
@@ -36,7 +37,7 @@ from estimateConcentration import estimateConcentration
 import os
 
 # Number of sensors in the array
-numSensors = 2
+numSensors = 1
 
 # Get the commit ID of the current repository
 gitCommitID = auxiliaryFunctions.getCommitID()
@@ -46,12 +47,12 @@ num_cores = multiprocessing.cpu_count()
 
 # Total number of sensor elements/gases simulated and generated using 
 # generateHypotheticalAdsorbents.py function
-numberOfAdsorbents = 10
+numberOfAdsorbents = 20
 numberOfGases = 2
     
 # "True" gas composition that is exposed to the sensor array (0-4)
 # Check generateTrueSensorResponse.py for the actual concentrations
-moleFracID = 0
+moleFracID = 1
 
 # Check for number of sensors in the array
 if numSensors == 1:
@@ -79,9 +80,6 @@ if numSensors == 1:
     if not os.path.exists('simulationResults'):
         os.mkdir('simulationResults')
     
-    # Save the array ceoncentration obtained from estimateConcentration
-    save (savePath, arrayConcentration)
-
 elif numSensors == 2:
     ##### FOR 2 SORBENT SENSOR ARRAY #####
     # Get the current date and time for saving purposes    
@@ -100,19 +98,6 @@ elif numSensors == 2:
             arrayConcentration = arrayConcentrationTemp
         else:
             arrayConcentration = np.append(arrayConcentration,arrayConcentrationTemp, axis=0)
-    
-    # Save the array concentration into a native numpy file
-    # The .npy file is saved in a folder called simulationResults (hardcoded)
-    filePrefix = "arrayConcentration"
-    saveFileName = filePrefix + "_" + simulationDT + "_" + gitCommitID;
-    savePath = os.path.join('simulationResults',saveFileName)
-    
-    # Check if inputResources directory exists or not. If not, create the folder
-    if not os.path.exists('simulationResults'):
-        os.mkdir('simulationResults')
-    
-    # Save the array ceoncentration obtained from estimateConcentration
-    save (savePath, arrayConcentration)
 
 elif numSensors == 3:
     ##### FOR 3 SORBENT SENSOR ARRAY #####
@@ -134,21 +119,10 @@ elif numSensors == 3:
                 arrayConcentration = arrayConcentrationTemp
             else:
                 arrayConcentration = np.append(arrayConcentration,arrayConcentrationTemp, axis=0)
-        
-    # Delete entries that use the same materials for all three sensors
-    # delRows = np.where(np.logical_and(arrayConcentration[:,0] == arrayConcentration[:,1],
-    #                                   arrayConcentration[:,0] == arrayConcentration[:,2]))
-    # arrayConcentration = np.delete(arrayConcentration,delRows,axis=0)
-    
-    # Save the array concentration into a native numpy file
-    # The .npy file is saved in a folder called simulationResults (hardcoded)
-    filePrefix = "arrayConcentration"
-    saveFileName = filePrefix + "_" + simulationDT + "_" + gitCommitID;
-    savePath = os.path.join('simulationResults',saveFileName)
-    
-    # Check if inputResources directory exists or not. If not, create the folder
-    if not os.path.exists('simulationResults'):
-        os.mkdir('simulationResults')
-    
-    # Save the array ceoncentration obtained from estimateConcentration
-    save (savePath, arrayConcentration)
+                
+# Save the array ceoncentration obtained from estimateConcentration
+savez (savePath, arrayConcentration = arrayConcentration, # Estimated Concentration
+        numberOfAdsorbents = numberOfAdsorbents, # Estimated response
+        numberOfGases = numberOfGases, # Flag to gases to be sensed
+        numSensors = numSensors, # Number of sensors in the array
+        moleFracID = moleFracID) # Mole fraction
