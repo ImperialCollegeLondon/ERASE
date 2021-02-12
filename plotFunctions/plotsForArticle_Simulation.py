@@ -122,7 +122,7 @@ def plotForArticle_SensorArray(gitCommitID, currentDT,
             if ii == 0:
                 ax.text(0.025, 55, "(a)", fontsize=10, 
                         backgroundcolor = 'w')
-                ax.text(0.56, 51, "Without Constraint", fontsize=10, 
+                ax.text(0.625, 51, "Without Constraint", fontsize=10, 
                         backgroundcolor = 'w', color = '#0077b6')
             else:
                 ax.set(xlabel='$y$ [-]')
@@ -140,7 +140,7 @@ def plotForArticle_SensorArray(gitCommitID, currentDT,
             if ii == 1:
                 ax.text(0.025, 55, "(b)", fontsize=10, 
                         backgroundcolor = 'w')
-                ax.text(0.56, 51, "Without Constraint", fontsize=10, 
+                ax.text(0.625, 51, "Without Constraint", fontsize=10, 
                         backgroundcolor = 'w', color = '#0077b6')
             else:
                 ax.set(xlabel='$y$ [-]')
