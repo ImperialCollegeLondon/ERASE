@@ -50,6 +50,13 @@ def plotsForArticle_Simulation(**kwargs):
         if kwargs["sensorArray"]:
             plotForArticle_SensorArray(gitCommitID, currentDT, 
                                        saveFlag, saveFileExtension)
+
+    # If sensor response curve needs to be plotted
+    if 'responseShape' in kwargs:
+        if kwargs["responseShape"]:
+            plotForArticle_ResponseShape(gitCommitID, currentDT, 
+                                       saveFlag, saveFileExtension)
+            
 # fun: plotForArticle_SensorArray
 # Plots the histogram of gas compositions for a one and two material 
 # sensor array
@@ -165,3 +172,176 @@ def plotForArticle_SensorArray(gitCommitID, currentDT,
        
     # For the figure to be saved show should appear after the save
     plt.show()
+
+
+# fun: plotForArticle_SensorArray
+# Plots the histogram of gas compositions for a one and two material 
+# sensor array
+def plotForArticle_ResponseShape(gitCommitID, currentDT, 
+                               saveFlag, saveFileExtension):
+    import numpy as np
+    import os
+    import pandas as pd
+    import seaborn as sns 
+    import matplotlib.pyplot as plt
+    from simulateSensorArray import simulateSensorArray
+    plt.style.use('doubleColumn.mplstyle') # Custom matplotlib style file
+
+    # Total pressure of the gas [Pa]
+    pressureTotal = np.array([1.e5]);
+    
+    # Temperature of the gas [K]
+    # Can be a vector of temperatures
+    temperature = np.array([298.15]);
+    
+    # Materials to be plotted
+    sensorID = np.array([17,16,6])
+    sensorText = ["A", "B", "C"]
+    
+    # File to be loaded for the left of violin plot
+    loadFileName = ["sensitivityAnalysis_17_20210212_1259_b02f8c3.npz", # No Noise
+                    "sensitivityAnalysis_16_20210212_1300_b02f8c3.npz", # No Noise
+                    "sensitivityAnalysis_6_20210212_1259_b02f8c3.npz"] # No Noise
+                    # "sensitivityAnalysis_17_20210212_1355_b02f8c3.npz", # Noise
+                    # "sensitivityAnalysis_16_20210212_1356_b02f8c3.npz" # Noise
+                    # "sensitivityAnalysis_6_20210212_1355_b02f8c3.npz"] # Noise
+    
+    # Colors for plot
+    colorsForPlot = ("#5fad56","#f78154","#b4436c")
+    
+    # Simulate the sensor response for all possible concentrations
+    # Number of molefractions
+    numMolFrac= 101
+    moleFractionRange = np.array([np.linspace(0,1,numMolFrac), 1 - np.linspace(0,1,numMolFrac)]).T
+
+    arraySimResponse = np.zeros([moleFractionRange.shape[0],sensorID.shape[0]])
+    os.chdir("..")
+    for ii in range(moleFractionRange.shape[0]):
+        arraySimResponse[ii,:] = simulateSensorArray(sensorID, pressureTotal, 
+                                                   temperature, np.array([moleFractionRange[ii,:]]))
+    os.chdir("plotFunctions")
+    
+    fig = plt.figure
+    ax1 = plt.subplot(1,2,1)        
+    # Loop through all sensors
+    for kk in range(arraySimResponse.shape[1]):
+        ax1.plot(moleFractionRange[:,0],arraySimResponse[:,kk],
+                 color=colorsForPlot[kk]) # Simulated Response
+
+    ax1.set(xlabel='$y_1$ [-]', 
+           ylabel='$m$ [g kg$^{-1}$]',
+           xlim = [0,1], ylim = [0, 300])     
+    ax1.locator_params(axis="x", nbins=4)
+    ax1.locator_params(axis="y", nbins=4)
+    ax1.text(0.03, 275, "(a)", fontsize=10, 
+            backgroundcolor = 'w')
+    
+    # Label for the materials     
+    ax1.text(0.9, 225, sensorText[0], fontsize=10, 
+            backgroundcolor = 'w', color = colorsForPlot[0])
+    ax1.text(0.05, 150, sensorText[1], fontsize=10, 
+            backgroundcolor = 'w', color = colorsForPlot[1])
+    ax1.text(0.8, 75, sensorText[2], fontsize=10, 
+            backgroundcolor = 'w', color = colorsForPlot[2])
+    
+    # CV - No noise 
+    ax2 = plt.subplot(1,2,2)
+    # Call the concatenateConcEstimate function
+    cvData = concatenateConcEstimate(loadFileName[0:3],sensorText)
+    cvData["x"] = pd.to_numeric(cvData["x"], downcast="float")
+    sns.lineplot(data=cvData, x='x', y='y1', hue='dataType', style='dataType',
+                 dashes = [(1,1),(1,1),(1,1)], markers = ['o','s','D'],
+                 palette = colorsForPlot[0:len(loadFileName)], linewidth = 0.5)
+        
+    ax2.set(xlabel='$y_1$ [-]', 
+            ylabel='$\chi$ [-]',
+            xlim = [0.,1.], ylim = [1e-10,100])
+    ax2.locator_params(axis="x", nbins=4)
+    ax2.set_yscale('log')
+    plt.legend([],[], frameon=False)
+    ax2.text(0.03, 10, "(b)", fontsize=10, 
+            backgroundcolor = 'w')
+
+    # Label for the materials         
+    ax2.text(0.9, 6e-2, sensorText[0], fontsize=10, 
+        backgroundcolor = 'w', color = colorsForPlot[0])
+    ax2.text(0.8, 4e-4, sensorText[1], fontsize=10, 
+            backgroundcolor = 'w', color = colorsForPlot[1])
+    ax2.text(0.6, 2e-6, sensorText[2], fontsize=10, 
+            backgroundcolor = 'w', color = colorsForPlot[2])
+
+    #  Save the figure
+    if saveFlag:
+        # FileName: responseShape_<sensorID>_<currentDateTime>_<GitCommitID_Current>
+        sensorText = str(sensorID).replace('[','').replace(']','').replace('  ','-').replace(' ','-')
+        saveFileName = "responseShape_" + sensorText + "_" + currentDT + "_" + gitCommitID + saveFileExtension
+        savePath = os.path.join('..','simulationFigures','simulationManuscript',saveFileName)
+        # Check if inputResources directory exists or not. If not, create the folder
+        if not os.path.exists(os.path.join('..','simulationFigures','simulationManuscript')):
+            os.mkdir(os.path.join('..','simulationFigures','simulationManuscript'))
+        plt.savefig (savePath)
+    plt.show()
+ 
+# fun: concatenateConcEstimate
+# Concatenates concentration estimates into a panda dataframe and computes 
+# the coefficient of variation
+def concatenateConcEstimate(loadFileName,sensorText):
+    import numpy as np
+    from numpy import load
+    import os
+    import pandas as pd
+
+    # Initialize x, y, and type for the plotting
+    concatenatedX = []
+    concatenatedY1 = []
+    concatenatedY2 = []
+    concatenatedType = []
+    
+    # Loop through the different files to generate the violin plot
+    for kk in range(len(loadFileName)):
+        # Initialize x, y, and type for the local loop
+        xVar = []
+        y1Var = []
+        y2Var = []
+        typeVar = []
+    
+        simResultsFile = os.path.join('..','simulationResults',loadFileName[kk]);
+        resultOutput = load(simResultsFile)["arrayConcentration"]
+        moleFrac = load(simResultsFile)["trueMoleFrac"]
+
+        # Loop through all the molefractions
+        for ii in range(resultOutput.shape[0]):
+            counterInd = -1
+    
+            y1Var = np.concatenate((y1Var,resultOutput[ii,:,counterInd+2])) # y1
+            y2Var = np.concatenate((y2Var,resultOutput[ii,:,counterInd+3])) # y2
+            xVar = xVar + ([str(moleFrac[ii])] * len(resultOutput[ii,:,counterInd+2])) # x (true mole fraction)
+            typeVar = typeVar+[sensorText[kk]] * len(resultOutput[ii,:,counterInd+2])
+     
+        # Concatenate all the data to form a data frame with x, y, and type
+        concatenatedX = concatenatedX + xVar
+        concatenatedY1 = np.concatenate((concatenatedY1,y1Var))
+        concatenatedY2 = np.concatenate((concatenatedY2,y2Var))
+        concatenatedType = concatenatedType + typeVar    
+        # Reinitialize all the loaded values to empty variable
+        simResultsFile = []
+        resultOutput = []
+        moleFrac = []
+    
+    # Generate panda data frame
+    # x = molefraction (true)
+    # y = molefraction (estimated)
+    # dataType = either sensor id/comparison type
+    df = pd.DataFrame({'x':concatenatedX,
+                       'y1':concatenatedY1,
+                       'y2':concatenatedY2,
+                       'dataType':concatenatedType})
+    # Compute the mean and standard deviation
+    meanData = df.groupby(['dataType','x'], as_index=False, sort=False).mean() 
+    stdData = df.groupby(['dataType','x'], as_index=False, sort=False).std()
+    # Coefficient of variation
+    cvData = stdData.copy()
+    cvData['y1'] = stdData['y1']/meanData['y1']
+    
+    # Return the coefficient of variation
+    return cvData
