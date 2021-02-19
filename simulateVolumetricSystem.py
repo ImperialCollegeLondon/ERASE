@@ -13,6 +13,7 @@
 # isotherm and kinetics
 #
 # Last modified:
+# - 2021-02-19, AK: Fix for ode solver and add mass balance (pressure)
 # - 2021-02-18, AK: Initial creation
 #
 # Input arguments:
@@ -27,6 +28,7 @@ def simulateVolumetricSystem(**kwargs):
     import numpy as np
     from scipy.integrate import solve_ivp
     import auxiliaryFunctions
+    from simulateSensorArray import simulateSensorArray
     
     # Plot flag
     plotFlag = False
@@ -47,13 +49,13 @@ def simulateVolumetricSystem(**kwargs):
     if 'timeInt' in kwargs:
         timeInt = kwargs["timeInt"]
     else:
-        timeInt = (0.0,2000)
+        timeInt = (0.0,500)
 
     # Kinetic rate constant [/s] - Only one constant (pure gas)
     if 'rateConstant' in kwargs:
         rateConstant = np.array(kwargs["rateConstant"])
     else:
-        rateConstant = np.array([.001])
+        rateConstant = np.array([0.1])
         
     # Valve rate constant [mol/s/Pa] - Only one constant (pure gas)
     if 'valveConstant' in kwargs:
@@ -78,7 +80,7 @@ def simulateVolumetricSystem(**kwargs):
     if 'pressUptake' in kwargs:
         pressUptake = np.array(kwargs["pressUptake"]);
     else:
-        pressUptake = np.array([0.95e5]);
+        pressUptake = np.array([0.e5]);
         
     # Dosing volume of the setup [m3]
     if 'volDose' in kwargs:
@@ -111,29 +113,42 @@ def simulateVolumetricSystem(**kwargs):
     inputParameters = (sensorID, rateConstant, valveConstant,
                        numberOfGases, initMoleFrac, temperature, voidFrac,
                        volDose, volUptake)
-            
+    
+    # Obtain the initial solid loading in the material for initialization
+    materialLoadingPerGasVol = simulateSensorArray(sensorID, pressUptake,
+                                                 temperature, np.array([initMoleFrac]))
+
     # Initial conditions for the solver
     initialConditions = np.zeros([4])
     initialConditions[0] = pressDose # Dosing pressure [Pa]
     initialConditions[1] = pressUptake # Uptake pressure [Pa]
-    # 2 and 3 are solid loading and the moles through the valve 
+    initialConditions[2] = materialLoadingPerGasVol[0] # Initial solid loading [mol/m3]
+    # 2 is the moles through the valve 
     
     # Solve the system of ordinary differential equations
     # Stiff solver used for the problem: BDF or Radau
     outputSol = solve_ivp(solveVolumetricSystemEquation, timeInt, initialConditions, 
-                      method='Radau', t_eval = np.arange(timeInt[0],timeInt[1],1),
-                      args = inputParameters)
+                      method='Radau', t_eval = np.arange(timeInt[0],timeInt[1],0.01),
+                      rtol = 1e-6, args = inputParameters)
     
     # Parse out the time and the pressure and loading from the output
     timeSim = outputSol.t
     resultMat = outputSol.y
     
+    # Compute the mass adsrobed based on mass balance (with pressures)
+    massAdsorbed = estimateMassAdsorbed(resultMat[0,:], resultMat[1,:],
+                                        materialLoadingPerGasVol[0]*(1-voidFrac)*volUptake,
+                                        volDose, volUptake, voidFrac, 
+                                        temperature)
+    
     # Call the plotting function
     if plotFlag:
-        plotFullModelResult(timeSim, resultMat, gitCommitID, currentDT)
+        plotInputs = (timeSim, resultMat, massAdsorbed, voidFrac, volUptake, 
+                      sensorID, gitCommitID, currentDT)
+        plotFullModelResult(plotInputs)
     
     # Return time, the output matrix, and the parameters used in the simulation
-    return timeSim, resultMat, inputParameters
+    return timeSim, resultMat, massAdsorbed, inputParameters
 
 # func: solveVolumetricSystemEquation
 # Solves the system of ODEs to simulate the volumetric system
@@ -150,11 +165,11 @@ def solveVolumetricSystemEquation(t, f, *inputParameters):
     # Initialize the derivatives to zero
     df = np.zeros([4])
     
-    sensorLoadingPerGasVol = simulateSensorArray(sensorID, f[1],
-                                                        temperature, np.array([initMoleFrac]))
+    materialLoadingPerGasVol = simulateSensorArray(sensorID, f[1],
+                                                   temperature, np.array([initMoleFrac]))
     
     # Linear driving force model (derivative of solid phase loadings)
-    df[2] = rateConstant*(sensorLoadingPerGasVol[0]-f[2])
+    df[2] = rateConstant*(materialLoadingPerGasVol[0]-f[2])
 
     # Valve flow model (derivative of gas flow through the valve)
     df[3] = valveConstant*(f[0]-f[1])
@@ -167,13 +182,40 @@ def solveVolumetricSystemEquation(t, f, *inputParameters):
     
     # Return the derivatives for the solver
     return df
+
+# func: estimateMassAdsorbed
+# Given the pressure from the two volumes, the volumes and temperature
+# compute the mass adsorbed
+def estimateMassAdsorbed(pressDoseALL, pressUptakeALL, initMass,
+                         volDose, volUptake, voidFrac, temperature):
+    import numpy as np
+
+    # Gas constant
+    Rg = 8.314; # [J/mol K]
     
+    # Compute the pressure difference over time on dosing side
+    delPressDosing = pressDoseALL[0] - pressDoseALL # Pd(0) - Pd(t)
+
+    # Compute the pressure difference over time on uptake side
+    delPressUptake = pressUptakeALL - pressUptakeALL[0]  # Pu(t) - Pu(0)
+    
+    # Calculate mass adsorbed
+    # massAdsorbed = Initial mass adsorbed + uptake 
+    massAdsorbed = initMass + (np.multiply(delPressDosing,(volDose/(Rg*temperature)))
+                              - np.multiply(delPressUptake,((voidFrac*volUptake)/(Rg*temperature))))
+        
+    # Return the mass adsorbed
+    return massAdsorbed
+
 # func: plotFullModelResult
 # Plots the model output for the conditions simulated locally
-def plotFullModelResult(timeSim, resultMat, gitCommitID, currentDT):
+def plotFullModelResult(plotInputs):
     import numpy as np
     import os
     import matplotlib.pyplot as plt
+    
+    # Unpack the inputs
+    timeSim, resultMat, massAdsorbed, voidFrac, volUptake, sensorID, gitCommitID, currentDT = plotInputs
     
     # Save settings
     saveFlag = False
@@ -191,24 +233,35 @@ def plotFullModelResult(timeSim, resultMat, gitCommitID, currentDT):
     ax.set(xlabel='$t$ [s]', 
            ylabel='$P/P_0$ [-]',
            xlim = [timeSim[0], timeSim[-1]], ylim = [0., 1.])
+    ax.locator_params(axis="x", nbins=4)
+    ax.locator_params(axis="y", nbins=4)
+    ax.legend()
     
     ax = plt.subplot(1,2,2)
-    ax.plot(timeSim, resultMat[2,:],
-             linewidth=1.5,color='k')
+    volAds = (1-voidFrac)*volUptake # Volume of adsorbent [m3]
+    ax.plot(timeSim, resultMat[2,:]*volAds,
+             linewidth=1.5,color='k',
+             label = 'From model') # Uptake estimated from the model
+    ax.plot(timeSim, massAdsorbed,'--',
+             linewidth=1.5,color='r',
+             label = 'From pressure') # Uptake estimated from mass balance with pressures
     ax.set(xlabel='$t$ [s]', 
-       ylabel='$q$ [mol m$^{\mathregular{-3}}$]',
-       xlim = [timeSim[0], timeSim[-1]], ylim = [0, 1.1*np.max(resultMat[2,:])])
-        
+       ylabel='$q$ [mol]',
+       xlim = [timeSim[0], timeSim[-1]], 
+       ylim = [0.9*np.min(resultMat[2,:])*volAds,
+               1.1*np.max(resultMat[2,:])*volAds])
+    ax.locator_params(axis="x", nbins=4)
+    ax.locator_params(axis="y", nbins=4)
+    ax.legend()
+    
     #  Save the figure
-    # if saveFlag:
-        # # FileName: solidLoadingFM_<sensorID>_<currentDateTime>_<gitCommitID>
-        # saveFileName = "solidLoadingFM_" + str(sensorID) + "_" + currentDT + "_" + gitCommitID + saveFileExtension
-        # savePath = os.path.join('..','simulationFigures',saveFileName.replace('[','').replace(']',''))
-        # # Check if inputResources directory exists or not. If not, create the folder
-        # if not os.path.exists(os.path.join('..','simulationFigures')):
-        #     os.mkdir(os.path.join('..','simulationFigures'))
-        # plt.savefig (savePath)
-        
+    if saveFlag:
+        # FileName: solidLoadingFM_<sensorID>_<currentDateTime>_<gitCommitID>
+        saveFileName = "volumetricSysFM_" + str(sensorID) + "_" + currentDT + "_" + gitCommitID + saveFileExtension
+        savePath = os.path.join('..','simulationFigures',saveFileName.replace('[','').replace(']',''))
+        # Check if inputResources directory exists or not. If not, create the folder
+        if not os.path.exists(os.path.join('..','simulationFigures')):
+            os.mkdir(os.path.join('..','simulationFigures'))
+        plt.savefig (savePath)
     plt.show()
-
     os.chdir("..")
