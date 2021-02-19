@@ -12,6 +12,7 @@
 # Simulates the sensor chamber as a CSTR incorporating kinetic effects
 #
 # Last modified:
+# - 2021-02-19, AK: Add relative tolerances for ode solver
 # - 2021-02-03, AK: Add total volume and void fraction
 # - 2021-02-02, AK: Add flow rate to output
 # - 2021-01-30, AK: Add constant pressure model
@@ -151,7 +152,7 @@ def simulateFullModel(**kwargs):
         initialConditions[2*numberOfGases-1] = pressureTotal # Outlet pressure the same as inlet pressure
         outputSol = solve_ivp(solveSorptionEquationConstF, timeInt, initialConditions, 
                               method='Radau', t_eval = np.arange(timeInt[0],timeInt[1],5),
-                              args = inputParameters)
+                              rtol = 1e-6, args = inputParameters)
 
         # Flow out vector in output
         flowOutVec =  flowIn * np.ones(len(outputSol.t)) # Constant flow rate
@@ -167,7 +168,7 @@ def simulateFullModel(**kwargs):
         initialConditions[numberOfGases-1:2*numberOfGases-1] = sensorLoadingPerGasVol # Initial Loading
         outputSol = solve_ivp(solveSorptionEquationConstP, timeInt, initialConditions, 
                               method='Radau', t_eval = np.arange(timeInt[0],timeInt[1],5),
-                              args = inputParameters)
+                              rtol = 1e-6, args = inputParameters)
         
         # Presure vector in output
         pressureVec =  pressureTotal * np.ones(len(outputSol.t)) # Constant pressure
@@ -278,7 +279,6 @@ def solveSorptionEquationConstP(t, f, *inputParameters):
     
     # Return the derivatives for the solver
     return df
-
 
 # func: plotFullModelResult
 # Plots the model output for the conditions simulated locally
