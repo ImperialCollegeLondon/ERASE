@@ -12,6 +12,7 @@
 # Plots for the simulation manuscript
 #
 # Last modified:
+# - 2021-02-23, AK: Add mean error to sensor shape plot
 # - 2021-02-11, AK: Initial creation
 #
 # Input arguments:
@@ -54,9 +55,9 @@ def plotsForArticle_Simulation(**kwargs):
     # If sensor response curve needs to be plotted
     if 'responseShape' in kwargs:
         if kwargs["responseShape"]:
-            plotForArticle_ResponseShape(gitCommitID, currentDT, 
+            meanErr = plotForArticle_ResponseShape(gitCommitID, currentDT, 
                                        saveFlag, saveFileExtension)
-            
+
 # fun: plotForArticle_SensorArray
 # Plots the histogram of gas compositions for a one and two material 
 # sensor array
@@ -173,7 +174,6 @@ def plotForArticle_SensorArray(gitCommitID, currentDT,
     # For the figure to be saved show should appear after the save
     plt.show()
 
-
 # fun: plotForArticle_SensorArray
 # Plots the histogram of gas compositions for a one and two material 
 # sensor array
@@ -222,7 +222,7 @@ def plotForArticle_ResponseShape(gitCommitID, currentDT,
     os.chdir("plotFunctions")
     
     fig = plt.figure
-    ax1 = plt.subplot(1,2,1)        
+    ax1 = plt.subplot(1,3,1)        
     # Loop through all sensors
     for kk in range(arraySimResponse.shape[1]):
         ax1.plot(moleFractionRange[:,0],arraySimResponse[:,kk],
@@ -233,43 +233,76 @@ def plotForArticle_ResponseShape(gitCommitID, currentDT,
            xlim = [0,1], ylim = [0, 300])     
     ax1.locator_params(axis="x", nbins=4)
     ax1.locator_params(axis="y", nbins=4)
-    ax1.text(0.03, 275, "(a)", fontsize=10, 
+    ax1.text(0.05, 270, "(a)", fontsize=10, 
             backgroundcolor = 'w')
     
     # Label for the materials     
-    ax1.text(0.9, 225, sensorText[0], fontsize=10, 
+    ax1.text(0.85, 225, sensorText[0], fontsize=10, 
             backgroundcolor = 'w', color = colorsForPlot[0])
-    ax1.text(0.05, 150, sensorText[1], fontsize=10, 
+    ax1.text(0.1, 150, sensorText[1], fontsize=10, 
             backgroundcolor = 'w', color = colorsForPlot[1])
     ax1.text(0.8, 75, sensorText[2], fontsize=10, 
             backgroundcolor = 'w', color = colorsForPlot[2])
+
+    # Call the concatenateConcEstimate function
+    meanErr, cvData = concatenateConcEstimate(loadFileName[0:3],sensorText)
+
+    # Mean Error - No noise 
+    ax2 = plt.subplot(1,3,2)
+    meanErr["x"] = pd.to_numeric(meanErr["x"], downcast="float")
+    sns.lineplot(data=meanErr, x='x', y='y1', hue='dataType', style='dataType',
+                 dashes = [(1,1),(1,1),(1,1)], markers = ['o','s','D'],
+                 palette = colorsForPlot[0:len(loadFileName)], linewidth = 0.5)
+        
+    ax2.set(xlabel='$y_1$ [-]', 
+            ylabel='$\psi$ [-]',
+            xlim = [0.,1.], ylim = [1e-10,100])
+    ax2.locator_params(axis="x", nbins=4)
+    ax2.set_yscale('log')
+    plt.legend([],[], frameon=False)
+    ax2.text(0.05, 8, "(b)", fontsize=10, 
+            backgroundcolor = 'w')
+
+    # Label for the materials         
+    ax2.text(0.85, 6e-3, sensorText[0], fontsize=10, 
+        backgroundcolor = 'w', color = colorsForPlot[0])
+    ax2.text(0.3, 4e-4, sensorText[1], fontsize=10, 
+            backgroundcolor = 'w', color = colorsForPlot[1])
+    ax2.text(0.6, 5e-7, sensorText[2], fontsize=10, 
+            backgroundcolor = 'w', color = colorsForPlot[2])
+
+    # Label for the formula
+    ax2.text(0.38, 8, "$\psi = |\mu - \hat{\mu}|/\mu$", fontsize=10, 
+            backgroundcolor = 'w', color = '#0077b6')
     
     # CV - No noise 
-    ax2 = plt.subplot(1,2,2)
-    # Call the concatenateConcEstimate function
-    cvData = concatenateConcEstimate(loadFileName[0:3],sensorText)
+    ax3 = plt.subplot(1,3,3)
     cvData["x"] = pd.to_numeric(cvData["x"], downcast="float")
     sns.lineplot(data=cvData, x='x', y='y1', hue='dataType', style='dataType',
                  dashes = [(1,1),(1,1),(1,1)], markers = ['o','s','D'],
                  palette = colorsForPlot[0:len(loadFileName)], linewidth = 0.5)
         
-    ax2.set(xlabel='$y_1$ [-]', 
+    ax3.set(xlabel='$y_1$ [-]', 
             ylabel='$\chi$ [-]',
             xlim = [0.,1.], ylim = [1e-10,100])
-    ax2.locator_params(axis="x", nbins=4)
-    ax2.set_yscale('log')
+    ax3.locator_params(axis="x", nbins=4)
+    ax3.set_yscale('log')
     plt.legend([],[], frameon=False)
-    ax2.text(0.03, 10, "(b)", fontsize=10, 
+    ax3.text(0.05, 8, "(c)", fontsize=10, 
             backgroundcolor = 'w')
 
     # Label for the materials         
-    ax2.text(0.9, 6e-2, sensorText[0], fontsize=10, 
+    ax3.text(0.85, 6e-2, sensorText[0], fontsize=10, 
         backgroundcolor = 'w', color = colorsForPlot[0])
-    ax2.text(0.8, 4e-4, sensorText[1], fontsize=10, 
+    ax3.text(0.81, 4e-4, sensorText[1], fontsize=10, 
             backgroundcolor = 'w', color = colorsForPlot[1])
-    ax2.text(0.6, 2e-6, sensorText[2], fontsize=10, 
+    ax3.text(0.6, 1e-6, sensorText[2], fontsize=10, 
             backgroundcolor = 'w', color = colorsForPlot[2])
 
+    # Label for the formula
+    ax3.text(0.62, 8, "$\chi = \hat{\sigma}/\hat{\mu}$", fontsize=10, 
+            backgroundcolor = 'w', color = '#0077b6')
+    
     #  Save the figure
     if saveFlag:
         # FileName: responseShape_<sensorID>_<currentDateTime>_<GitCommitID_Current>
@@ -339,9 +372,16 @@ def concatenateConcEstimate(loadFileName,sensorText):
     # Compute the mean and standard deviation
     meanData = df.groupby(['dataType','x'], as_index=False, sort=False).mean() 
     stdData = df.groupby(['dataType','x'], as_index=False, sort=False).std()
+    
+    # Compute the relative error of the mean (non-negative)
+    meanErr = stdData.copy()
+    meanErr['y1'] = abs(meanData['x'].astype(float) - meanData['y1'])/meanData['x'].astype(float)
+    meanErr['y2'] = abs((1.-meanData['x'].astype(float)) - meanData['y2'])/(1.-meanData['x'].astype(float))
+
     # Coefficient of variation
     cvData = stdData.copy()
     cvData['y1'] = stdData['y1']/meanData['y1']
-    
+    cvData['y2'] = stdData['y2']/meanData['y2']
+
     # Return the coefficient of variation
-    return cvData
+    return meanErr, cvData
