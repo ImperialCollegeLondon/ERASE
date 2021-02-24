@@ -12,6 +12,7 @@
 # Plots for the simulation manuscript
 #
 # Last modified:
+# - 2021-02-24, AK: Add function to generate sensitive region for each material
 # - 2021-02-23, AK: Add mean error to sensor shape plot
 # - 2021-02-11, AK: Initial creation
 #
@@ -184,15 +185,7 @@ def plotForArticle_ResponseShape(gitCommitID, currentDT,
     import pandas as pd
     import seaborn as sns 
     import matplotlib.pyplot as plt
-    from simulateSensorArray import simulateSensorArray
     plt.style.use('doubleColumn.mplstyle') # Custom matplotlib style file
-
-    # Total pressure of the gas [Pa]
-    pressureTotal = np.array([1.e5]);
-    
-    # Temperature of the gas [K]
-    # Can be a vector of temperatures
-    temperature = np.array([298.15]);
     
     # Materials to be plotted
     sensorID = np.array([17,16,6])
@@ -209,18 +202,12 @@ def plotForArticle_ResponseShape(gitCommitID, currentDT,
     # Colors for plot
     colorsForPlot = ("#5fad56","#f78154","#b4436c")
     
-    # Simulate the sensor response for all possible concentrations
-    # Number of molefractions
-    numMolFrac= 101
-    moleFractionRange = np.array([np.linspace(0,1,numMolFrac), 1 - np.linspace(0,1,numMolFrac)]).T
-
-    arraySimResponse = np.zeros([moleFractionRange.shape[0],sensorID.shape[0]])
+    # Get the sensor response and the sensor sensitive region
     os.chdir("..")
-    for ii in range(moleFractionRange.shape[0]):
-        arraySimResponse[ii,:] = simulateSensorArray(sensorID, pressureTotal, 
-                                                   temperature, np.array([moleFractionRange[ii,:]]))
+    moleFractionRange, arraySimResponse, _ = getSensorSensitiveRegion(sensorID)
     os.chdir("plotFunctions")
     
+    # Plot the figure
     fig = plt.figure
     ax1 = plt.subplot(1,3,1)        
     # Loop through all sensors
@@ -272,7 +259,7 @@ def plotForArticle_ResponseShape(gitCommitID, currentDT,
             backgroundcolor = 'w', color = colorsForPlot[2])
 
     # Label for the formula
-    ax2.text(0.38, 8, "$\psi = |\mu - \hat{\mu}|/\mu$", fontsize=10, 
+    ax2.text(0.38, 7, "$\psi = |\mu - \hat{\mu}|/\mu$", fontsize=10, 
             backgroundcolor = 'w', color = '#0077b6')
     
     # CV - No noise 
@@ -300,7 +287,7 @@ def plotForArticle_ResponseShape(gitCommitID, currentDT,
             backgroundcolor = 'w', color = colorsForPlot[2])
 
     # Label for the formula
-    ax3.text(0.62, 8, "$\chi = \hat{\sigma}/\hat{\mu}$", fontsize=10, 
+    ax3.text(0.62, 7, "$\chi = \hat{\sigma}/\hat{\mu}$", fontsize=10, 
             backgroundcolor = 'w', color = '#0077b6')
     
     #  Save the figure
@@ -314,7 +301,64 @@ def plotForArticle_ResponseShape(gitCommitID, currentDT,
             os.mkdir(os.path.join('..','simulationFigures','simulationManuscript'))
         plt.savefig (savePath)
     plt.show()
- 
+
+# fun: getSensorSensitiveRegion
+# Simulate the sensor array and obtain the region of sensitivity
+def getSensorSensitiveRegion(sensorID):
+    import numpy as np
+    from simulateSensorArray import simulateSensorArray
+    from kneed import KneeLocator # To compute the knee/elbow of a curve
+
+    # Total pressure of the gas [Pa]
+    pressureTotal = np.array([1.e5]);
+    
+    # Temperature of the gas [K]
+    # Can be a vector of temperatures
+    temperature = np.array([298.15]);
+    
+    # Number of molefractions
+    numMolFrac= 101
+    moleFractionRange = np.array([np.linspace(0,1,numMolFrac), 1 - np.linspace(0,1,numMolFrac)]).T
+
+    # Simulate the sensor response for all possible concentrations
+    arraySimResponse = np.zeros([moleFractionRange.shape[0],sensorID.shape[0]])
+    for ii in range(moleFractionRange.shape[0]):
+        arraySimResponse[ii,:] = simulateSensorArray(sensorID, pressureTotal, 
+                                                   temperature, np.array([moleFractionRange[ii,:]]))
+
+    # Compute the sensitive region for each sensor material in the array
+    sensitiveRegion = np.zeros([arraySimResponse.shape[1],2])
+    # Loop through all the materials
+    firstDerivative = np.zeros([arraySimResponse.shape[0],arraySimResponse.shape[1]])
+    firstDerivativeSimResponse_y1 = np.zeros([moleFractionRange.shape[0],arraySimResponse.shape[1]])
+    firstDerivativeSimResponse_y2 = np.zeros([moleFractionRange.shape[0],arraySimResponse.shape[1]])
+    for kk in range(arraySimResponse.shape[1]):
+        firstDerivative[:,kk] = np.gradient(arraySimResponse[:,kk],moleFractionRange[1,0]-moleFractionRange[0,0])
+        firstDerivativeSimResponse_y1[:,kk] = np.gradient(moleFractionRange[:,0],arraySimResponse[:,kk])
+        firstDerivativeSimResponse_y2[:,kk] = np.gradient(moleFractionRange[:,1],arraySimResponse[:,kk])
+        # Get the sign of the first derivative for increasing/decreasing
+        if all(i >= 0. for i in firstDerivative[:,kk]):
+            slopeDir = "increasing"
+        elif all(i < 0. for i in firstDerivative[:,kk]):
+            slopeDir = "decreasing"
+        else:
+            print("Dangerous! I should not be here!!!")
+    
+        # Compute the knee/elbow of the curve
+        kneedle = KneeLocator(moleFractionRange[:,0], arraySimResponse[:,kk], 
+                              direction=slopeDir)
+        elbowPoint = list(kneedle.all_elbows)
+
+        # Obtain coordinates to fill working region
+        if slopeDir == "increasing":
+            sensitiveRegion[kk,:] = [0,elbowPoint[0]]
+        else:
+            sensitiveRegion[kk,:] = [elbowPoint[0], 1.0]
+
+    # Return the mole fraction, response and sensitive region for each 
+    # material
+    return moleFractionRange, arraySimResponse, sensitiveRegion
+
 # fun: concatenateConcEstimate
 # Concatenates concentration estimates into a panda dataframe and computes 
 # the coefficient of variation
