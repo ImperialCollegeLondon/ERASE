@@ -9,7 +9,7 @@ figure.autolayout : true # for labels not being cut out
 ## Axes
 axes.titlesize : 10
 axes.labelsize : 10
-axes.formatter.limits : -5, 3
+axes.formatter.limits : -5, 4
 
 ## Grid
 axes.grid : true
