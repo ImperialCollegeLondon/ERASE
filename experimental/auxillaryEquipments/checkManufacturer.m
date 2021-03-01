@@ -30,29 +30,17 @@
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [controllerOutput] = controlAuxiliaryEquipments(portProperty, serialCommand, flagAlicat,gasID)
+function flagAlicat = checkManufacturer(portProperty)
 
 %% CREATE CONNECTION WITH uCONTROLLER & PARSE ARGUMENTS
 % Create a serial object with the port and baudrate specified by the user
 % Requires > MATLAB2020a
-serialObj = serialport(portProperty.portName,portProperty.baudRate);
-% Configure terminator as specified by the user
-configureTerminator(serialObj,portProperty.terminator)
+flagAlicat = 0;
 
-if flagAlicat
-    % change name for initialisation
-    writeline(serialObj,"a");
-    % Send a command to check the gas
-    writeline(serialObj, gasID);
-    % Add other initialisation procedure (if required)
+switch portProperty.portName
+    case 'COM5'
+        flagAlicat = 1;
+    case 'COM6'
+        flagAlicat = 0;      
 end
-%% SEND THE COMMAND AND CLOSE THE CONNCETION
-% Send command to controller
-writeline(serialObj, serialCommand);
-
-% Read response from the microcontroller and print it out
-controllerOutput = readline(serialObj);
-
-% Terminate the connection with the microcontroller
-clear serialObj
 end
