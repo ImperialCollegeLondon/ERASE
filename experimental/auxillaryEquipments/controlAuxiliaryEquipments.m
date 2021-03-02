@@ -1,7 +1,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% ETH Zurich, Switzerland
-% Separation Processes Laboratory
+% Imperial College London, United Kingdom
+% Multifunctional Nanomaterials Laboratory
 %
 % Project:  ERASE
 % Year:     2021
@@ -9,28 +9,27 @@
 % Authors:  Hassan Azzan (HA)
 %
 % Purpose: 
-% Controls the pump (Ismatec BVP series) which works with the IKA Magic Lab
-% (Milling setup) and the IKA Magic Lab. Additionally, two relay switches 
-% are available which can be used to control two overhead stirrers.
+%
 %
 % Last modified:
 % - 2021-03-01, HA: Initial creation
 %
 % Input arguments:
-% - portProperty    : Enter the serial port ID for the connection to be
-%                     made
+% - portProperty    : Structure containing the properties of the comms 
+%                     device
+%
 % - serialCommand   : Command that would be issued to the microcontoller.
 %
+% - flagAlicat      : Determines whether or not the equipment is from Alicat
+% 
+% - gasID           : ID input for the gas for alicat equipment
+%
 % Output arguments:
-% - controllerOutput: Values ranging from -1 to 6, serves as an output from
-%                     the microcontroller to indicate successful execution
-%                     of the command. For the Mill, output from the
-%                     controller would typically be an acknowledgment
-%                     character or the speed in rpm.
+% - controllerOutput: variable output from the controller
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [controllerOutput] = controlAuxiliaryEquipments(portProperty, serialCommand, flagAlicat,gasID)
+function [controllerOutput] = controlAuxiliaryEquipments(portProperty, serialCommand, flagAlicat, gasID)
 
 %% CREATE CONNECTION WITH uCONTROLLER & PARSE ARGUMENTS
 % Create a serial object with the port and baudrate specified by the user
