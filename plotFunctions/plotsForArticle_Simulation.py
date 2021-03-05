@@ -12,6 +12,7 @@
 # Plots for the simulation manuscript
 #
 # Last modified:
+# - 2021-03-05, AK: Add plot for comparing sensor array with graphical tool
 # - 2021-02-24, AK: Add function to generate sensitive region for each material
 # - 2021-02-23, AK: Add mean error to sensor shape plot
 # - 2021-02-11, AK: Initial creation
@@ -57,6 +58,12 @@ def plotsForArticle_Simulation(**kwargs):
     if 'responseShape' in kwargs:
         if kwargs["responseShape"]:
             meanErr = plotForArticle_ResponseShape(gitCommitID, currentDT, 
+                                       saveFlag, saveFileExtension)
+
+    # If graphical tool needs to be plotted
+    if 'graphicalTool' in kwargs:
+        if kwargs["graphicalTool"]:
+            plotForArticle_GraphicalTool(gitCommitID, currentDT, 
                                        saveFlag, saveFileExtension)
 
 # fun: plotForArticle_SensorArray
@@ -108,7 +115,7 @@ def plotForArticle_SensorArray(gitCommitID, currentDT,
         histTypeX = 'stepfilled'
         alphaX=0.75
         densityX = True
-    
+
         # Plot the histogram of the gas compositions
         ax = plt.subplot(2,2,ii+1)
         # Histogram for 1 material array
@@ -176,8 +183,7 @@ def plotForArticle_SensorArray(gitCommitID, currentDT,
     plt.show()
 
 # fun: plotForArticle_SensorArray
-# Plots the histogram of gas compositions for a one and two material 
-# sensor array
+# Plots the sensor response for a given sensor array
 def plotForArticle_ResponseShape(gitCommitID, currentDT, 
                                saveFlag, saveFileExtension):
     import numpy as np
@@ -191,7 +197,7 @@ def plotForArticle_ResponseShape(gitCommitID, currentDT,
     sensorID = np.array([17,16,6])
     sensorText = ["A", "B", "C"]
     
-    # File to be loaded for the left of violin plot
+    # File to be loaded for the simulation results
     loadFileName = ["sensitivityAnalysis_17_20210212_1259_b02f8c3.npz", # No Noise
                     "sensitivityAnalysis_16_20210212_1300_b02f8c3.npz", # No Noise
                     "sensitivityAnalysis_6_20210212_1259_b02f8c3.npz"] # No Noise
@@ -302,6 +308,193 @@ def plotForArticle_ResponseShape(gitCommitID, currentDT,
         plt.savefig (savePath)
     plt.show()
 
+# fun: plotForArticle_GraphicalTool
+# Plots the histogram of gas compositions for a one and two material 
+# sensor array
+def plotForArticle_GraphicalTool(gitCommitID, currentDT,
+                                 saveFlag, saveFileExtension):
+    import numpy as np
+    import os
+    import pandas as pd
+    import seaborn as sns 
+    import matplotlib.pyplot as plt
+    plt.style.use('doubleColumn2Row.mplstyle') # Custom matplotlib style file
+
+    # File to be loaded for the simulation results
+    loadFileName = ["sensitivityAnalysis_6-2_20210305_1109_b02f8c3.npz", # 6,2
+                    "sensitivityAnalysis_17-16_20210305_1050_b02f8c3.npz"] # 17,16
+
+    # Materials to be plotted
+    sensorID = np.array([[6,2],[17,16]])
+    arrayText = ["D", "E"]
+    materialText = ["$\\alpha$", "$\\beta$", "$\gamma$", "$\delta$"]
+    
+    # Colors for plot
+    colorsForPlot = ("#5fad56","#ff9e00")
+    colorLeft = ("#e5383b","#6c757d")
+    colorRight = ("#6c757d","#e5383b")
+         
+    # Plot the figure
+    fig = plt.figure
+    ax1 = plt.subplot(2,2,1)        
+    # Get the sensor response and the sensor sensitive region
+    os.chdir("..")
+    moleFractionRange, arraySimResponse, sensitiveRegion = getSensorSensitiveRegion(sensorID[0,:])
+    os.chdir("plotFunctions")
+    # Loop through all sensors
+    for kk in range(arraySimResponse.shape[1]):
+        ax1.plot(moleFractionRange[:,0],arraySimResponse[:,kk],
+                 color=colorsForPlot[kk]) # Simulated Response
+        ax1.fill_between(sensitiveRegion[kk,:],1.5*np.max(arraySimResponse), 
+                        facecolor=colorsForPlot[kk], alpha=0.25)
+
+    ax1.set(ylabel='$m$ [g kg$^{-1}$]',
+           xlim = [0,1], ylim = [0, 150])
+    ax1.axes.xaxis.set_ticklabels([])     
+    ax1.locator_params(axis="x", nbins=4)
+    ax1.locator_params(axis="y", nbins=4)
+    ax1.text(0.025, 138, "(a)", fontsize=10)
+    ax1.text(0.78, 138, "Array D", fontsize=10, 
+             color = '#0077b6')
+    
+    # Label for the materials     
+    ax1.text(0.9, 120, materialText[0], fontsize=10, 
+            backgroundcolor = 'w', color = colorsForPlot[0])
+    ax1.text(0.9, 23, materialText[1], fontsize=10, 
+            backgroundcolor = 'w', color = colorsForPlot[1])    
+
+    ax2 = plt.subplot(2,2,2)
+    # Call the concatenateConcEstimate function
+    meanErr, cvData = concatenateConcEstimate([loadFileName[0]],arrayText[0])
+
+    # Mean Error - No noise 
+    meanErr["x"] = pd.to_numeric(meanErr["x"], downcast="float")
+    sns.lineplot(data=meanErr, x='x', y='y1', hue='dataType', style='dataType',
+                 dashes = [(1,1)], markers = ['o'],
+                 palette = colorLeft, linewidth = 0.5)
+    ax2.set(ylabel='$\psi$ [-]',
+            xlim = [0.,1.], ylim = [1e-8,1])
+    ax2.locator_params(axis="x", nbins=4)
+    ax2.set(xlabel=None)
+    ax2.axes.xaxis.set_ticklabels([])     
+    ax2.set_yscale('log')
+    ax2.yaxis.label.set_color(colorLeft[0])
+    ax2.tick_params(axis='y', colors=colorLeft[0])
+    plt.legend([],[], frameon=False)
+    # CV - No noise 
+    ax2r = plt.twinx()
+    cvData["x"] = pd.to_numeric(cvData["x"], downcast="float")
+    sns.lineplot(data=cvData, x='x', y='y1', hue='dataType', style='dataType',
+                 dashes = [(1,1)], markers = ['D'],
+                 palette = colorRight, linewidth = 0.5,
+                 ax = ax2r)
+    # Plot sensitive region
+    for kk in range(arraySimResponse.shape[1]):
+        ax2r.fill_between(sensitiveRegion[kk,:],1.5*np.max(arraySimResponse), 
+                        facecolor=colorsForPlot[kk], alpha=0.25)
+
+    ax2r.set(ylabel='$\chi$ [-]',ylim = [1e-8,1])
+    ax2r.locator_params(axis="x", nbins=4)
+    ax2r.axes.xaxis.set_ticklabels([]) 
+    ax2r.set_yscale('log')
+    ax2r.yaxis.label.set_color(colorLeft[1])
+    ax2r.tick_params(axis='y', colors=colorLeft[1])
+    plt.legend([],[], frameon=False)
+    ax2r.annotate("", xy=(0.5, 5e-7), xytext=(0.6, 5e-7), 
+                  arrowprops=dict(arrowstyle="-|>", color = colorLeft[0]))
+    ax2r.annotate("", xy=(0.95, 1e-5), xytext=(0.85, 1e-5), 
+                  arrowprops=dict(arrowstyle="-|>", color = colorLeft[1]))
+    ax2r.text(0.025, 0.2, "(b)", fontsize=10)
+    ax2r.spines["left"].set_color(colorLeft[0])
+    ax2r.spines["right"].set_color(colorLeft[1])
+    
+    ax2r.text(0.78, 0.2, "Array D", fontsize=10, 
+             color = '#0077b6')
+
+    ax3 = plt.subplot(2,2,3)        
+    # Get the sensor response and the sensor sensitive region
+    os.chdir("..")
+    moleFractionRange, arraySimResponse, sensitiveRegion = getSensorSensitiveRegion(sensorID[1,:])
+    os.chdir("plotFunctions")
+    # Loop through all sensors
+    for kk in range(arraySimResponse.shape[1]):
+        ax3.plot(moleFractionRange[:,0],arraySimResponse[:,kk],
+                 color=colorsForPlot[kk]) # Simulated Response
+        ax3.fill_between(sensitiveRegion[kk,:],1.5*np.max(arraySimResponse), 
+                        facecolor=colorsForPlot[kk], alpha=0.25)
+
+    ax3.set(xlabel='$y_1$ [-]', 
+           ylabel='$m$ [g kg$^{-1}$]',
+           xlim = [0,1], ylim = [0, 300])     
+    ax3.locator_params(axis="x", nbins=4)
+    ax3.locator_params(axis="y", nbins=4)
+    ax3.text(0.025, 275, "(c)", fontsize=10)
+    ax3.text(0.78, 275, "Array E", fontsize=10,
+             color = '#0077b6')
+ 
+    # Label for the materials     
+    ax3.text(0.78, 225, materialText[2], fontsize=10, 
+            backgroundcolor = 'w', color = colorsForPlot[0])
+    ax3.text(0.1, 150, materialText[3], fontsize=10, 
+            backgroundcolor = 'w', color = colorsForPlot[1])
+
+    ax4 = plt.subplot(2,2,4)
+    # Call the concatenateConcEstimate function
+    meanErr, cvData = concatenateConcEstimate([loadFileName[1]],arrayText[1])
+
+    # Mean Error - No noise 
+    meanErr["x"] = pd.to_numeric(meanErr["x"], downcast="float")
+    sns.lineplot(data=meanErr, x='x', y='y1', hue='dataType', style='dataType',
+                 dashes = [(1,1)], markers = ['o'],
+                 palette = colorLeft, linewidth = 0.5)
+    ax4.set(xlabel='$y_1$ [-]',
+            ylabel='$\psi$ [-]',
+            xlim = [0.,1.], ylim = [1e-8,1])
+    ax4.locator_params(axis="x", nbins=4)
+    ax4.set_yscale('log')
+    ax4.yaxis.label.set_color(colorLeft[0])
+    ax4.tick_params(axis='y', colors=colorLeft[0])
+    plt.legend([],[], frameon=False)
+    # CV - No noise 
+    ax4r = plt.twinx()
+    cvData["x"] = pd.to_numeric(cvData["x"], downcast="float")
+    sns.lineplot(data=cvData, x='x', y='y1', hue='dataType', style='dataType',
+                 dashes = [(1,1)], markers = ['D'],
+                 palette = colorRight, linewidth = 0.5,
+                 ax = ax4r)
+    # Plot sensitive region
+    for kk in range(arraySimResponse.shape[1]):
+        ax4r.fill_between(sensitiveRegion[kk,:],1.5*np.max(arraySimResponse), 
+                        facecolor=colorsForPlot[kk], alpha=0.25)
+
+    ax4r.set(ylabel='$\chi$ [-]',ylim = [1e-8,1])
+    ax4r.locator_params(axis="x", nbins=4)
+    ax4r.set_yscale('log')
+    ax4r.yaxis.label.set_color(colorLeft[1])
+    ax4r.tick_params(axis='y', colors=colorLeft[1])
+    plt.legend([],[], frameon=False)
+    ax4r.annotate("", xy=(0.2, 5e-4), xytext=(0.3, 5e-4), 
+                  arrowprops=dict(arrowstyle="-|>", color = colorLeft[0]))
+    ax4r.annotate("", xy=(0.7, 1e-3), xytext=(0.6, 1e-3), 
+                  arrowprops=dict(arrowstyle="-|>", color = colorLeft[1]))
+    ax4r.text(0.025, 0.2, "(d)", fontsize=10)
+    ax4r.spines["left"].set_color(colorLeft[0])
+    ax4r.spines["right"].set_color(colorLeft[1])
+
+    ax4r.text(0.78, 0.2, "Array E", fontsize=10, 
+             color = '#0077b6')
+
+    #  Save the figure
+    if saveFlag:
+        # FileName: responseShape_<sensorID>_<currentDateTime>_<GitCommitID_Current>
+        saveFileName = "graphicalTool_" + currentDT + "_" + gitCommitID + saveFileExtension
+        savePath = os.path.join('..','simulationFigures','simulationManuscript',saveFileName)
+        # Check if inputResources directory exists or not. If not, create the folder
+        if not os.path.exists(os.path.join('..','simulationFigures','simulationManuscript')):
+            os.mkdir(os.path.join('..','simulationFigures','simulationManuscript'))
+        plt.savefig (savePath)
+    plt.show()
+
 # fun: getSensorSensitiveRegion
 # Simulate the sensor array and obtain the region of sensitivity
 def getSensorSensitiveRegion(sensorID):
@@ -373,7 +566,7 @@ def concatenateConcEstimate(loadFileName,sensorText):
     concatenatedY1 = []
     concatenatedY2 = []
     concatenatedType = []
-    
+
     # Loop through the different files to generate the violin plot
     for kk in range(len(loadFileName)):
         # Initialize x, y, and type for the local loop
@@ -388,8 +581,11 @@ def concatenateConcEstimate(loadFileName,sensorText):
 
         # Loop through all the molefractions
         for ii in range(resultOutput.shape[0]):
-            counterInd = -1
-    
+            if resultOutput.shape[2] == 3:
+                counterInd = -1
+            elif resultOutput.shape[2] == 4:
+                counterInd = 0
+                
             y1Var = np.concatenate((y1Var,resultOutput[ii,:,counterInd+2])) # y1
             y2Var = np.concatenate((y2Var,resultOutput[ii,:,counterInd+3])) # y2
             xVar = xVar + ([str(moleFrac[ii])] * len(resultOutput[ii,:,counterInd+2])) # x (true mole fraction)
@@ -413,10 +609,11 @@ def concatenateConcEstimate(loadFileName,sensorText):
                        'y1':concatenatedY1,
                        'y2':concatenatedY2,
                        'dataType':concatenatedType})
+
     # Compute the mean and standard deviation
     meanData = df.groupby(['dataType','x'], as_index=False, sort=False).mean() 
     stdData = df.groupby(['dataType','x'], as_index=False, sort=False).std()
-    
+
     # Compute the relative error of the mean (non-negative)
     meanErr = stdData.copy()
     meanErr['y1'] = abs(meanData['x'].astype(float) - meanData['y1'])/meanData['x'].astype(float)
