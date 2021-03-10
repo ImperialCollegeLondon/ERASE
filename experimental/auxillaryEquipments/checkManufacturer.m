@@ -26,9 +26,9 @@
 function flagAlicat = checkManufacturer(portProperty)
 flagAlicat = 0;
 switch portProperty.portName
-    case 'COM5'
-        flagAlicat = 1;
     case 'COM6'
+        flagAlicat = 1;
+    case 'COM5'
         flagAlicat = 0;      
 end
 end

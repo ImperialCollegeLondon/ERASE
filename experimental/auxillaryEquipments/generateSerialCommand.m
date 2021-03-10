@@ -32,11 +32,11 @@
 function [serialCommand] = generateSerialCommand(commandToBeAnalyzed, varargin)
 % Generate serial command for the device
 % If Alicat is used: variable argument 1 is true!
-if varargin(1)
+if varargin{1}
     switch commandToBeAnalyzed
         case 'setPoint'
             % Set the set point value for the controller 
-            setPointValue = round(varargin(2),2);
+            setPointValue = round(varargin{2},2);
             serialCommand = ['as',num2str(setPointValue)];
         case 'pollData'
             serialCommand = 'a??d';
