@@ -9,7 +9,7 @@
 % Authors:  Hassan Azzan (HA)
 %
 % Purpose: 
-%
+% Function to generate the gas ID required for alicat devices
 %
 % Last modified:
 % - 2021-03-01, HA: Initial creation
@@ -21,11 +21,7 @@
 % - gasID       : ID of the gas needed for 'controlAuxiliaryEquipments.m'
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% function to generate the gas ID required for alicat devices
 function gasID = checkGasName(gasName)
-%% CREATE CONNECTION WITH uCONTROLLER & PARSE ARGUMENTS
-% Create a serial object with the port and baudrate specified by the user
 % Requires > MATLAB2020a
 switch gasName
     case 'CO2'

@@ -9,7 +9,7 @@
 % Authors:  Hassan Azzan (HA)
 %
 % Purpose: 
-%
+% Function to check if the device connected to a port is Alicat or not
 %
 % Last modified:
 % - 2021-03-01, HA: Initial creation
@@ -24,12 +24,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function flagAlicat = checkManufacturer(portProperty)
-
-%% CREATE CONNECTION WITH uCONTROLLER & PARSE ARGUMENTS
-% Create a serial object with the port and baudrate specified by the user
-% Requires > MATLAB2020a
 flagAlicat = 0;
-
 switch portProperty.portName
     case 'COM5'
         flagAlicat = 1;
