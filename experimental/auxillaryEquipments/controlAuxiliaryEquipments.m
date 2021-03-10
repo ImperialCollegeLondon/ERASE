@@ -10,8 +10,8 @@
 %
 % Purpose: 
 %
-%
 % Last modified:
+% - 2021-03-01, HA: Remove gas selection (hard coded)
 % - 2021-03-01, HA: Initial creation
 %
 % Input arguments:
@@ -35,12 +35,11 @@ configureTerminator(serialObj,portProperty.terminator)
 % If using Alicat (flow meter or controller)
 % varargin(1): Device type - Alicat: True
 % varargin(2): Gas ID - If Alicat, then ID for the process gas
-if varargin{1}
+if nargin>2 && varargin{1}
     % Perform a pseudo handshake for the alicat devices. Without this line
     % the communcation is usually not established (AK:10.03.21)
-    writeline(serialObj,"a");
-    % Send a command to check the gas
-    writeline(serialObj, varargin{2});
+    writeline(serialObj,'a');
+    pause(0.01); % Pause to ensure proper read
 end
 
 %% SEND THE COMMAND AND CLOSE THE CONNCETION
