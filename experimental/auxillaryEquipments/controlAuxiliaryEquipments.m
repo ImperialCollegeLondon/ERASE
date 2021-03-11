@@ -11,6 +11,7 @@
 % Purpose: 
 %
 % Last modified:
+% - 2021-03-11, HA: Add UMFM
 % - 2021-03-01, HA: Remove gas selection (hard coded)
 % - 2021-03-01, HA: Initial creation
 %
@@ -28,27 +29,33 @@ function [controllerOutput] = controlAuxiliaryEquipments(portProperty, serialCom
 % Create a serial object with the port and baudrate specified by the user
 % Requires > MATLAB2020a
 serialObj = serialport(portProperty.portName,portProperty.baudRate);
-% Configure terminator as specified by the user
-% Alicat: <CR>
-configureTerminator(serialObj,portProperty.terminator)
 
 % If using Alicat (flow meter or controller)
 % varargin(1): Device type - Alicat: True
-% varargin(2): Gas ID - If Alicat, then ID for the process gas
 if nargin>2 && varargin{1}
+    % Configure terminator as specified by the user
+    % Alicat: <CR>
+    configureTerminator(serialObj,portProperty.terminator)
     % Perform a pseudo handshake for the alicat devices. Without this line
     % the communcation is usually not established (AK:10.03.21)
     writeline(serialObj,'a');
-    pause(0.01); % Pause to ensure proper read
+    pause(1); % Pause to ensure proper read
 end
 
 %% SEND THE COMMAND AND CLOSE THE CONNCETION
 % Send command to controller
-writeline(serialObj, serialCommand);
-
+% Send a command if not the universal gas flow meter
+if ~strcmp(serialCommand,"UMFM")
+    writeline(serialObj, serialCommand);
+end
 % Read response from the microcontroller and print it out
-controllerOutput = readline(serialObj);
-
+% Read the output from the UMFM (this is always streaming)
+if strcmp(serialCommand,"UMFM")
+    controllerOutput = read(serialObj,10,"string");
+% For everything else
+else
+    controllerOutput = readline(serialObj);
+end
 % Terminate the connection with the microcontroller
 clear serialObj
 end
