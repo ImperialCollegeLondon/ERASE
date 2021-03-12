@@ -21,11 +21,12 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function calibrateMeters
     % Experiment name
-    expInfo.expName = 'ZLCCalibrateMeters';
+    expInfo.expName = ['ZLCCalibrateMeters','_',...
+        datestr(datetime('now'),'yyyymmdd')];
     % Maximum time of the experiment
-    expInfo.maxTime = 10;
+    expInfo.maxTime = 60;
     % Sampling time for the device
-    expInfo.samplingTime = 1;
+    expInfo.samplingTime = 2;
     % Define gas for MFM
     expInfo.gasName_MFM = 'He';
     % Define gas for MFC1
@@ -33,7 +34,7 @@ function calibrateMeters
     % Define gas for MFC2
     expInfo.gasName_MFC2 = 'CO2';
     % Define set point for MFC1
-    MFC1_SP = [0.0];
+    MFC1_SP = [0.0, 10.0, 20.0];
     
     % Loop through all setpoints to calibrate the meters
     for ii=1:length(MFC1_SP)
