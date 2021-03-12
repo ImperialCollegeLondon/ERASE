@@ -7,12 +7,14 @@
 % Year:     2021
 % MATLAB:   R2020a
 % Authors:  Hassan Azzan (HA)
+%           Ashwin Kumar Rajagopalan (AK)
 %
 % Purpose: 
 % Runs the ZLC setup. This function will provide set points to the 
 % controllers, will read flow data.
 %
 % Last modified:
+% - 2021-03-12, AK: Add auto detection of ports and change structure
 % - 2021-03-11, HA: Add data logger, set points, and refine code
 % - 2021-03-10, HA: Initial creation
 %
@@ -21,29 +23,57 @@
 % Output arguments:
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function runZLC
-    % Experiment name
-    expInfo.expName = 'ZLCexpTest';
-    % Maximum time of the experiment
-    expInfo.maxTime = 10;
-    % Sampling time for the device
-    expInfo.samplingTime = 1;
-    % Define gas for MFM
-    expInfo.gasName_MFM = 'He';
-    % Define gas for MFC1
-    expInfo.gasName_MFC1 = 'He';
-    % Define gas for MFC2
-    expInfo.gasName_MFC2 = 'CO2';
-    % Define set point for MFC1
-    expInfo.MFC1_SP = 0.3;
-    % Define gas for MFC2
-    expInfo.MFC2_SP = 5.0;
-    
+function runZLC(varargin)
+    if(nargin<1)
+        % Display default value being used
+        % Get the date/time
+        currentDateTime = datestr(now,'yyyymmdd_HHMMSS');
+        disp([currentDateTime,'-> Default experimental settings are used!!'])
+        % Experiment name
+        expInfo.expName = 'ZLC';
+        % Maximum time of the experiment
+        expInfo.maxTime = 10;
+        % Sampling time for the device
+        expInfo.samplingTime = 1;
+        % Define gas for MFM
+        expInfo.gasName_MFM = 'He';
+        % Define gas for MFC1
+        expInfo.gasName_MFC1 = 'He';
+        % Define gas for MFC2
+        expInfo.gasName_MFC2 = 'CO2';
+        % Define set point for MFC1
+        expInfo.MFC1_SP = 0.3;
+        % Define gas for MFC2
+        expInfo.MFC2_SP = 5.0;
+    else
+        % Use the value passed to the function
+        currentDateTime = datestr(now,'yyyymmdd_HHMMSS');
+        disp([currentDateTime,'-> Experimental settings passed to the function are used!!'])
+        expInfo = varargin{1};
+    end
+    % Find COM Ports
+    % Initatlize ports
+    portMFM = []; portMFC1 = []; portMFC2 = []; portUMFM = [];
+    % Find COM port for MFM
+    portText = matchUSBport({'FT1EQDD6A'});
+    if ~isempty(portText{1})
+        portMFM = ['COM',portText{1}(regexp(portText{1},'COM[123456789] - FTDI')+3)];
+    end
+    % Find COM port for MFC1
+    portText = matchUSBport({'FT1EU0ACA'});
+    if ~isempty(portText{1})
+        portMFC1 = ['COM',portText{1}(regexp(portText{1},'COM[123456789] - FTDI')+3)];
+    end
+    % Find COM port for UMFM
+    portText = matchUSBport({'3065335A3235'});
+    if ~isempty(portText{1})
+        portUMFM = ['COM',portText{1}(regexp(portText{1},'COM[1234567891011]')+3)];
+    end
     % Comm setup for the flow meter and controller
-    serialObj.MFM = struct('portName','COM6','baudRate',19200,'terminator','CR');
-    serialObj.MFC1 = struct('portName','COM6','baudRate',19200,'terminator','CR');
-    serialObj.MFC2 = struct('portName','COM7','baudRate',19200,'terminator','CR');
-    serialObj.UMFM = struct('portName','COM8','baudRate',9600);
+    serialObj.MFM = struct('portName',portMFM,'baudRate',19200,'terminator','CR');
+    serialObj.MFC1 = struct('portName',portMFC1,'baudRate',19200,'terminator','CR');
+    serialObj.MFC2 = struct('portName',portMFC2,'baudRate',19200,'terminator','CR');
+    serialObj.UMFM = struct('portName',portUMFM,'baudRate',9600);
 
     % Generate serial command for polling data
     serialObj.cmdPollData = generateSerialCommand('pollData',1);
@@ -53,7 +83,7 @@ function runZLC
     timerDevice.ExecutionMode = 'fixedRate';
     timerDevice.BusyMode = 'drop';
     timerDevice.Period = expInfo.samplingTime; % [s]
-    timerDevice.StartDelay = 0; % [s]
+    timerDevice.StartDelay = 5; % [s]
     timerDevice.TasksToExecute = floor((expInfo.maxTime)/expInfo.samplingTime);
 
     % Specify timer callbacks
@@ -72,11 +102,11 @@ function runZLC
 
     % Load the experimental data and add a few more things
     % Load the output .mat file
-    load(['..',filesep,'experimentalData',filesep,expInfo.expName])
+    load(['experimentalData',filesep,expInfo.expName])
     % Get the git commit ID
     gitCommitID = getGitCommit;
     % Load the output .mat file
-    save(['..',filesep,'experimentalData',filesep,expInfo.expName],...
+    save(['experimentalData',filesep,expInfo.expName],...
         'gitCommitID','outputStruct')
 end
 
@@ -95,11 +125,11 @@ function initializeTimerDevice(~, thisEvent, expInfo, serialObj)
     gasID_MFC2 = checkGasName(gasName_MFC2);
     % Initialize the gas for the meter and the controller
     % MFM
-    if ~isempty(serialObj.MFM)
+    if ~isempty(serialObj.MFM.portName)
         [~] = controlAuxiliaryEquipments(serialObj.MFM, gasID_MFM,1);   % Set gas for MFM
     end
     % MFC1
-    if ~isempty(serialObj.MFC1)
+    if ~isempty(serialObj.MFC1.portName)
         [~] = controlAuxiliaryEquipments(serialObj.MFC1, gasID_MFC1,1); % Set gas for MFC1
         % Generate serial command for volumteric flow rate set point
         cmdSetPt = generateSerialCommand('setPoint',1,expInfo.MFC1_SP); % Same units as device
@@ -112,7 +142,7 @@ function initializeTimerDevice(~, thisEvent, expInfo, serialObj)
         end
     end
     % MFC2
-    if ~isempty(serialObj.MFC2)
+    if ~isempty(serialObj.MFC2.portName)
         [~] = controlAuxiliaryEquipments(serialObj.MFC2, gasID_MFC2,1); % Set gas for MFC2
         % Generate serial command for volumteric flow rate set point
         cmdSetPt = generateSerialCommand('setPoint',1,expInfo.MFC2_SP); % Same units as device
@@ -136,7 +166,7 @@ function executeTimerDevice(timerObj, thisEvent, expInfo, serialObj)
     currentDateTime = datestr(thisEvent.Data.time,'yyyymmdd_HHMMSS');
     disp([currentDateTime,'-> Performing task #', num2str(timerObj.tasksExecuted)])
     % Get the current state of the flow meter
-    if ~isempty(serialObj.MFM)
+    if ~isempty(serialObj.MFM.portName)
         outputMFM = controlAuxiliaryEquipments(serialObj.MFM, serialObj.cmdPollData,1);
         outputMFMTemp = strsplit(outputMFM,' '); % Split the output string
         MFM.pressure = str2double(outputMFMTemp(2)); % [bar]
@@ -146,7 +176,7 @@ function executeTimerDevice(timerObj, thisEvent, expInfo, serialObj)
         MFM.gas = outputMFMTemp(6); % gas in the meter
     end
     % Get the current state of the flow controller 1
-    if ~isempty(serialObj.MFC1)
+    if ~isempty(serialObj.MFC1.portName)
         outputMFC1 = controlAuxiliaryEquipments(serialObj.MFC1, serialObj.cmdPollData,1);
         outputMFC1Temp = strsplit(outputMFC1,' '); % Split the output string
         MFC1.pressure = str2double(outputMFC1Temp(2)); % [bar]
@@ -157,7 +187,7 @@ function executeTimerDevice(timerObj, thisEvent, expInfo, serialObj)
         MFC1.gas = outputMFC1Temp(7); % gas in the controller
     end
     % Get the current state of the flow controller 2
-    if ~isempty(serialObj.MFC2)
+    if ~isempty(serialObj.MFC2.portName)
         outputMFC2 = controlAuxiliaryEquipments(serialObj.MFC2, serialObj.cmdPollData,1);
         outputMFC2Temp = strsplit(outputMFC2,' '); % Split the output string
         MFC2.pressure = str2double(outputMFC2Temp(2)); % [bar]
@@ -168,7 +198,7 @@ function executeTimerDevice(timerObj, thisEvent, expInfo, serialObj)
         MFC2.gas = outputMFC2Temp(7); % gas in the controller
     end
     % Get the current state of the universal flow controller
-    if ~isempty(serialObj.UMFM)
+    if ~isempty(serialObj.UMFM.portName)
         outputUMFM = controlAuxiliaryEquipments(serialObj.UMFM, "UMFM");
         UMFM.volFlow = str2double(outputUMFM);
     end
@@ -185,26 +215,12 @@ end
 %% dataLogger: Function to log data into a .mat file
 function dataLogger(timerObj, expInfo, currentDateTime, ...
     MFM, MFC1, MFC2, UMFM)
-% If running for the first time initialize the structure
-if timerObj.tasksExecuted == 1
-    outputStruct(1).samplingDateTime = currentDateTime;
-    outputStruct(1).timeElapsed = 0;
-    outputStruct(1).MFM = MFM;
-    outputStruct(1).MFC1= MFC1;
-    outputStruct(1).MFC2 = MFC2;
-    outputStruct(1).UMFM = UMFM;
-    % Create an experimental data folder if it doesnt exost
-    if ~exist(['..',filesep,'experimentalData'],'dir')
-        mkdir(['..',filesep,'experimentalData']);
-    % Save the output into a .mat file
-    else
-        save(['..',filesep,'experimentalData',filesep,expInfo.expName],'outputStruct')
-    end
-else
-    % Load the output .mat file
-    load(['..',filesep,'experimentalData',filesep,expInfo.expName])
-    % Get the size of the output structure
+% Check if the file exists
+if exist(['experimentalData',filesep,expInfo.expName,'.mat'])==2
+    load(['experimentalData',filesep,expInfo.expName])
+    % Initialize the counter to existing size plus 1
     nCount = size(outputStruct,2);
+    % Load the output .mat file
     % Save the data into the structure
     outputStruct(nCount+1).samplingDateTime = currentDateTime;
     outputStruct(nCount+1).timeElapsed = seconds(datetime(currentDateTime,...
@@ -216,6 +232,22 @@ else
     outputStruct(nCount+1).MFC2 = MFC2;
     outputStruct(nCount+1).UMFM = UMFM;
     % Save the output into a .mat file
-    save(['..',filesep,'experimentalData',filesep,expInfo.expName],'outputStruct')
+    save(['experimentalData',filesep,expInfo.expName],'outputStruct')
+% First initiaization 
+else
+    nCount = 1;
+    outputStruct(nCount).samplingDateTime = currentDateTime;
+    outputStruct(nCount).timeElapsed = 0;
+    outputStruct(nCount).MFM = MFM;
+    outputStruct(nCount).MFC1= MFC1;
+    outputStruct(nCount).MFC2 = MFC2;
+    outputStruct(nCount).UMFM = UMFM;
+    % Create an experimental data folder if it doesnt exost
+    if ~exist(['experimentalData'],'dir')
+        mkdir(['experimentalData']);
+    % Save the output into a .mat file
+    else
+        save(['experimentalData',filesep,expInfo.expName],'outputStruct')
+    end
 end
 end
