@@ -14,6 +14,7 @@
 % controllers, will read flow data.
 %
 % Last modified:
+% - 2021-03-12, AK: Add set point to zero at the end of the experiment
 % - 2021-03-12, AK: Add auto detection of ports and change structure
 % - 2021-03-11, HA: Add data logger, set points, and refine code
 % - 2021-03-10, HA: Initial creation
@@ -207,13 +208,31 @@ function executeTimerDevice(timerObj, thisEvent, expInfo, serialObj)
         MFC1,MFC2,UMFM);
 end
 %% stopTimerDevice: Stop timer device
-function stopTimerDevice(~, thisEvent)
+function stopTimerDevice(~, thisEvent, serialObj)
     % Get the event date/time
     currentDateTime = datestr(thisEvent.Data.time,'yyyymmdd_HHMMSS');
     disp([currentDateTime,'-> And its over babyyyyyy!!'])
+    % Generate serial command for volumteric flow rate set point to zero
+    cmdSetPt = generateSerialCommand('setPoint',1,0); % Same units as device
+    [~] = controlAuxiliaryEquipments(serialObj.MFC1, cmdSetPt,1); % Set gas for MFC1
+    % Check if the set point was sent to the controller
+    outputMFC1 = controlAuxiliaryEquipments(serialObj.MFC1, serialObj.cmdPollData,1);
+    outputMFC1Temp = strsplit(outputMFC1,' '); % Split the output string
+    if str2double(outputMFC1Temp(6)) ~= expInfo.MFC1_SP
+        error("You should not be here!!!")
+    end
+    % Generate serial command for volumteric flow rate set point to zero
+    cmdSetPt = generateSerialCommand('setPoint',1,0); % Same units as device
+    [~] = controlAuxiliaryEquipments(serialObj.MFC2, cmdSetPt,1); % Set gas for MFC1
+    % Check if the set point was sent to the controller
+    outputMFC2 = controlAuxiliaryEquipments(serialObj.MFC2, serialObj.cmdPollData,1);
+    outputMFC2Temp = strsplit(outputMFC2,' '); % Split the output string
+    if str2double(outputMFC2Temp(6)) ~= expInfo.MFC2_SP
+        error("You should not be here!!!")
+    end
 end
 %% dataLogger: Function to log data into a .mat file
-function dataLogger(timerObj, expInfo, currentDateTime, ...
+function dataLogger(~, expInfo, currentDateTime, ...
     MFM, MFC1, MFC2, UMFM)
 % Check if the file exists
 if exist(['experimentalData',filesep,expInfo.expName,'.mat'])==2
