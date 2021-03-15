@@ -14,6 +14,7 @@
 % controllers, will read flow data.
 %
 % Last modified:
+% - 2021-03-15, AK: Bug fixes
 % - 2021-03-12, AK: Add set point to zero at the end of the experiment
 % - 2021-03-12, AK: Add auto detection of ports and change structure
 % - 2021-03-11, HA: Add data logger, set points, and refine code
@@ -43,7 +44,7 @@ function runZLC(varargin)
         % Define gas for MFC2
         expInfo.gasName_MFC2 = 'CO2';
         % Define set point for MFC1
-        expInfo.MFC1_SP = 0.3;
+        expInfo.MFC1_SP = 5.0;
         % Define gas for MFC2
         expInfo.MFC2_SP = 5.0;
     else
@@ -90,7 +91,7 @@ function runZLC(varargin)
     % Specify timer callbacks
     timerDevice.StartFcn = {@initializeTimerDevice,expInfo,serialObj};
     timerDevice.TimerFcn = {@executeTimerDevice, expInfo, serialObj};
-    timerDevice.StopFcn = {@stopTimerDevice};
+    timerDevice.StopFcn = {@stopTimerDevice, expInfo, serialObj};
     
     % Start the experiment
     % Get the date/time
@@ -208,27 +209,34 @@ function executeTimerDevice(timerObj, thisEvent, expInfo, serialObj)
         MFC1,MFC2,UMFM);
 end
 %% stopTimerDevice: Stop timer device
-function stopTimerDevice(~, thisEvent, serialObj)
+function stopTimerDevice(~, thisEvent, expInfo, serialObj)
     % Get the event date/time
     currentDateTime = datestr(thisEvent.Data.time,'yyyymmdd_HHMMSS');
     disp([currentDateTime,'-> And its over babyyyyyy!!'])
     % Generate serial command for volumteric flow rate set point to zero
-    cmdSetPt = generateSerialCommand('setPoint',1,0); % Same units as device
-    [~] = controlAuxiliaryEquipments(serialObj.MFC1, cmdSetPt,1); % Set gas for MFC1
-    % Check if the set point was sent to the controller
-    outputMFC1 = controlAuxiliaryEquipments(serialObj.MFC1, serialObj.cmdPollData,1);
-    outputMFC1Temp = strsplit(outputMFC1,' '); % Split the output string
-    if str2double(outputMFC1Temp(6)) ~= expInfo.MFC1_SP
-        error("You should not be here!!!")
+    % MFC1
+    if ~isempty(serialObj.MFC1.portName)
+        cmdSetPt = generateSerialCommand('setPoint',1,0); % Same units as device
+        [~] = controlAuxiliaryEquipments(serialObj.MFC1, cmdSetPt,1); % Set gas for MFC1
+        % Check if the set point was sent to the controller
+        outputMFC1 = controlAuxiliaryEquipments(serialObj.MFC1, serialObj.cmdPollData,1);
+        outputMFC1Temp = strsplit(outputMFC1,' '); % Split the output string
+        if str2double(outputMFC1Temp(6)) ~= 0
+            error("You should not be here!!!")
+            1+2
+        end
     end
     % Generate serial command for volumteric flow rate set point to zero
-    cmdSetPt = generateSerialCommand('setPoint',1,0); % Same units as device
-    [~] = controlAuxiliaryEquipments(serialObj.MFC2, cmdSetPt,1); % Set gas for MFC1
-    % Check if the set point was sent to the controller
-    outputMFC2 = controlAuxiliaryEquipments(serialObj.MFC2, serialObj.cmdPollData,1);
-    outputMFC2Temp = strsplit(outputMFC2,' '); % Split the output string
-    if str2double(outputMFC2Temp(6)) ~= expInfo.MFC2_SP
-        error("You should not be here!!!")
+    % MFC2
+    if ~isempty(serialObj.MFC2.portName)
+        cmdSetPt = generateSerialCommand('setPoint',1,0); % Same units as device
+        [~] = controlAuxiliaryEquipments(serialObj.MFC2, cmdSetPt,1); % Set gas for MFC1
+        % Check if the set point was sent to the controller
+        outputMFC2 = controlAuxiliaryEquipments(serialObj.MFC2, serialObj.cmdPollData,1);
+        outputMFC2Temp = strsplit(outputMFC2,' '); % Split the output string
+        if str2double(outputMFC2Temp(6)) ~= 0
+            error("You should not be here!!!")
+        end
     end
 end
 %% dataLogger: Function to log data into a .mat file
