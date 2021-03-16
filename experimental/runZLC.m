@@ -14,6 +14,7 @@
 % controllers, will read flow data.
 %
 % Last modified:
+% - 2021-03-16, AK: Add MFC2 and fix for MS calibration
 % - 2021-03-16, AK: Add valve switch times
 % - 2021-03-15, AK: Bug fixes
 % - 2021-03-12, AK: Add set point to zero at the end of the experiment
@@ -45,11 +46,11 @@ function runZLC(varargin)
         % Define gas for MFC2
         expInfo.gasName_MFC2 = 'CO2';
         % Define set point for MFC1
-        expInfo.MFC1_SP = 5.0;
+        expInfo.MFC1_SP = 15.0;
         % Define gas for MFC2
-        expInfo.MFC2_SP = 5.0;
+        expInfo.MFC2_SP = 15.0;
         % Calibrate meters flag
-        expInfo.calibrateMeters = False;
+        expInfo.calibrateMeters = false;
     else
         % Use the value passed to the function
         currentDateTime = datestr(now,'yyyymmdd_HHMMSS');
@@ -68,6 +69,11 @@ function runZLC(varargin)
     portText = matchUSBport({'FT1EU0ACA'});
     if ~isempty(portText{1})
         portMFC1 = ['COM',portText{1}(regexp(portText{1},'COM[123456789] - FTDI')+3)];
+    end
+    % Find COM port for MFC2
+    portText = matchUSBport({'FT1EQDD6M'});
+    if ~isempty(portText{1})
+        portMFC2 = ['COM',portText{1}(regexp(portText{1},'COM[123456789] - FTDI')+3)];
     end
     % Find COM port for UMFM
     portText = matchUSBport({'3065335A3235'});
@@ -94,7 +100,7 @@ function runZLC(varargin)
     % Specify timer callbacks
     timerDevice.StartFcn = {@initializeTimerDevice,expInfo,serialObj};
     timerDevice.TimerFcn = {@executeTimerDevice, expInfo, serialObj};
-    timerDevice.StopFcn = {@stopTimerDevice, expInfo, serialObj};
+    timerDevice.StopFcn = {@stopTimerDevice};
     
     % Start the experiment
     % Get the date/time
@@ -225,34 +231,10 @@ function executeTimerDevice(timerObj, thisEvent, expInfo, serialObj)
         MFC1,MFC2,UMFM);
 end
 %% stopTimerDevice: Stop timer device
-function stopTimerDevice(~, thisEvent, expInfo, serialObj)
+function stopTimerDevice(~, thisEvent)
     % Get the event date/time
     currentDateTime = datestr(thisEvent.Data.time,'yyyymmdd_HHMMSS');
     disp([currentDateTime,'-> And its over babyyyyyy!!'])
-    % Generate serial command for volumteric flow rate set point to zero
-    % MFC1
-    if ~isempty(serialObj.MFC1.portName)
-        cmdSetPt = generateSerialCommand('setPoint',1,0); % Same units as device
-        [~] = controlAuxiliaryEquipments(serialObj.MFC1, cmdSetPt,1); % Set gas for MFC1
-        % Check if the set point was sent to the controller
-        outputMFC1 = controlAuxiliaryEquipments(serialObj.MFC1, serialObj.cmdPollData,1);
-        outputMFC1Temp = strsplit(outputMFC1,' '); % Split the output string
-        if str2double(outputMFC1Temp(6)) ~= 0
-            error("You should not be here!!!")
-        end
-    end
-    % Generate serial command for volumteric flow rate set point to zero
-    % MFC2
-    if ~isempty(serialObj.MFC2.portName)
-        cmdSetPt = generateSerialCommand('setPoint',1,0); % Same units as device
-        [~] = controlAuxiliaryEquipments(serialObj.MFC2, cmdSetPt,1); % Set gas for MFC1
-        % Check if the set point was sent to the controller
-        outputMFC2 = controlAuxiliaryEquipments(serialObj.MFC2, serialObj.cmdPollData,1);
-        outputMFC2Temp = strsplit(outputMFC2,' '); % Split the output string
-        if str2double(outputMFC2Temp(6)) ~= 0
-            error("You should not be here!!!")
-        end
-    end
 end
 %% dataLogger: Function to log data into a .mat file
 function dataLogger(~, expInfo, currentDateTime, ...
