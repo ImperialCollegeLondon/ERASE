@@ -14,6 +14,7 @@
 % controllers, will read flow data.
 %
 % Last modified:
+% - 2021-03-16, AK: Add valve switch times
 % - 2021-03-15, AK: Bug fixes
 % - 2021-03-12, AK: Add set point to zero at the end of the experiment
 % - 2021-03-12, AK: Add auto detection of ports and change structure
@@ -164,8 +165,24 @@ end
 function executeTimerDevice(timerObj, thisEvent, expInfo, serialObj)
     % Initialize outputs
     MFM = []; MFC1 = []; MFC2 = []; UMFM = [];
-    % Get the event date/time
-    currentDateTime = datestr(thisEvent.Data.time,'yyyymmdd_HHMMSS');
+    % Get user input to indicate switching of the valve
+    if timerObj.tasksExecuted == 1
+        % Waiting for user to switch the valve
+        promptUser = 'Switch asap! When you press Y, the gas switches (you wish)! [Y/N]: ';
+        userInput = input(promptUser,'s');
+        % This is recorded as the time of switch
+        % Empty readings (just for analysis purpose)
+        if strcmp(userInput,'Y') || strcmp(userInput,'y')
+            currentDateTime = datestr(now,'yyyymmdd_HHMMSS');
+            dataLogger(timerObj,expInfo,currentDateTime,[],...
+                [],[],[]);
+        end
+    end
+    % Get the sampling date/time
+    if timerObj.tasksExecuted > 1
+        % Get the event date/time
+        currentDateTime = datestr(now,'yyyymmdd_HHMMSS');
+    end
     disp([currentDateTime,'-> Performing task #', num2str(timerObj.tasksExecuted)])
     % Get the current state of the flow meter
     if ~isempty(serialObj.MFM.portName)
@@ -223,7 +240,6 @@ function stopTimerDevice(~, thisEvent, expInfo, serialObj)
         outputMFC1Temp = strsplit(outputMFC1,' '); % Split the output string
         if str2double(outputMFC1Temp(6)) ~= 0
             error("You should not be here!!!")
-            1+2
         end
     end
     % Generate serial command for volumteric flow rate set point to zero
