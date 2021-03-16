@@ -35,9 +35,9 @@ function runZLC(varargin)
         % Experiment name
         expInfo.expName = 'ZLC';
         % Maximum time of the experiment
-        expInfo.maxTime = 10;
+        expInfo.maxTime = 300;
         % Sampling time for the device
-        expInfo.samplingTime = 1;
+        expInfo.samplingTime = 2;
         % Define gas for MFM
         expInfo.gasName_MFM = 'He';
         % Define gas for MFC1
@@ -48,6 +48,8 @@ function runZLC(varargin)
         expInfo.MFC1_SP = 5.0;
         % Define gas for MFC2
         expInfo.MFC2_SP = 5.0;
+        % Calibrate meters flag
+        expInfo.calibrateMeters = False;
     else
         % Use the value passed to the function
         currentDateTime = datestr(now,'yyyymmdd_HHMMSS');
@@ -166,7 +168,7 @@ function executeTimerDevice(timerObj, thisEvent, expInfo, serialObj)
     % Initialize outputs
     MFM = []; MFC1 = []; MFC2 = []; UMFM = [];
     % Get user input to indicate switching of the valve
-    if timerObj.tasksExecuted == 1
+    if timerObj.tasksExecuted == 1 && ~expInfo.calibrateMeters
         % Waiting for user to switch the valve
         promptUser = 'Switch asap! When you press Y, the gas switches (you wish)! [Y/N]: ';
         userInput = input(promptUser,'s');
@@ -179,10 +181,7 @@ function executeTimerDevice(timerObj, thisEvent, expInfo, serialObj)
         end
     end
     % Get the sampling date/time
-    if timerObj.tasksExecuted > 1
-        % Get the event date/time
-        currentDateTime = datestr(now,'yyyymmdd_HHMMSS');
-    end
+    currentDateTime = datestr(now,'yyyymmdd_HHMMSS');
     disp([currentDateTime,'-> Performing task #', num2str(timerObj.tasksExecuted)])
     % Get the current state of the flow meter
     if ~isempty(serialObj.MFM.portName)

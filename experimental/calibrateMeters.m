@@ -12,6 +12,7 @@
 % Calibrates the flow meter and controller for different set point values
 %
 % Last modified:
+% - 2021-03-16, AK: Add calibrate meters flag
 % - 2021-03-12, AK: Initial creation
 %
 % Input arguments:
@@ -34,11 +35,13 @@ function calibrateMeters
     % Define gas for MFC2
     expInfo.gasName_MFC2 = 'CO2';
     % Define set point for MFC1
-    MFC1_SP = [0.0, 10.0, 20.0];
+    MFC1_SP = [0.0, 15.0, 30.0, 45.0, 60.0];
     
     % Loop through all setpoints to calibrate the meters
     for ii=1:length(MFC1_SP)
         expInfo.MFC1_SP = MFC1_SP(ii);
+        % Flag for meter calibration
+        expInfo.calibrateMeters = true;
         % Run the setup for different calibrations
         runZLC(expInfo)
     end
