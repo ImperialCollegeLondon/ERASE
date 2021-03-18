@@ -13,6 +13,7 @@
 # Reference: 10.1016/j.ces.2008.02.023
 #
 # Last modified:
+# - 2021-03-18, AK: Fix for inlet concentration
 # - 2021-03-17, AK: Initial creation
 #
 # Input arguments:
@@ -52,17 +53,7 @@ def simulateDeadVolume(**kwargs):
     if 'numberOfTanks' in kwargs:
         numberOfTanks = kwargs["numberOfTanks"]
     else:
-        numberOfTanks = 2
-    # Total pressure of the gas [Pa]
-    if 'pressureTotal' in kwargs:
-        pressureTotal = np.array(kwargs["pressureTotal"]);
-    else:
-        pressureTotal = np.array([1.e5]);
-    # Temperature of the gas [K]
-    if 'temperature' in kwargs:
-        temperature = np.array(kwargs["temperature"]);
-    else:
-        temperature = np.array([298.15]);
+        numberOfTanks = 1
     # Feed Mole Fraction [-]
     if 'feedMoleFrac' in kwargs:
         feedMoleFrac = np.array(kwargs["feedMoleFrac"])
@@ -74,17 +65,13 @@ def simulateDeadVolume(**kwargs):
     else:
         timeInt = (0.0,20)
     
-    # Gas constant
-    Rg = 8.314; # [J/mol K]
-    
     # Prepare tuple of input parameters for the ode solver
-    inputParameters = (flowRate, deadVolume, numberOfTanks, pressureTotal, temperature)            
+    inputParameters = (flowRate, deadVolume, numberOfTanks, feedMoleFrac)            
 
     # Prepare initial conditions vector
     # The first element is the inlet composition and the rest is the dead 
     # volume
-    initialConditions = np.concatenate((feedMoleFrac, 
-                                        np.ones([numberOfTanks])*(1-feedMoleFrac)))
+    initialConditions = np.ones([numberOfTanks])*(1-feedMoleFrac)
     # Solve the system of equations
     outputSol = solve_ivp(solveTanksInSeries, timeInt, initialConditions, 
                           method='Radau', t_eval = np.arange(timeInt[0],timeInt[1],0.1),
@@ -110,14 +97,11 @@ def simulateDeadVolume(**kwargs):
 def solveTanksInSeries(t, f, *inputParameters):
     import numpy as np
     
-    # Gas constant
-    Rg = 8.314; # [J/mol K]
-    
     # Unpack the tuple of input parameters used to solve equations
-    flowRate, deadVolume , numberOfTanks, pressureTotal, temperature = inputParameters
+    flowRate, deadVolume , numberOfTanks, feedMoleFrac = inputParameters
 
     # Initialize the derivatives to zero
-    df = np.zeros([numberOfTanks+1])
+    df = np.zeros([numberOfTanks])
 
     # Volume of each tank
     volumeOfTank = deadVolume/numberOfTanks
@@ -126,8 +110,9 @@ def solveTanksInSeries(t, f, *inputParameters):
     residenceTime = volumeOfTank/flowRate
 
     # Solve the ode
-    df[1:numberOfTanks+1] = ((1/residenceTime)
-                             *(f[0:numberOfTanks] - f[1:numberOfTanks+1]))
+    df[0] = ((1/residenceTime)*(feedMoleFrac - f[0]))
+    df[1:numberOfTanks] = ((1/residenceTime)
+                             *(f[0:numberOfTanks-1] - f[1:numberOfTanks]))
     
     # Return the derivatives for the solver
     return df
