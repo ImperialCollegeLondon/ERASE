@@ -13,6 +13,7 @@
 % 
 %
 % Last modified:
+% - 2021-03-18, AK: Add interpolation based on MS or flow meter
 % - 2021-03-18, AK: Add experiment analysis mode
 % - 2021-03-17, AK: Initial creation
 %
@@ -31,7 +32,12 @@ function reconciledData = concatenateData(fileToLoad)
     load(fileToLoad.calibrationFlow);
     % Analyse flow data
     MFC1 = [flowMS.outputStruct.MFC1]; % MFC1 - He
-    MFC2 = [flowMS.outputStruct.MFC2]; % MFC2 - CO2
+    % Done right now to check if calibration of MS is preesnt or not
+    if ~isfield(fileToLoad,'calibrationMS')
+        MFC2 = [flowMS.outputStruct.MFC2]; % MFC2 - CO2
+    else
+        MFC2 = [flowMS.outputStruct.MFM]; % MFC2 - CO2
+    end
     % Get the datetime and volumetric flow rate
     dateTimeFlow = datetime({flowMS.outputStruct.samplingDateTime},...
         'InputFormat','yyyyMMdd_HHmmss');
@@ -68,13 +74,15 @@ function reconciledData = concatenateData(fileToLoad)
     
     % Find index corresponding to initial time for meters and MS
     indexInitial_Flow = find(dateTimeFlow>=initialTime,1,'first');
-    indexInitial_He = find(dateTimeHe>=initialTime,1,'first');
-    indexInitial_CO2 = find(dateTimeCO2>=initialTime,1,'first');    
-
+  
+    indexInitial_MS = max([find(dateTimeHe>=initialTime,1,'first'),...
+                        find(dateTimeCO2>=initialTime,1,'first')]);
+                    
     % Find index corresponding to final time for meters and MS
     indexFinal_Flow = find(dateTimeFlow<=finalTime,1,'last');
-    indexFinal_He = find(dateTimeHe<=finalTime,1,'last');
-    indexFinal_CO2 = find(dateTimeCO2<=finalTime,1,'last');    
+    indexFinal_MS = min([find(dateTimeHe<=finalTime,1,'last'),...
+                        find(dateTimeCO2<=finalTime,1,'last')]);
+  
 
     % Reconciled data (without interpolation)
     % NOTE: The whole reconciliation assumes that the MS is running after #
@@ -84,30 +92,54 @@ function reconciledData = concatenateData(fileToLoad)
     reconciledData.raw.volFlow_He = volFlow_He(indexInitial_Flow:end);
     reconciledData.raw.volFlow_CO2 = volFlow_CO2(indexInitial_Flow:end);
     % MS    
-    reconciledData.raw.dateTimeMS_He = dateTimeHe(indexInitial_He:end);
-    reconciledData.raw.dateTimeMS_CO2 = dateTimeCO2(indexInitial_CO2:end);
-    reconciledData.raw.signalHe = str2num(cell2mat(rawMSData{1,6}(indexInitial_He:end)));
-    reconciledData.raw.signalCO2 = str2num(cell2mat(rawMSData{1,3}(indexInitial_CO2:end)));  
+    reconciledData.raw.dateTimeMS_He = dateTimeHe(indexInitial_MS:end);
+    reconciledData.raw.dateTimeMS_CO2 = dateTimeCO2(indexInitial_MS:end);
+    reconciledData.raw.signalHe = str2num(cell2mat(rawMSData{1,6}(indexInitial_MS:end)));
+    reconciledData.raw.signalCO2 = str2num(cell2mat(rawMSData{1,3}(indexInitial_MS:end)));  
     
     % Reconciled data (with interpolation)
-    % Meters and the controllers
-    reconciledData.flow(:,1) = seconds(reconciledData.raw.dateTimeFlow...
-        -reconciledData.raw.dateTimeFlow(1)); % Time elapsed [s]
-    reconciledData.flow(:,2) = reconciledData.raw.volFlow_He; % He Flow [ccm]
-    reconciledData.flow(:,3) = reconciledData.raw.volFlow_CO2; % CO2 flow [ccm]
+    % Interpolate based on flow
+    if fileToLoad.interpMS
+        % Meters and the controllers
+        reconciledData.flow(:,1) = seconds(reconciledData.raw.dateTimeFlow...
+            -reconciledData.raw.dateTimeFlow(1)); % Time elapsed [s]
+        reconciledData.flow(:,2) = reconciledData.raw.volFlow_He; % He Flow [ccm]
+        reconciledData.flow(:,3) = reconciledData.raw.volFlow_CO2; % CO2 flow [ccm]
 
-    % MS
-    rawTimeElapsedHe = seconds(reconciledData.raw.dateTimeMS_He ...
-        - reconciledData.raw.dateTimeMS_He(1)); % Time elapsed He [s]
-    rawTimeElapsedCO2 = seconds(reconciledData.raw.dateTimeMS_CO2 ...
-        - reconciledData.raw.dateTimeMS_CO2(1)); % Time elapsed CO2 [s]
-    % Interpolate the MS signal at the times of flow meter/controller
-    reconciledData.MS(:,1) = reconciledData.flow(:,1); % Use the time of the flow meter [s]
-    reconciledData.MS(:,2) = interp1(rawTimeElapsedHe,reconciledData.raw.signalHe,...
-                                    reconciledData.MS(:,1)); % Interpoloted MS signal He [-]
-    reconciledData.MS(:,3) = interp1(rawTimeElapsedCO2,reconciledData.raw.signalCO2,...
-                                    reconciledData.MS(:,1)); % Interpoloted MS signal CO2 [-]
-    
+        % MS
+        rawTimeElapsedHe = seconds(reconciledData.raw.dateTimeMS_He ...
+            - reconciledData.raw.dateTimeMS_He(1)); % Time elapsed He [s]
+        rawTimeElapsedCO2 = seconds(reconciledData.raw.dateTimeMS_CO2 ...
+            - reconciledData.raw.dateTimeMS_CO2(1)); % Time elapsed CO2 [s]
+        % Interpolate the MS signal at the times of flow meter/controller
+        reconciledData.MS(:,1) = reconciledData.flow(:,1); % Use the time of the flow meter [s]
+        reconciledData.MS(:,2) = interp1(rawTimeElapsedHe,reconciledData.raw.signalHe,...
+                                        reconciledData.MS(:,1)); % Interpoloted MS signal He [-]
+        reconciledData.MS(:,3) = interp1(rawTimeElapsedCO2,reconciledData.raw.signalCO2,...
+                                        reconciledData.MS(:,1)); % Interpoloted MS signal CO2 [-]
+    % Interpolate based on MS
+    else
+        % MS
+        rawTimeElapsedHe = seconds(reconciledData.raw.dateTimeMS_He ...
+            - reconciledData.raw.dateTimeMS_He(1)); % Time elapsed He [s]
+        rawTimeElapsedCO2 = seconds(reconciledData.raw.dateTimeMS_CO2 ...
+            - reconciledData.raw.dateTimeMS_CO2(1)); % Time elapsed CO2 [s] 
+        % Interpolate the MS signal at the times of flow meter/controller
+        reconciledData.MS(:,1) = rawTimeElapsedHe; % Use the time of He [s]
+        reconciledData.MS(:,2) = reconciledData.raw.signalHe; % Raw signal He [-]
+        reconciledData.MS(:,3) = interp1(rawTimeElapsedCO2,reconciledData.raw.signalCO2,...
+                                        reconciledData.MS(:,1)); % Interpoloted MS signal CO2 based on He time [-]
+        
+        % Meters and the controllers
+        rawTimeElapsedFlow = seconds(reconciledData.raw.dateTimeFlow...
+                                    -reconciledData.raw.dateTimeFlow(1)); 
+        reconciledData.flow(:,1) = reconciledData.MS(:,1); % Time elapsed of MS [s]
+        reconciledData.flow(:,2) = interp1(rawTimeElapsedFlow,reconciledData.raw.volFlow_He,...
+                                        reconciledData.MS(:,1)); % Interpoloted He Flow [ccm]
+        reconciledData.flow(:,3) = interp1(rawTimeElapsedFlow,reconciledData.raw.volFlow_CO2,...
+                                        reconciledData.MS(:,1)); % Interpoloted CO2 flow [ccm]
+    end
+                                    
     % Get the mole fraction used for the calibration
     % This will be used in the analyzeCalibration script
     if ~isfield(fileToLoad,'calibrationMS')

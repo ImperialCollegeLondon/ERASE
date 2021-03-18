@@ -22,9 +22,9 @@
 % Output arguments:
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function analyseCalibration(fileToLoadMeter,fileToLoadMS)
+function analyzeCalibration(fileToLoadMeter,fileToLoadMS)
 % Find the directory of the file and move to the top folder
-filePath = which('analyseCalibration');
+filePath = which('analyzeCalibration');
 cd(filePath(1:end-21));
 
 % Get the git commit ID
