@@ -13,6 +13,7 @@
 % 
 %
 % Last modified:
+% - 2021-03-18, AK: Fix variable names
 % - 2021-03-17, AK: Change structure
 % - 2021-03-17, AK: Initial creation
 %
@@ -58,11 +59,11 @@ if ~isempty(fileToLoadMeter)
     
     % Calibrate the meters
     % MFC
-    calibration.MFC_He = volFlow_MFC1_He'\volFlow_UMFM_He';
-    calibration.MFC_CO2 = volFlow_MFC1_CO2'\volFlow_UMFM_CO2';
+    calibrationFlow.MFC_He = volFlow_MFC1_He'\volFlow_UMFM_He';
+    calibrationFlow.MFC_CO2 = volFlow_MFC1_CO2'\volFlow_UMFM_CO2';
     % MFM
-    calibration.MFM_He = volFlow_MFM_He'\volFlow_UMFM_He';
-    calibration.MFM_CO2 = volFlow_MFM_CO2'\volFlow_UMFM_CO2';
+    calibrationFlow.MFM_He = volFlow_MFM_He'\volFlow_UMFM_He';
+    calibrationFlow.MFM_CO2 = volFlow_MFM_CO2'\volFlow_UMFM_CO2';
     
     % Save the calibration data into a .mat file
     % Check if calibration data folder exists
@@ -70,14 +71,14 @@ if ~isempty(fileToLoadMeter)
             'calibrationData'],'dir') == 7
         % Save the calibration data for further use
         save(['experimentalData',filesep,...
-            'calibrationData',filesep,fileToLoadMeter,'_Model'],'calibration',...
+            'calibrationData',filesep,fileToLoadMeter,'_Model'],'calibrationFlow',...
             'gitCommitID');
     else
         % Create the calibration data folder if it does not exist
         mkdir(['experimentalData',filesep,'calibrationData'])
         % Save the calibration data for further use
         save(['experimentalData',filesep,...
-            'calibrationData',filesep,fileToLoadMeter,'_Model'],'calibration',...
+            'calibrationData',filesep,fileToLoadMeter,'_Model'],'calibrationFlow',...
             'gitCommitID');
     end
    
@@ -87,19 +88,19 @@ if ~isempty(fileToLoadMeter)
     subplot(2,2,1)
     hold on
     scatter(volFlow_MFC1_He,volFlow_UMFM_He,'or')
-    plot(MFC1Set,calibration.MFC_He*MFC1Set,'b')
+    plot(MFC1Set,calibrationFlow.MFC_He*MFC1Set,'b')
     subplot(2,2,2)
     hold on
     scatter(volFlow_MFC1_CO2,volFlow_UMFM_CO2,'or')
-    plot(MFC1Set,calibration.MFC_CO2*MFC1Set,'b')    
+    plot(MFC1Set,calibrationFlow.MFC_CO2*MFC1Set,'b')    
     subplot(2,2,3)
     hold on
     scatter(volFlow_MFM_He,volFlow_UMFM_He,'or')
-    plot(MFC1Set,calibration.MFM_He*MFC1Set,'b')    
+    plot(MFC1Set,calibrationFlow.MFM_He*MFC1Set,'b')    
     subplot(2,2,4)
     hold on
     scatter(volFlow_MFM_CO2,volFlow_UMFM_CO2,'or')
-    plot(MFC1Set,calibration.MFM_CO2*MFC1Set,'b')
+    plot(MFC1Set,calibrationFlow.MFM_CO2*MFC1Set,'b')
 end
 % Load the file that contains the MS calibration
 if ~isempty(fileToLoadMS)
@@ -108,8 +109,8 @@ if ~isempty(fileToLoadMS)
 
     % Fit a polynomial function to get the model for MS
     % Fitting a 3rd order polynomial (check before accepting this)
-    calibration.He = polyfit(reconciledData.moleFrac(:,1),reconciledData.MS(:,2),3); % He
-    calibration.CO2 = polyfit(reconciledData.moleFrac(:,2),reconciledData.MS(:,3),3); % Co2
+    calibrationMS.He = polyfit(reconciledData.MS(:,2),reconciledData.moleFrac(:,1),3); % He
+    calibrationMS.CO2 = polyfit(reconciledData.MS(:,3),reconciledData.moleFrac(:,2),3); % Co2
     
     % Save the calibration data into a .mat file
     % Check if calibration data folder exists
@@ -117,14 +118,14 @@ if ~isempty(fileToLoadMS)
             'calibrationData'],'dir') == 7
         % Save the calibration data for further use
         save(['experimentalData',filesep,...
-            'calibrationData',filesep,fileToLoadMS.flow,'_Model'],'calibration',...
+            'calibrationData',filesep,fileToLoadMS.flow,'_Model'],'calibrationMS',...
             'gitCommitID');
     else
         % Create the calibration data folder if it does not exist
         mkdir(['experimentalData',filesep,'calibrationData'])
         % Save the calibration data for further use
         save(['experimentalData',filesep,...
-            'calibrationData',filesep,fileToLoadMS.flow,'_Model'],'calibration',...
+            'calibrationData',filesep,fileToLoadMS.flow,'_Model'],'calibrationMS',...
             'gitCommitID');
     end
     
@@ -132,14 +133,14 @@ if ~isempty(fileToLoadMS)
     figure
     % He
     subplot(1,2,1)
-    plot(0:0.01:1,polyval(calibration.He,0:0.01:1))
+    plot(1e-13:1e-13:1e-8,polyval(calibrationMS.He,1e-13:1e-13:1e-8))
     hold on
-    plot(reconciledData.moleFrac(:,1),reconciledData.MS(:,2),'or')
+    plot(reconciledData.MS(:,2),reconciledData.moleFrac(:,1),'or')
     
     % CO2
     subplot(1,2,2)
-    plot(0:0.01:1,polyval(calibration.CO2,0:0.01:1))
+    plot(1e-13:1e-13:1e-8,polyval(calibrationMS.CO2,1e-13:1e-13:1e-8))
     hold on
-    plot(reconciledData.moleFrac(:,2),reconciledData.MS(:,3),'or')
+    plot(reconciledData.MS(:,3),reconciledData.moleFrac(:,2),'or')
 end
 end

@@ -13,6 +13,7 @@
 % 
 %
 % Last modified:
+% - 2021-03-18, AK: Add experiment analysis mode
 % - 2021-03-17, AK: Initial creation
 %
 % Input arguments:
@@ -23,11 +24,11 @@
 function reconciledData = reconcileData(fileToLoad)
     % Load flow data
     flowMS = load(fileToLoad.flow);
-    if ~isfield(fileToLoad,'calibration')
-        error('You gotta calibrate your flow meters fisrst!! Or check the file name of the flow calibration!!')
+    if ~isfield(fileToLoad,'calibrationFlow')
+        error('You gotta calibrate your flow meters first!! Or check the file name of the flow calibration!!')
     end
     % Flow Calibration File
-    calibrationMeters = load(fileToLoad.calibration);
+    load(fileToLoad.calibrationFlow);
     % Analyse flow data
     MFC1 = [flowMS.outputStruct.MFC1]; % MFC1 - He
     MFC2 = [flowMS.outputStruct.MFC2]; % MFC2 - CO2
@@ -37,8 +38,17 @@ function reconciledData = reconcileData(fileToLoad)
     volFlow_MFC1 = [MFC1.volFlow]; % He
     volFlow_MFC2 = [MFC2.volFlow]; % CO2
     % Apply the calibration for the flows
-    volFlow_He = volFlow_MFC1*calibrationMeters.calibration.MFC_He;
-    volFlow_CO2 = volFlow_MFC2*calibrationMeters.calibration.MFC_CO2;
+    volFlow_He = volFlow_MFC1*calibrationFlow.MFC_He;
+    % For calibration both MFCs are present
+    % Done right now to check if calibration of MS is preesnt or not
+    if ~isfield(fileToLoad,'calibrationMS')
+        volFlow_CO2 = volFlow_MFC2*calibrationFlow.MFC_CO2;
+    % For actual measurements, one MFC and one MFM present
+    % NOTE: Here MFC2 = MFM!!!!!
+    else
+        % Flow is converted assuming helium calibration for MFM
+        volFlow_CO2 = volFlow_MFC2*calibrationFlow.MFM_He;
+    end
     % Load MS Ascii data
     % Create file identifier
     fileId = fopen(fileToLoad.MS);
@@ -67,8 +77,8 @@ function reconciledData = reconcileData(fileToLoad)
     indexFinal_CO2 = find(dateTimeCO2<=finalTime,1,'last');    
 
     % Reconciled data (without interpolation)
-    % The whole reconciliation assumes that the MS is running after the
-    % flow meters to avoid any issues with interpolation!!!
+    % NOTE: The whole reconciliation assumes that the MS is running after #
+    % the flow meters to avoid any issues with interpolation!!!
     % Meters and the controllers
     reconciledData.raw.dateTimeFlow = dateTimeFlow(indexInitial_Flow:end);
     reconciledData.raw.volFlow_He = volFlow_He(indexInitial_Flow:end);
@@ -98,7 +108,18 @@ function reconciledData = reconcileData(fileToLoad)
     reconciledData.MS(:,3) = interp1(rawTimeElapsedCO2,reconciledData.raw.signalCO2,...
                                     reconciledData.MS(:,1)); % Interpoloted MS signal CO2 [-]
     
-    % Compute the mole fractions using the reconciled flow data
-    reconciledData.moleFrac(:,1) = (reconciledData.flow(:,2))./(reconciledData.flow(:,2)+reconciledData.flow(:,3));
-    reconciledData.moleFrac(:,2) = 1 - reconciledData.moleFrac(:,1);
+    % Get the mole fraction used for the calibration
+    % This will be used in the analyzeCalibration script
+    if ~isfield(fileToLoad,'calibrationMS')
+        % Compute the mole fractions using the reconciled flow data
+        reconciledData.moleFrac(:,1) = (reconciledData.flow(:,2))./(reconciledData.flow(:,2)+reconciledData.flow(:,3));
+        reconciledData.moleFrac(:,2) = 1 - reconciledData.moleFrac(:,1);
+    % If actual experiment is analyzed, loads the calibration MS file
+    else
+        % MS Calibration File
+        load(fileToLoad.calibrationMS);
+        % Convert the raw signal to concentration
+        reconciledData.moleFrac(:,1) = polyval(calibrationMS.He,reconciledData.MS(:,2)); % He [-]
+        reconciledData.moleFrac(:,2) = polyval(calibrationMS.CO2,reconciledData.MS(:,3)); % CO2 [-]
+    end
 end
