@@ -21,7 +21,7 @@
 % Output arguments:
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function reconciledData = reconcileData(fileToLoad)
+function reconciledData = concatenateData(fileToLoad)
     % Load flow data
     flowMS = load(fileToLoad.flow);
     if ~isfield(fileToLoad,'calibrationFlow')

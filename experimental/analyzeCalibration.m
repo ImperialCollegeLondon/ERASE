@@ -105,7 +105,7 @@ end
 % Load the file that contains the MS calibration
 if ~isempty(fileToLoadMS)
     % Call reconcileData function for calibration of the MS
-    reconciledData = reconcileData(fileToLoadMS);
+    reconciledData = concatenateData(fileToLoadMS);
 
     % Fit a polynomial function to get the model for MS
     % Fitting a 3rd order polynomial (check before accepting this)
