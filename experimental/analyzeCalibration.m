@@ -13,6 +13,8 @@
 % 
 %
 % Last modified:
+% - 2021-03-19, HA: Added kmeans calculation to obtain mean ion current for
+%                   polynomial fitting
 % - 2021-03-18, AK: Fix variable names
 % - 2021-03-17, AK: Change structure
 % - 2021-03-17, AK: Initial creation
@@ -106,11 +108,19 @@ end
 if ~isempty(fileToLoadMS)
     % Call reconcileData function for calibration of the MS
     reconciledData = concatenateData(fileToLoadMS);
-
+    % Find the mean values of Ion current at concentration steps and
+    % corresponding indices
+    [indicesHe, meansHe]=kmeans(reconciledData.MS(:,2),6);
+    [indicesCO2, meansCO2]=kmeans(reconciledData.MS(:,3),6);
+    % create new ion current array using mean values
+    for kk = 1:length(meansHe)
+        correctedMS_He(find(indicesHe==kk)) = meansHe(kk);
+        correctedMS_CO2(find(indicesCO2==kk)) = meansCO2(kk);
+    end
     % Fit a polynomial function to get the model for MS
     % Fitting a 3rd order polynomial (check before accepting this)
-    calibrationMS.He = polyfit(reconciledData.MS(:,2),reconciledData.moleFrac(:,1),3); % He
-    calibrationMS.CO2 = polyfit(reconciledData.MS(:,3),reconciledData.moleFrac(:,2),3); % Co2
+    calibrationMS.He = polyfit(correctedMS_He,reconciledData.moleFrac(:,1),3); % He
+    calibrationMS.CO2 = polyfit(correctedMS_CO2,reconciledData.moleFrac(:,2),3); % Co2
     
     % Save the calibration data into a .mat file
     % Check if calibration data folder exists
@@ -135,12 +145,14 @@ if ~isempty(fileToLoadMS)
     subplot(1,2,1)
     plot(1e-13:1e-13:1e-8,polyval(calibrationMS.He,1e-13:1e-13:1e-8))
     hold on
-    plot(reconciledData.MS(:,2),reconciledData.moleFrac(:,1),'or')
+    plot(correctedMS_He,reconciledData.moleFrac(:,1),'or')
+    xlim([0 2e-9]);
     
     % CO2
     subplot(1,2,2)
     plot(1e-13:1e-13:1e-8,polyval(calibrationMS.CO2,1e-13:1e-13:1e-8))
     hold on
-    plot(reconciledData.MS(:,3),reconciledData.moleFrac(:,2),'or')
+    plot(correctedMS_CO2,reconciledData.moleFrac(:,2),'or')
+    xlim([0 3.7e-9]);
 end
 end
