@@ -52,10 +52,9 @@ currentDT = auxiliaryFunctions.getCurrentDateTime()
 # (False) or not (True)
 flagIndTime = True
 
-# Flag to determine whether constant pressure or constant flow rate model to 
-# be used
-# (False) or not (True)
-flagIndTime = True
+# Flag to determine whether constant pressure (False) or constant flow rate 
+# model to be used (True)
+modelConstF = False
 
 # Sensor ID
 sensorID = [6,2] # [-]
@@ -78,7 +77,7 @@ flowIn = 5e-7 # [s]
 
 # Measurement noise characteristics
 meanNoise = 0.0 # [g/kg]
-stdNoise = 0.1 # [g/kg]
+stdNoise = 0.0 # [g/kg]
 
 # Loop over all rate constants
 outputStruct = {}
