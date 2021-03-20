@@ -12,6 +12,7 @@
 # Simulates the sensor chamber as a CSTR incorporating kinetic effects
 #
 # Last modified:
+# - 2021-03-20, AK: Bug fix for flow rate calculator
 # - 2021-02-19, AK: Add relative tolerances for ode solver
 # - 2021-02-03, AK: Add total volume and void fraction
 # - 2021-02-02, AK: Add flow rate to output
@@ -36,7 +37,7 @@ def simulateFullModel(**kwargs):
     from scipy.integrate import solve_ivp
     from simulateSensorArray import simulateSensorArray
     import auxiliaryFunctions
-    
+
     # Plot flag
     plotFlag = False
     
@@ -89,6 +90,12 @@ def simulateFullModel(**kwargs):
         timeInt = kwargs["timeInt"]
     else:
         timeInt = (0.0,2000)
+
+    # Time step for output printing 
+    if 'timeStep' in kwargs:
+        timeStep = kwargs["timeStep"]
+    else:
+        timeStep = 5.
                     
     # Volume of sorbent material [m3]
     if 'volSorbent' in kwargs:
@@ -151,7 +158,7 @@ def simulateFullModel(**kwargs):
         initialConditions[numberOfGases-1:2*numberOfGases-1] = sensorLoadingPerGasVol # Initial Loading
         initialConditions[2*numberOfGases-1] = pressureTotal # Outlet pressure the same as inlet pressure
         outputSol = solve_ivp(solveSorptionEquationConstF, timeInt, initialConditions, 
-                              method='Radau', t_eval = np.arange(timeInt[0],timeInt[1],5),
+                              method='Radau', t_eval = np.arange(timeInt[0],timeInt[1],timeStep),
                               rtol = 1e-6, args = inputParameters)
 
         # Flow out vector in output
@@ -167,17 +174,25 @@ def simulateFullModel(**kwargs):
         initialConditions[0:numberOfGases-1] = initMoleFrac[0:numberOfGases-1] # Gas mole fraction
         initialConditions[numberOfGases-1:2*numberOfGases-1] = sensorLoadingPerGasVol # Initial Loading
         outputSol = solve_ivp(solveSorptionEquationConstP, timeInt, initialConditions, 
-                              method='Radau', t_eval = np.arange(timeInt[0],timeInt[1],5),
+                              method='Radau', t_eval = np.arange(timeInt[0],timeInt[1],timeStep),
                               rtol = 1e-6, args = inputParameters)
         
         # Presure vector in output
         pressureVec =  pressureTotal * np.ones(len(outputSol.t)) # Constant pressure
 
-        # Compute the outlet flow rate
-        dqdt = np.gradient(outputSol.y[numberOfGases-1:2*numberOfGases-1,:],
-                           outputSol.t, axis=1) # Compute gradient of loading
-        sum_dqdt = np.sum(dqdt, axis=0) # Time resolved sum of gradient
-        flowOut = flowIn - ((volSorbent*(8.314*temperature)/pressureTotal)*(sum_dqdt))
+        # This is needed to make sure constant pressure model functions well
+        # If the time of integration and the time step is equal then the code 
+        # will fail because of the flow rate determination step which requires 
+        # a gradient - very first step flow out and in are considered to be the
+        # same if only one element present
+        if len(outputSol.t) == 1 :
+            flowOut = flowIn
+        else:
+            # Compute the outlet flow rate
+            dqdt = np.gradient(outputSol.y[numberOfGases-1:2*numberOfGases-1,:],
+                               outputSol.t, axis=1) # Compute gradient of loading
+            sum_dqdt = np.sum(dqdt, axis=0) # Time resolved sum of gradient
+            flowOut = flowIn - ((volSorbent*(8.314*temperature)/pressureTotal)*(sum_dqdt))
         
         # Parse out the output matrix and add flow rate
         resultMat = np.row_stack((outputSol.y,pressureVec,flowOut))
