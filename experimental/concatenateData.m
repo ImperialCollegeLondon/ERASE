@@ -13,6 +13,7 @@
 % 
 %
 % Last modified:
+% - 2021-03-22, AK: Add checks for MS concatenation
 % - 2021-03-18, AK: Add interpolation based on MS or flow meter
 % - 2021-03-18, AK: Add experiment analysis mode
 % - 2021-03-17, AK: Initial creation
@@ -36,7 +37,7 @@ function reconciledData = concatenateData(fileToLoad)
     if ~isfield(fileToLoad,'calibrationMS')
         MFC2 = [flowMS.outputStruct.MFC2]; % MFC2 - CO2
     else
-        MFC2 = [flowMS.outputStruct.MFM]; % MFC2 - CO2
+        MFC2 = [flowMS.outputStruct.MFM]; % MFM - CO2
     end
     % Get the datetime and volumetric flow rate
     dateTimeFlow = datetime({flowMS.outputStruct.samplingDateTime},...
@@ -92,11 +93,31 @@ function reconciledData = concatenateData(fileToLoad)
     reconciledData.raw.volFlow_He = volFlow_He(indexInitial_Flow:end);
     reconciledData.raw.volFlow_CO2 = volFlow_CO2(indexInitial_Flow:end);
     % MS    
-    reconciledData.raw.dateTimeMS_He = dateTimeHe(indexInitial_MS:end);
-    reconciledData.raw.dateTimeMS_CO2 = dateTimeCO2(indexInitial_MS:end);
-    reconciledData.raw.signalHe = str2num(cell2mat(rawMSData{1,6}(indexInitial_MS:end)));
-    reconciledData.raw.signalCO2 = str2num(cell2mat(rawMSData{1,3}(indexInitial_MS:end)));  
-    
+    % Find the index of the last entry (from one of the two gases)
+    concantenateLastInd = min([size(dateTimeHe(indexInitial_MS:end),1), ...
+        size(dateTimeHe(indexInitial_MS:end),1)]);
+    reconciledData.raw.dateTimeMS_He = dateTimeHe(indexInitial_MS:concantenateLastInd);
+    reconciledData.raw.dateTimeMS_CO2 = dateTimeCO2(indexInitial_MS:concantenateLastInd);
+    % Check if any element is negative for concatenation
+    for ii=1:length(indexInitial_MS:concantenateLastInd)
+        % He
+        % If negative element, initialize to eps
+        if str2num(cell2mat(rawMSData{1,6}(ii))) < 0
+            reconciledData.raw.signalHe(ii) = eps;
+        % If not, use the actual value
+        else
+            reconciledData.raw.signalHe(ii) = str2num(cell2mat(rawMSData{1,6}(ii)));
+        end
+        % CO2        
+        % If negative element, initialize to eps        
+        if str2num(cell2mat(rawMSData{1,3}(ii))) < 0
+            reconciledData.raw.signalCO2(ii) = eps;
+        % If not, use the actual value            
+        else
+            reconciledData.raw.signalCO2(ii) = str2num(cell2mat(rawMSData{1,3}(ii)));
+        end
+    end
+  
     % Reconciled data (with interpolation)
     % Interpolate based on flow
     if fileToLoad.interpMS

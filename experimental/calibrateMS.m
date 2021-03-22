@@ -24,7 +24,7 @@ function calibrateMS
     expInfo.expName = ['ZLCCalibrateMS','_',...
         datestr(datetime('now'),'yyyymmdd')];
     % Maximum time of the experiment
-    expInfo.maxTime = 240;
+    expInfo.maxTime = 300;
     % Sampling time for the device
     expInfo.samplingTime = 2;
     % Define gas for MFM
