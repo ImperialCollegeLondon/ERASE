@@ -12,6 +12,7 @@
 # Plots for the simulation manuscript
 #
 # Last modified:
+# - 2021-03-05, AK: Add plot for full model
 # - 2021-03-05, AK: Add plot for three materials
 # - 2021-03-05, AK: Add plot for comparing sensor array with graphical tool
 # - 2021-02-24, AK: Add function to generate sensitive region for each material
@@ -67,10 +68,16 @@ def plotsForArticle_Simulation(**kwargs):
             plotForArticle_GraphicalTool(gitCommitID, currentDT, 
                                        saveFlag, saveFileExtension)
 
-    # If graphical tool needs to be plotted
+    # If three materials needs to be plotted
     if 'threeMaterials' in kwargs:
         if kwargs["threeMaterials"]:
             plotForArticle_ThreeMaterials(gitCommitID, currentDT, 
+                                       saveFlag, saveFileExtension)
+
+    # If kinetic importance needs to be plotted
+    if 'kineticsImportance' in kwargs:
+        if kwargs["kineticsImportance"]:
+            plotForArticle_KineticsImportance(gitCommitID, currentDT, 
                                        saveFlag, saveFileExtension)
 
 # fun: plotForArticle_SensorArray
@@ -316,8 +323,7 @@ def plotForArticle_ResponseShape(gitCommitID, currentDT,
     plt.show()
 
 # fun: plotForArticle_GraphicalTool
-# Plots the histogram of gas compositions for a one and two material 
-# sensor array
+# Plots the graphical tool to screen for materials
 def plotForArticle_GraphicalTool(gitCommitID, currentDT,
                                  saveFlag, saveFileExtension):
     import numpy as np
@@ -503,8 +509,7 @@ def plotForArticle_GraphicalTool(gitCommitID, currentDT,
     plt.show()
 
 # fun: plotForArticle_GraphicalTool
-# Plots the histogram of gas compositions for a one and two material 
-# sensor array
+# Plots the analaysis for three material arrays
 def plotForArticle_ThreeMaterials(gitCommitID, currentDT,
                                   saveFlag, saveFileExtension):
     import numpy as np
@@ -707,6 +712,119 @@ def plotForArticle_ThreeMaterials(gitCommitID, currentDT,
     if saveFlag:
         # FileName: threeMaterials_<currentDateTime>_<GitCommitID_Current>
         saveFileName = "threeMaterials_" + currentDT + "_" + gitCommitID + saveFileExtension
+        savePath = os.path.join('..','simulationFigures','simulationManuscript',saveFileName)
+        # Check if inputResources directory exists or not. If not, create the folder
+        if not os.path.exists(os.path.join('..','simulationFigures','simulationManuscript')):
+            os.mkdir(os.path.join('..','simulationFigures','simulationManuscript'))
+        plt.savefig (savePath)
+    plt.show()
+
+# fun: plotForArticle_GraphicalTool
+# Plots the analaysis for three material arrays
+def plotForArticle_KineticsImportance(gitCommitID, currentDT,
+                                  saveFlag, saveFileExtension):
+    import numpy as np
+    from numpy import load
+    import os
+    import matplotlib.pyplot as plt
+    plt.style.use('doubleColumn.mplstyle') # Custom matplotlib style file    
+    
+    # Colors for plot
+    colorsForPlot = ("#5fad56","#ff9e00","#e5383b","#6c757d")
+    
+    # Labels for materials
+    materialText = ["$\\alpha$", "$\\beta$"]
+    
+    # File name for equilibrium model and full model estimates
+    loadFileName_E = "fullModelConcentrationEstimate_6-2_20210320_1336_4b80775.npz" # Eqbm
+    loadFileName_F = "fullModelConcentrationEstimate_6-2_20210320_1338_4b80775.npz" # Full model
+    
+    # Parse out equilbirum results file
+    simResultsFile = os.path.join('..','simulationResults',loadFileName_E);
+    loadedFile_E = load(simResultsFile, allow_pickle=True)
+    concentrationEstimate_E = loadedFile_E["arrayConcentration"]
+    
+    # Parse out full model results file
+    simResultsFile = os.path.join('..','simulationResults',loadFileName_F);
+    loadedFile_F = load(simResultsFile, allow_pickle=True)
+    concentrationEstimate_F = loadedFile_F["arrayConcentration"]
+
+    # Parse out true responses (this should be the same for both eqbm and full
+    # model (here loaded from full model)
+    trueResponseStruct = loadedFile_F["outputStruct"].item()
+    # Parse out time
+    timeSim = []
+    timeSim = trueResponseStruct[0]["timeSim"]
+    # Parse out feed mole fraction
+    feedMoleFrac = trueResponseStruct[0]["inputParameters"][5]
+    # Parse out true sensor finger print
+    sensorFingerPrint = np.zeros([len(timeSim),len(trueResponseStruct)])
+    for ii in range(len(trueResponseStruct)):
+        sensorFingerPrint[:,ii] = trueResponseStruct[ii]["sensorFingerPrint"]
+        
+    # Points that will be taken for sampling (for plots)
+    lenSampling = 6
+    fig = plt.figure
+    # Plot the true sensor response (using the full model)
+    ax1 = plt.subplot(1,2,1)
+    ax1.plot(timeSim[0:len(timeSim):lenSampling],
+            sensorFingerPrint[0:len(timeSim):lenSampling,0],
+            marker = 'o', markersize = 2, linestyle = 'dotted', linewidth = 0.5,
+            color=colorsForPlot[0])
+    ax1.plot(timeSim[0:len(timeSim):lenSampling],
+            sensorFingerPrint[0:len(timeSim):lenSampling,1],
+            marker = 'D', markersize = 2, linestyle = 'dotted', linewidth = 0.5,
+            color=colorsForPlot[1])
+    ax1.locator_params(axis="x", nbins=4)
+    ax1.locator_params(axis="y", nbins=4)
+    ax1.set(xlabel='$t$ [s]', 
+            ylabel='$m$ [g kg$^{\mathregular{-1}}$]',
+            xlim = [0, 1000.], ylim = [0, 40])
+    
+    ax1.text(20, 37, "(a)", fontsize=10)
+    ax1.text(800, 37, "Array D", fontsize=10, 
+             color = '#0077b6')
+    ax1.text(780, 33.5, "$y^{\mathregular{in}}_{\mathregular{1}}$ = 0.1", fontsize=10, 
+             color = '#0077b6')
+    
+    # Label for the materials     
+    ax1.text(900, 26, materialText[0], fontsize=10, 
+            backgroundcolor = 'w', color = colorsForPlot[0])
+    ax1.text(900, 4, materialText[1], fontsize=10, 
+            backgroundcolor = 'w', color = colorsForPlot[1])    
+    
+    # Plot the evolution of the gas composition with respect to time
+    ax2 = plt.subplot(1,2,2)
+    ax2.plot(timeSim[0:len(timeSim):lenSampling],
+            concentrationEstimate_E[0:len(timeSim):lenSampling,2],
+            marker = 'v', markersize = 2, linestyle = 'dotted', linewidth = 0.5,
+            color=colorsForPlot[2])
+    ax2.plot(timeSim[0:len(timeSim):lenSampling],
+            concentrationEstimate_F[0:len(timeSim):lenSampling,2],
+            marker = '^', markersize = 2, linestyle = 'dotted', linewidth = 0.5,
+            color=colorsForPlot[3])  
+    ax2.locator_params(axis="x", nbins=4)
+    ax2.locator_params(axis="y", nbins=4)
+    ax2.set(xlabel='$t$ [s]', 
+            ylabel='$y_1$ [-]',
+            xlim = [0, 1000.], ylim = [0, 0.2])
+
+    ax2.text(20, 0.185, "(b)", fontsize=10)
+    ax2.text(800, 0.185, "Array D", fontsize=10, 
+             color = '#0077b6')
+    ax2.text(780, 0.11, "$y^{\mathregular{in}}_{\mathregular{1}}$ = 0.1", fontsize=10, 
+             color = '#0077b6')
+    
+    # Label for the materials     
+    ax2.text(280, 0.06, "Equilibrium Model", fontsize=10, 
+            backgroundcolor = 'w', color = colorsForPlot[2])
+    ax2.text(50, 0.11, "Full Model", fontsize=10, 
+            backgroundcolor = 'w', color = colorsForPlot[3])   
+    
+    #  Save the figure
+    if saveFlag:
+        # FileName: threeMaterials_<currentDateTime>_<GitCommitID_Current>
+        saveFileName = "kineticsImportance_" + currentDT + "_" + gitCommitID + saveFileExtension
         savePath = os.path.join('..','simulationFigures','simulationManuscript',saveFileName)
         # Check if inputResources directory exists or not. If not, create the folder
         if not os.path.exists(os.path.join('..','simulationFigures','simulationManuscript')):
