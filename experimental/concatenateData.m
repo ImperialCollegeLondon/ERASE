@@ -99,22 +99,22 @@ function reconciledData = concatenateData(fileToLoad)
     reconciledData.raw.dateTimeMS_He = dateTimeHe(indexInitial_MS:concantenateLastInd);
     reconciledData.raw.dateTimeMS_CO2 = dateTimeCO2(indexInitial_MS:concantenateLastInd);
     % Check if any element is negative for concatenation
-    for ii=1:length(indexInitial_MS:concantenateLastInd)
+    for ii=indexInitial_MS:concantenateLastInd
         % He
         % If negative element, initialize to eps
         if str2num(cell2mat(rawMSData{1,6}(ii))) < 0
-            reconciledData.raw.signalHe(ii) = eps;
+            reconciledData.raw.signalHe(ii-indexInitial_MS+1) = eps;
         % If not, use the actual value
         else
-            reconciledData.raw.signalHe(ii) = str2num(cell2mat(rawMSData{1,6}(ii)));
+            reconciledData.raw.signalHe(ii-indexInitial_MS+1) = str2num(cell2mat(rawMSData{1,6}(ii)));
         end
         % CO2        
         % If negative element, initialize to eps        
         if str2num(cell2mat(rawMSData{1,3}(ii))) < 0
-            reconciledData.raw.signalCO2(ii) = eps;
+            reconciledData.raw.signalCO2(ii-indexInitial_MS+1) = eps;
         % If not, use the actual value            
         else
-            reconciledData.raw.signalCO2(ii) = str2num(cell2mat(rawMSData{1,3}(ii)));
+            reconciledData.raw.signalCO2(ii-indexInitial_MS+1) = str2num(cell2mat(rawMSData{1,3}(ii)));
         end
     end
   
