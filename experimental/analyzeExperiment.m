@@ -85,6 +85,7 @@ else
     experimentOutput.timeExp = outputStruct.flow(:,1); % Time elapsed [s]
     experimentOutput.moleFrac = outputStruct.moleFrac(:,2); % Mole fraction CO2 [-]
     experimentOutput.totalFlowRate = totalFlowRate./60; % Total flow rate of the gas [ccs]
+    experimentOutput.setTotalFlowRate = setTotalFlowRate/60; % Set point for total flow rate [ccs]
     % Save the experimental output into a .mat file
     % Check if runData data folder exists
     if exist(['experimentalData',filesep,...
