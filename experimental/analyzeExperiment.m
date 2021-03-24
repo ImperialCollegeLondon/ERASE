@@ -25,6 +25,9 @@
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% Get the git commit ID
+gitCommitID = getGitCommit;
+
 flagCalibration = false; % Flag to decide calibration or analysis
 
 % Mode to switch between calibration and analyzing real experiment
@@ -54,6 +57,8 @@ else
     outputStruct.moleFrac(:,2)=1-outputStruct.moleFrac(:,1); % Compute CO2 with mass balance
     
     % Convert the MFM flow to real flow
+    % Load the meter calibrations
+    load(experimentStruct.calibrationFlow);
     % Flow rate when there is pure He (He equivalent)
     flowRateAtPureHe = setTotalFlowRate*calibrationFlow.MFC_He/calibrationFlow.MFM_He;
     % Flow rate when there is pure CO2 (He equivalent)
@@ -80,4 +85,20 @@ else
     experimentOutput.timeExp = outputStruct.flow(:,1); % Time elapsed [s]
     experimentOutput.moleFrac = outputStruct.moleFrac(:,2); % Mole fraction CO2 [-]
     experimentOutput.totalFlowRate = totalFlowRate./60; % Total flow rate of the gas [ccs]
+    % Save the experimental output into a .mat file
+    % Check if runData data folder exists
+    if exist(['experimentalData',filesep,...
+            'runData'],'dir') == 7
+        % Save the calibration data for further use
+        save(['experimentalData',filesep,...
+            'runData',filesep,experimentStruct.flow,'_Output'],'experimentOutput',...
+            'gitCommitID');
+    else
+        % Create the calibration data folder if it does not exist
+        mkdir(['experimentalData',filesep,'runData'])
+        % Save the calibration data for further use
+        save(['experimentalData',filesep,...
+            'runData',filesep,experimentStruct.flow,'_Output'],'experimentOutput',...
+            'gitCommitID');
+    end
 end
