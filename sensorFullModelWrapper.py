@@ -37,8 +37,8 @@ import matplotlib.pyplot as plt
 # Save and plot settings
 saveFlag = True
 saveFileExtension = ".png"
-saveText = "rateConstant"
-colorsForPlot = ["1DBDE6","52A2C4","6D95B3","A27A91","CA6678","F1515E"]
+saveFlag = "rateConstant"
+colorsForPlot = ["E5383B","CD4448","B55055","9C5D63","846970","6C757D"]
 
 # Get the commit ID of the current repository
 gitCommitID = auxiliaryFunctions.getCommitID()
@@ -50,7 +50,13 @@ currentDT = auxiliaryFunctions.getCurrentDateTime()
 # This has to be a be a tuple. For on condition write the values followed by a 
 # comma to say its a tuple
 volTotal = 10e-7
-loopVariable = (0.001,0.25,0.5,0.75,0.9)
+voidFrac = 0.5
+loopVariable = ([0.0001,0.0001,0.0001],
+                [0.0005,0.0005,0.0005],
+                [0.001,0.001,0.001],
+                [0.005,0.005,0.005],
+                [0.01,0.01,0.01],
+                [10000.0,10000.0,10000.0])
     
 # Define a dictionary
 outputStruct = {}
@@ -59,7 +65,8 @@ outputStruct = {}
 for ii in tqdm(range(len(loopVariable))):
     # Call the full model with a given rate constant
     timeSim, _ , sensorFingerPrint, inputParameters = simulateFullModel(volTotal = volTotal,
-                                                                        voidFrac = loopVariable[ii])
+                                                                        voidFrac = voidFrac,
+                                                                        rateConstant = loopVariable[ii])
     outputStruct[ii] = {'timeSim':timeSim,
                 'sensorFingerPrint':sensorFingerPrint,
                 'inputParameters':inputParameters}
@@ -69,7 +76,7 @@ for ii in tqdm(range(len(loopVariable))):
 #  Save the figure
 if saveFlag:
     filePrefix = "fullModelSensitivity"
-    saveFileName = filePrefix + "_" + currentDT + "_" + gitCommitID;
+    saveFileName = filePrefix + "_" + saveFlag + "_" + currentDT + "_" + gitCommitID;
     savePath = os.path.join('simulationResults',saveFileName)
     savez (savePath, outputStruct = outputStruct, # True response
             hostName = socket.gethostname()) # Hostname of the computer    
