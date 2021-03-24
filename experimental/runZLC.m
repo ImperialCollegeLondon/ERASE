@@ -14,6 +14,7 @@
 % controllers, will read flow data.
 %
 % Last modified:
+% - 2021-03-24, AK: Cosmetic changes
 % - 2021-03-16, AK: Add MFC2 and fix for MS calibration
 % - 2021-03-16, AK: Add valve switch times
 % - 2021-03-15, AK: Bug fixes
@@ -178,13 +179,6 @@ function executeTimerDevice(timerObj, thisEvent, expInfo, serialObj)
         % Waiting for user to switch the valve
         promptUser = 'Switch asap! When you press Y, the gas switches (you wish)! [Y/N]: ';
         userInput = input(promptUser,'s');
-        % This is recorded as the time of switch
-        % Empty readings (just for analysis purpose)
-        if strcmp(userInput,'Y') || strcmp(userInput,'y')
-            currentDateTime = datestr(now,'yyyymmdd_HHMMSS');
-            dataLogger(timerObj,expInfo,currentDateTime,[],...
-                [],[],[]);
-        end
     end
     % Get the sampling date/time
     currentDateTime = datestr(now,'yyyymmdd_HHMMSS');

@@ -13,6 +13,7 @@
 % 
 %
 % Last modified:
+% - 2021-03-24, AK: Remove k-means and replace with averaging of n points
 % - 2021-03-19, HA: Added kmeans calculation to obtain mean ion current for
 %                   polynomial fitting
 % - 2021-03-18, AK: Fix variable names
@@ -24,7 +25,7 @@
 % Output arguments:
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function analyzeCalibration(fileToLoadMeter,fileToLoadMS)
+function analyzeCalibration(parametersFlow,parametersMS)
 % Find the directory of the file and move to the top folder
 filePath = which('analyzeCalibration');
 cd(filePath(1:end-21));
@@ -33,8 +34,8 @@ cd(filePath(1:end-21));
 gitCommitID = getGitCommit;
 
 % Load the file that contains the flow meter calibration
-if ~isempty(fileToLoadMeter)
-    flowData = load(fileToLoadMeter);
+if ~isempty(parametersFlow)
+    flowData = load(parametersFlow);
     % Analyse flow data
     MFM = [flowData.outputStruct.MFM]; % MFM 
     MFC1 = [flowData.outputStruct.MFC1]; % MFC1
@@ -73,14 +74,14 @@ if ~isempty(fileToLoadMeter)
             'calibrationData'],'dir') == 7
         % Save the calibration data for further use
         save(['experimentalData',filesep,...
-            'calibrationData',filesep,fileToLoadMeter,'_Model'],'calibrationFlow',...
+            'calibrationData',filesep,parametersFlow,'_Model'],'calibrationFlow',...
             'gitCommitID');
     else
         % Create the calibration data folder if it does not exist
         mkdir(['experimentalData',filesep,'calibrationData'])
         % Save the calibration data for further use
         save(['experimentalData',filesep,...
-            'calibrationData',filesep,fileToLoadMeter,'_Model'],'calibrationFlow',...
+            'calibrationData',filesep,parametersFlow,'_Model'],'calibrationFlow',...
             'gitCommitID');
     end
    
@@ -105,22 +106,35 @@ if ~isempty(fileToLoadMeter)
     plot(MFC1Set,calibrationFlow.MFM_CO2*MFC1Set,'b')
 end
 % Load the file that contains the MS calibration
-if ~isempty(fileToLoadMS)
+if ~isempty(parametersMS)
     % Call reconcileData function for calibration of the MS
-    reconciledData = concatenateData(fileToLoadMS);
-    % Find the mean values of Ion current at concentration steps and
-    % corresponding indices
-    [indicesHe, meansHe]=kmeans(reconciledData.MS(:,2),6);
-    [indicesCO2, meansCO2]=kmeans(reconciledData.MS(:,3),6);
-    % create new ion current array using mean values
-    for kk = 1:length(meansHe)
-        correctedMS_He(find(indicesHe==kk)) = meansHe(kk);
-        correctedMS_CO2(find(indicesCO2==kk)) = meansCO2(kk);
+    reconciledData = concatenateData(parametersMS);
+    % Find the index that corresponds to the last time for a given set
+    % point
+    setPtMFC = unique(reconciledData.flow(:,4));
+	% Find indices that corresponds to a given set point
+    indList = ones(length(setPtMFC),2);
+    % Loop over all the set points
+    for ii=1:length(setPtMFC)
+        % Indices for a given set point
+        indList(ii,1) = find(reconciledData.flow(:,4)==setPtMFC(ii),1,'first');
+        indList(ii,2) = find(reconciledData.flow(:,4)==setPtMFC(ii),1,'last');
+        % Find the mean value of the signal for numMean number of points
+        % for each set point
+        indMean = find(reconciledData.flow(:,4)==setPtMFC(ii),...
+            parametersMS.numMean,'last');
+        % MS Signal mean
+        meanHeSignal(ii) = mean(reconciledData.MS(indMean(1):indMean(end),2)); % He
+        meanCO2Signal(ii) = mean(reconciledData.MS(indMean(1):indMean(end),3)); % CO2
+        % Mole fraction mean
+        meanMoleFrac(ii,1) = mean(reconciledData.moleFrac(indMean(1):indMean(end),1)); % He
+        meanMoleFrac(ii,2) = mean(reconciledData.moleFrac(indMean(1):indMean(end),2)); % CO2
     end
+            
     % Fit a polynomial function to get the model for MS
     % Fitting a 3rd order polynomial (check before accepting this)
-    calibrationMS.He = polyfit(correctedMS_He,reconciledData.moleFrac(:,1),3); % He
-    calibrationMS.CO2 = polyfit(correctedMS_CO2,reconciledData.moleFrac(:,2),3); % Co2
+    calibrationMS.He = polyfit(meanHeSignal,meanMoleFrac(:,1),parametersMS.polyDeg); % He
+    calibrationMS.CO2 = polyfit(meanCO2Signal,meanMoleFrac(:,2),parametersMS.polyDeg); % COo2
     
     % Save the calibration data into a .mat file
     % Check if calibration data folder exists
@@ -128,31 +142,33 @@ if ~isempty(fileToLoadMS)
             'calibrationData'],'dir') == 7
         % Save the calibration data for further use
         save(['experimentalData',filesep,...
-            'calibrationData',filesep,fileToLoadMS.flow,'_Model'],'calibrationMS',...
+            'calibrationData',filesep,parametersMS.flow,'_Model'],'calibrationMS',...
             'gitCommitID');
     else
         % Create the calibration data folder if it does not exist
         mkdir(['experimentalData',filesep,'calibrationData'])
         % Save the calibration data for further use
         save(['experimentalData',filesep,...
-            'calibrationData',filesep,fileToLoadMS.flow,'_Model'],'calibrationMS',...
+            'calibrationData',filesep,parametersMS.flow,'_Model'],'calibrationMS',...
             'gitCommitID');
     end
     
     % Plot the raw and the calibrated data
-    figure
+    figure(1)
     % He
     subplot(1,2,1)
-    plot(1e-13:1e-13:1e-8,polyval(calibrationMS.He,1e-13:1e-13:1e-8))
     hold on
-    plot(correctedMS_He,reconciledData.moleFrac(:,1),'or')
-    xlim([0 2e-9]);
+    plot(1e-13:1e-13:1e-8,polyval(calibrationMS.He,1e-13:1e-13:1e-8))
+    scatter(meanHeSignal,meanMoleFrac(:,1))
+    xlim([0 1.1*max(meanHeSignal)]);
+    ylim([0 1]);
     
     % CO2
     subplot(1,2,2)
-    plot(1e-13:1e-13:1e-8,polyval(calibrationMS.CO2,1e-13:1e-13:1e-8))
     hold on
-    plot(correctedMS_CO2,reconciledData.moleFrac(:,2),'or')
-    xlim([0 3.7e-9]);
+    plot(1e-13:1e-13:1e-8,polyval(calibrationMS.CO2,1e-13:1e-13:1e-8))
+    scatter(meanCO2Signal,meanMoleFrac(:,2))
+    xlim([0 1.1*max(meanCO2Signal)]);
+    ylim([0 1]);
 end
 end

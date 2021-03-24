@@ -13,6 +13,7 @@
 % 
 %
 % Last modified:
+% - 2021-03-22, AK: Bug fixes for finding indices
 % - 2021-03-22, AK: Add checks for MS concatenation
 % - 2021-03-18, AK: Add interpolation based on MS or flow meter
 % - 2021-03-18, AK: Add experiment analysis mode
@@ -43,6 +44,7 @@ function reconciledData = concatenateData(fileToLoad)
     dateTimeFlow = datetime({flowMS.outputStruct.samplingDateTime},...
         'InputFormat','yyyyMMdd_HHmmss');
     volFlow_MFC1 = [MFC1.volFlow]; % He
+    setPt_MFC1 = [MFC1.setpoint]; % He setpoint for calibration
     volFlow_MFC2 = [MFC2.volFlow]; % CO2
     % Apply the calibration for the flows
     volFlow_He = volFlow_MFC1*calibrationFlow.MFC_He;
@@ -92,10 +94,12 @@ function reconciledData = concatenateData(fileToLoad)
     reconciledData.raw.dateTimeFlow = dateTimeFlow(indexInitial_Flow:end);
     reconciledData.raw.volFlow_He = volFlow_He(indexInitial_Flow:end);
     reconciledData.raw.volFlow_CO2 = volFlow_CO2(indexInitial_Flow:end);
+    reconciledData.raw.setPt_He = setPt_MFC1(indexInitial_Flow:end);
+    
     % MS    
     % Find the index of the last entry (from one of the two gases)
-    concantenateLastInd = min([size(dateTimeHe(indexInitial_MS:end),1), ...
-        size(dateTimeHe(indexInitial_MS:end),1)]);
+    concantenateLastInd = indexInitial_MS + min([size(dateTimeHe(indexInitial_MS:end),1), ...
+        size(dateTimeCO2(indexInitial_MS:end),1)]) - 1;
     reconciledData.raw.dateTimeMS_He = dateTimeHe(indexInitial_MS:concantenateLastInd);
     reconciledData.raw.dateTimeMS_CO2 = dateTimeCO2(indexInitial_MS:concantenateLastInd);
     % Check if any element is negative for concatenation
@@ -126,6 +130,7 @@ function reconciledData = concatenateData(fileToLoad)
             -reconciledData.raw.dateTimeFlow(1)); % Time elapsed [s]
         reconciledData.flow(:,2) = reconciledData.raw.volFlow_He; % He Flow [ccm]
         reconciledData.flow(:,3) = reconciledData.raw.volFlow_CO2; % CO2 flow [ccm]
+        reconciledData.flow(:,4) = reconciledData.raw.setPt_He; % He set point [ccm]
 
         % MS
         rawTimeElapsedHe = seconds(reconciledData.raw.dateTimeMS_He ...
@@ -159,6 +164,8 @@ function reconciledData = concatenateData(fileToLoad)
                                         reconciledData.MS(:,1)); % Interpoloted He Flow [ccm]
         reconciledData.flow(:,3) = interp1(rawTimeElapsedFlow,reconciledData.raw.volFlow_CO2,...
                                         reconciledData.MS(:,1)); % Interpoloted CO2 flow [ccm]
+        reconciledData.flow(:,4) = interp1(rawTimeElapsedFlow,reconciledData.raw.setPt_He,...
+                                        reconciledData.MS(:,1)); % Interpoloted He setpoint[ccm]                                    
     end
                                     
     % Get the mole fraction used for the calibration
