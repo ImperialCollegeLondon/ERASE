@@ -9,9 +9,12 @@
 # Authors:  Ashwin Kumar Rajagopalan (AK)
 #
 # Purpose:
-# Simulates the ZLC setup
+# Simulates the ZLC setup. This is inspired from Ruthven's work and from the 
+# sensor model. Note that there is no analytical solution and it uses a full 
+# model with mass transfer defined using linear driving force.
 #
 # Last modified:
+# - 2021-03-25, AK: Remove the constant F model
 # - 2021-03-01, AK: Initial creation
 #
 # Input arguments:
@@ -21,11 +24,15 @@
 #
 ############################################################################
 
-def simulateFullModel(**kwargs):
+def simulateZLC(**kwargs):
     import numpy as np
     from scipy.integrate import solve_ivp
     from simulateSensorArray import simulateSensorArray
     import auxiliaryFunctions
+    import os
+    
+    # Move to top level folder (to avoid path issues)
+    os.chdir("..")
     
     # Plot flag
     plotFlag = False
@@ -35,13 +42,6 @@ def simulateFullModel(**kwargs):
     
     # Get the current date and time for saving purposes    
     currentDT = auxiliaryFunctions.getCurrentDateTime()
-       
-    # Model flag (constant pressure or constant flow rate)
-    # Default is constant pressure
-    if 'modelConstF' in kwargs:
-        modelConstF = kwargs["modelConstF"]
-    else:
-        modelConstF = False
     
     # Sensor ID
     if 'sensorID' in kwargs:
@@ -133,44 +133,26 @@ def simulateFullModel(**kwargs):
     # Solve the system of ordinary differential equations
     # Stiff solver used for the problem: BDF or Radau
     # The output is print out every 5 s
-    # Solves the model assuming constant flow rate at the inlet and outlet
-    if modelConstF:
-        # Prepare initial conditions vector
-        initialConditions = np.zeros([2*numberOfGases])
-        initialConditions[0:numberOfGases-1] = initMoleFrac[0:numberOfGases-1] # Gas mole fraction
-        initialConditions[numberOfGases-1:2*numberOfGases-1] = sensorLoadingPerGasVol # Initial Loading
-        initialConditions[2*numberOfGases-1] = pressureTotal # Outlet pressure the same as inlet pressure
-        outputSol = solve_ivp(solveSorptionEquationConstF, timeInt, initialConditions, 
-                              method='Radau', t_eval = np.arange(timeInt[0],timeInt[1],5),
-                              rtol = 1e-6, args = inputParameters)
-
-        # Flow out vector in output
-        flowOutVec =  flowIn * np.ones(len(outputSol.t)) # Constant flow rate
-
-        # Parse out the output matrix and add flow rate
-        resultMat = np.row_stack((outputSol.y,flowOutVec))
-
     # Solves the model assuming constant/negligible pressure across the sensor
-    else:
-        # Prepare initial conditions vector
-        initialConditions = np.zeros([2*numberOfGases-1])
-        initialConditions[0:numberOfGases-1] = initMoleFrac[0:numberOfGases-1] # Gas mole fraction
-        initialConditions[numberOfGases-1:2*numberOfGases-1] = sensorLoadingPerGasVol # Initial Loading
-        outputSol = solve_ivp(solveSorptionEquationConstP, timeInt, initialConditions, 
-                              method='Radau', t_eval = np.arange(timeInt[0],timeInt[1],5),
-                              rtol = 1e-6, args = inputParameters)
-        
-        # Presure vector in output
-        pressureVec =  pressureTotal * np.ones(len(outputSol.t)) # Constant pressure
+    # Prepare initial conditions vector
+    initialConditions = np.zeros([2*numberOfGases-1])
+    initialConditions[0:numberOfGases-1] = initMoleFrac[0:numberOfGases-1] # Gas mole fraction
+    initialConditions[numberOfGases-1:2*numberOfGases-1] = sensorLoadingPerGasVol # Initial Loading
+    outputSol = solve_ivp(solveSorptionEquationConstP, timeInt, initialConditions, 
+                          method='Radau', t_eval = np.arange(timeInt[0],timeInt[1],5),
+                          rtol = 1e-6, args = inputParameters)
+    
+    # Presure vector in output
+    pressureVec =  pressureTotal * np.ones(len(outputSol.t)) # Constant pressure
 
-        # Compute the outlet flow rate
-        dqdt = np.gradient(outputSol.y[numberOfGases-1:2*numberOfGases-1,:],
-                           outputSol.t, axis=1) # Compute gradient of loading
-        sum_dqdt = np.sum(dqdt, axis=0) # Time resolved sum of gradient
-        flowOut = flowIn - ((volSorbent*(8.314*temperature)/pressureTotal)*(sum_dqdt))
-        
-        # Parse out the output matrix and add flow rate
-        resultMat = np.row_stack((outputSol.y,pressureVec,flowOut))
+    # Compute the outlet flow rate
+    dqdt = np.gradient(outputSol.y[numberOfGases-1:2*numberOfGases-1,:],
+                       outputSol.t, axis=1) # Compute gradient of loading
+    sum_dqdt = np.sum(dqdt, axis=0) # Time resolved sum of gradient
+    flowOut = flowIn - ((volSorbent*(8.314*temperature)/pressureTotal)*(sum_dqdt))
+    
+    # Parse out the output matrix and add flow rate
+    resultMat = np.row_stack((outputSol.y,pressureVec,flowOut))
 
     # Parse out the time
     timeSim = outputSol.t
@@ -184,52 +166,10 @@ def simulateFullModel(**kwargs):
     # Call the plotting function
     if plotFlag:
         plotFullModelResult(timeSim, resultMat, sensorFingerPrint, inputParameters,
-                            gitCommitID, currentDT, modelConstF)
+                            gitCommitID, currentDT)
     
     # Return time and the output matrix
     return timeSim, resultMat, sensorFingerPrint, inputParameters
-
-# func: solveSorptionEquationConstF - Constant flow rate model
-# Solves the system of ODEs to evaluate the gas composition, loadings, and pressure
-def solveSorptionEquationConstF(t, f, *inputParameters):  
-    import numpy as np
-    from simulateSensorArray import simulateSensorArray
-
-    # Gas constant
-    Rg = 8.314; # [J/mol K]
-    
-    # Unpack the tuple of input parameters used to solve equations
-    sensorID, _ , rateConstant, numberOfGases, flowIn, feedMoleFrac, _ , pressureTotal, temperature, volSorbent, volGas = inputParameters
-
-    # Initialize the derivatives to zero
-    df = np.zeros([2*numberOfGases])
-    
-    # Compute the equilbirium loading at the current gas composition
-    currentGasComposition = np.concatenate((f[0:numberOfGases-1],
-                                            np.array([1.-np.sum(f[0:numberOfGases-1])])))
-    sensorLoadingPerGasVol, _ , _ = simulateSensorArray(sensorID, f[2*numberOfGases-1],
-                                                        temperature, np.array([currentGasComposition]),
-                                                        fullModel = True)
-    
-    # Linear driving force model (derivative of solid phase loadings)
-    df[numberOfGases-1:2*numberOfGases-1] = np.multiply(rateConstant,(sensorLoadingPerGasVol-f[numberOfGases-1:2*numberOfGases-1]))
-
-    # Total mass balance
-    # Assumes constant flow rate, so pressure evalauted
-    term1 = 1/volGas
-    term2 = ((flowIn*pressureTotal) - (flowIn*f[2*numberOfGases-1])
-             - ((volSorbent*(Rg*temperature))*(np.sum(df[numberOfGases-1:2*numberOfGases-1]))))
-    df[2*numberOfGases-1] = term1*term2
-    
-    # Component mass balance
-    term1 = 1/volGas
-    for ii in range(numberOfGases-1):
-        term2 = (flowIn*(pressureTotal*feedMoleFrac[ii] - f[2*numberOfGases-1]*f[ii])
-                 - (volSorbent*(Rg*temperature))*df[ii+numberOfGases-1])
-        df[ii] = (term1*term2 - f[ii]*df[2*numberOfGases-1])/f[2*numberOfGases-1]
-    
-    # Return the derivatives for the solver
-    return df
 
 # func: solveSorptionEquationConstP - Constant pressure model
 # Solves the system of ODEs to evaluate the gas composition and loadings
@@ -273,7 +213,7 @@ def solveSorptionEquationConstP(t, f, *inputParameters):
 # func: plotFullModelResult
 # Plots the model output for the conditions simulated locally
 def plotFullModelResult(timeSim, resultMat, sensorFingerPrint, inputParameters,
-                        gitCommitID, currentDT, modelConstF):
+                        gitCommitID, currentDT):
     import numpy as np
     import os
     import matplotlib.pyplot as plt
