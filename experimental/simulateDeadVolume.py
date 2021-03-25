@@ -13,6 +13,7 @@
 # Reference: 10.1016/j.ces.2008.02.023
 #
 # Last modified:
+# - 2021-03-25, AK: Fix for plot
 # - 2021-03-18, AK: Fix for inlet concentration
 # - 2021-03-17, AK: Initial creation
 #
@@ -81,7 +82,7 @@ def simulateDeadVolume(**kwargs):
     timeSim = outputSol.t
     
     # Inlet concentration
-    moleFracIn = outputSol.y[0]
+    moleFracIn = np.ones((len(outputSol.t),1))*feedMoleFrac
     
     # Outlet concentration at the dead volume
     moleFracOut = outputSol.y[-1]

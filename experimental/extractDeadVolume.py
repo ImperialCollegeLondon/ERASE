@@ -14,6 +14,7 @@
 # Reference: 10.1016/j.ces.2008.02.023
 #
 # Last modified:
+# - 2021-03-25, AK: Estimate parameters using experimental data
 # - 2021-03-17, AK: Initial creation
 #
 # Input arguments:
@@ -43,7 +44,7 @@ def extractDeadVolume():
     currentDT = auxiliaryFunctions.getCurrentDateTime()
 
     # Define the bounds and the type of the parameters to be optimized
-    optBounds = np.array(([np.finfo(float).eps,100], [1,20]))
+    optBounds = np.array(([np.finfo(float).eps,100], [1,30]))
     optType=np.array(['real','int'])
     # Algorithm parameters for GA
     algorithm_param = {'max_num_iteration':25,
@@ -80,18 +81,29 @@ def extractDeadVolume():
 def deadVolObjectiveFunction(x):
     import numpy as np
     from simulateDeadVolume import simulateDeadVolume
+    from numpy import load
+    from scipy.interpolate import interp1d
     
-    # Dead volume [cc]
-    deadVolume = 3.25
-    # Number of tanks [-]
-    numberOfTanks = 6    
-    # Generate dead volume response (pseudo experiment)
-    _ , _ , moleFracExp = simulateDeadVolume(deadVolume = deadVolume,
-                                             numberOfTanks = numberOfTanks)
+    # Directory of raw data
+    mainDir = '/Users/ash23win/Google Drive/ERASE/experimental/runData/'
+    # File name of the experinent
+    fileName = 'ZLC_DeadVolume_Exp05A_Output_0cf1b97.npz'
+    # Path of the file name
+    fileToLoad = mainDir + fileName   
+    # Load experimental molefraction
+    timeElapsedExp = load(fileToLoad)["timeElapsed"].flatten()
+    moleFracExp = load(fileToLoad)["moleFrac"].flatten()
     
     # Compute the dead volume response using the optimizer parameters
-    _ , _ , moleFracOut = simulateDeadVolume(deadVolume = x[0],
-                                             numberOfTanks = int(x[1]))
+    timeSimOut , _ , moleFracOut = simulateDeadVolume(deadVolume = x[0],
+                                                      numberOfTanks = int(x[1]))
+    
+    # Interpolate simulation data (generate function)
+    interpSim = interp1d(timeSimOut, moleFracOut)    
+    
+    # Find the interpolated simulation mole fraction at times corresponding to 
+    # the experimental ones
+    moleFracSim = interpSim(timeElapsedExp)
     
     # Compute the sum of the error for the difference between exp. and sim.
-    return np.sum(np.power(moleFracExp - moleFracOut,2))
+    return np.sum(np.power(moleFracExp - moleFracSim,2))
