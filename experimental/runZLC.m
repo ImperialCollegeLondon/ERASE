@@ -120,7 +120,7 @@ function runZLC(varargin)
     gitCommitID = getGitCommit;
     % Load the output .mat file
     save(['experimentalData',filesep,expInfo.expName],...
-        'gitCommitID','outputStruct')
+        'gitCommitID','outputStruct','expInfo')
 end
 
 %% initializeTimerDevice: Initialisation of timer device
