@@ -14,6 +14,7 @@
 % controllers, will read flow data.
 %
 % Last modified:
+% - 2021-03-25, AK: Fix rounding errors
 % - 2021-03-24, AK: Cosmetic changes
 % - 2021-03-16, AK: Add MFC2 and fix for MS calibration
 % - 2021-03-16, AK: Add valve switch times
@@ -149,7 +150,9 @@ function initializeTimerDevice(~, thisEvent, expInfo, serialObj)
         % Check if the set point was sent to the controller
         outputMFC1 = controlAuxiliaryEquipments(serialObj.MFC1, serialObj.cmdPollData,1);
         outputMFC1Temp = strsplit(outputMFC1,' '); % Split the output string
-        if str2double(outputMFC1Temp(6)) ~= expInfo.MFC1_SP
+        % Rounding required due to rounding errors. Differences of around
+        % eps can be observed
+        if round(str2double(outputMFC1Temp(6)),4) ~= round(expInfo.MFC1_SP,4)
             error("You should not be here!!!")
         end
     end
@@ -162,7 +165,9 @@ function initializeTimerDevice(~, thisEvent, expInfo, serialObj)
         % Check if the set point was sent to the controller
         outputMFC2 = controlAuxiliaryEquipments(serialObj.MFC2, serialObj.cmdPollData,1);
         outputMFC2Temp = strsplit(outputMFC2,' '); % Split the output string
-        if str2double(outputMFC2Temp(6)) ~= expInfo.MFC2_SP
+        % Rounding required due to rounding errors. Differences of around
+        % eps can be observed        
+        if round(str2double(outputMFC2Temp(6)),4) ~= round(expInfo.MFC2_SP,4)
             error("You should not be here!!!")
         end
     end

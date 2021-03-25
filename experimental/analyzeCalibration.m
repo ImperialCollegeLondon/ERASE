@@ -9,12 +9,13 @@
 % Authors:  Ashwin Kumar Rajagopalan (AK)
 %           Hassan Azzan (HA)
 %
-% Purpose: 
-% 
+% Purpose:
+%
 %
 % Last modified:
+% - 2021-03-19, HA: Add legends to the plots
 % - 2021-03-24, AK: Remove k-means and replace with averaging of n points
-% - 2021-03-19, HA: Added kmeans calculation to obtain mean ion current for
+% - 2021-03-19, HA: Add kmeans calculation to obtain mean ion current for
 %                   polynomial fitting
 % - 2021-03-18, AK: Fix variable names
 % - 2021-03-17, AK: Change structure
@@ -37,7 +38,7 @@ gitCommitID = getGitCommit;
 if ~isempty(parametersFlow)
     flowData = load(parametersFlow);
     % Analyse flow data
-    MFM = [flowData.outputStruct.MFM]; % MFM 
+    MFM = [flowData.outputStruct.MFM]; % MFM
     MFC1 = [flowData.outputStruct.MFC1]; % MFC1
     MFC2 = [flowData.outputStruct.MFC2]; % MFC2
     UMFM = [flowData.outputStruct.UMFM]; % UMFM
@@ -84,7 +85,7 @@ if ~isempty(parametersFlow)
             'calibrationData',filesep,parametersFlow,'_Model'],'calibrationFlow',...
             'gitCommitID');
     end
-   
+    
     % Plot the raw and the calibrated data
     figure
     MFC1Set = 0:80;
@@ -95,11 +96,11 @@ if ~isempty(parametersFlow)
     subplot(2,2,2)
     hold on
     scatter(volFlow_MFC1_CO2,volFlow_UMFM_CO2,'or')
-    plot(MFC1Set,calibrationFlow.MFC_CO2*MFC1Set,'b')    
+    plot(MFC1Set,calibrationFlow.MFC_CO2*MFC1Set,'b')
     subplot(2,2,3)
     hold on
     scatter(volFlow_MFM_He,volFlow_UMFM_He,'or')
-    plot(MFC1Set,calibrationFlow.MFM_He*MFC1Set,'b')    
+    plot(MFC1Set,calibrationFlow.MFM_He*MFC1Set,'b')
     subplot(2,2,4)
     hold on
     scatter(volFlow_MFM_CO2,volFlow_UMFM_CO2,'or')
@@ -112,7 +113,7 @@ if ~isempty(parametersMS)
     % Find the index that corresponds to the last time for a given set
     % point
     setPtMFC = unique(reconciledData.flow(:,4));
-	% Find indices that corresponds to a given set point
+    % Find indices that corresponds to a given set point
     indList = ones(length(setPtMFC),2);
     % Loop over all the set points
     for ii=1:length(setPtMFC)
@@ -130,7 +131,7 @@ if ~isempty(parametersMS)
         meanMoleFrac(ii,1) = mean(reconciledData.moleFrac(indMean(1):indMean(end),1)); % He
         meanMoleFrac(ii,2) = mean(reconciledData.moleFrac(indMean(1):indMean(end),2)); % CO2
     end
-            
+    
     % Fit a polynomial function to get the model for MS
     % Fitting a 3rd order polynomial (check before accepting this)
     calibrationMS.He = polyfit(meanHeSignal,meanMoleFrac(:,1),parametersMS.polyDeg); % He
@@ -162,6 +163,8 @@ if ~isempty(parametersMS)
     scatter(meanHeSignal,meanMoleFrac(:,1))
     xlim([0 1.1*max(meanHeSignal)]);
     ylim([0 1]);
+    xlabel('Helium Signal [A]')
+    ylabel('Helium mole frac [-]')
     
     % CO2
     subplot(1,2,2)
@@ -170,5 +173,7 @@ if ~isempty(parametersMS)
     scatter(meanCO2Signal,meanMoleFrac(:,2))
     xlim([0 1.1*max(meanCO2Signal)]);
     ylim([0 1]);
+    xlabel('CO2 Signal [A]')
+    ylabel('CO2 mole frac [-]')
 end
 end
