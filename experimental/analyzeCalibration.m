@@ -13,6 +13,7 @@
 %
 %
 % Last modified:
+% - 2021-03-26, AK: Fix for number of repetitions
 % - 2021-03-19, HA: Add legends to the plots
 % - 2021-03-24, AK: Remove k-means and replace with averaging of n points
 % - 2021-03-19, HA: Add kmeans calculation to obtain mean ion current for
@@ -109,27 +110,49 @@ end
 % Load the file that contains the MS calibration
 if ~isempty(parametersMS)
     % Call reconcileData function for calibration of the MS
-    reconciledData = concatenateData(parametersMS);
+    [reconciledData, expInfo] = concatenateData(parametersMS);
     % Find the index that corresponds to the last time for a given set
     % point
     setPtMFC = unique(reconciledData.flow(:,4));
+    % Find total number of data points
+    numDataPoints = length(reconciledData.flow(:,1));
+    % Total number of points per set point
+    numPointsSetPt = expInfo.maxTime/expInfo.samplingTime;
+    % Number of repetitions per set point (assuming repmat in calibrateMS)
+    numRepetitions = floor((numDataPoints/numPointsSetPt)/length(setPtMFC));
+    % Remove the 5 min idle time between repetitions
+    % For two repetitions
+    if numRepetitions == 2
+        indRepFirst = numPointsSetPt*length(setPtMFC)+1;
+        indRepLast = indRepFirst+numPointsSetPt-1;
+        reconciledData.flow(indRepFirst:indRepLast,:) = [];
+        reconciledData.MS(indRepFirst:indRepLast,:) = [];
+        reconciledData.moleFrac(indRepFirst:indRepLast,:) = [];
+    % For one repetition
+    elseif numRepetitions == 1
+            % Do nothing %
+    else
+        error('Currently more than two repetitions are not supported by analyzeCalibration.m');
+    end
     % Find indices that corresponds to a given set point
-    indList = ones(length(setPtMFC),2);
+    indList = ones(numRepetitions*length(setPtMFC),2);
     % Loop over all the set points
-    for ii=1:length(setPtMFC)
-        % Indices for a given set point
-        indList(ii,1) = find(reconciledData.flow(:,4)==setPtMFC(ii),1,'first');
-        indList(ii,2) = find(reconciledData.flow(:,4)==setPtMFC(ii),1,'last');
-        % Find the mean value of the signal for numMean number of points
-        % for each set point
-        indMean = find(reconciledData.flow(:,4)==setPtMFC(ii),...
-            parametersMS.numMean,'last');
-        % MS Signal mean
-        meanHeSignal(ii) = mean(reconciledData.MS(indMean(1):indMean(end),2)); % He
-        meanCO2Signal(ii) = mean(reconciledData.MS(indMean(1):indMean(end),3)); % CO2
-        % Mole fraction mean
-        meanMoleFrac(ii,1) = mean(reconciledData.moleFrac(indMean(1):indMean(end),1)); % He
-        meanMoleFrac(ii,2) = mean(reconciledData.moleFrac(indMean(1):indMean(end),2)); % CO2
+    for kk = 1:numRepetitions
+        for ii=1:length(setPtMFC)
+            % Indices for a given set point accounting for set point and
+            % number of repetitions
+            initInd = length(setPtMFC)*numPointsSetPt*(kk-1) + (ii-1)*numPointsSetPt + 1;
+            finalInd = initInd + numPointsSetPt - 1;
+            % Find the mean value of the signal for numMean number of points
+            % for each set point
+            indMean = (finalInd-parametersMS.numMean+1):finalInd;
+            % MS Signal mean
+            meanHeSignal((kk-1)*length(setPtMFC)+ii) = mean(reconciledData.MS(indMean,2)); % He
+            meanCO2Signal((kk-1)*length(setPtMFC)+ii) = mean(reconciledData.MS(indMean,3)); % CO2
+            % Mole fraction mean
+            meanMoleFrac(((kk-1)*length(setPtMFC)+ii),1) = mean(reconciledData.moleFrac(indMean,1)); % He
+            meanMoleFrac(((kk-1)*length(setPtMFC)+ii),2) = mean(reconciledData.moleFrac(indMean,2)); % CO2
+        end
     end
     
     % Fit a polynomial function to get the model for MS

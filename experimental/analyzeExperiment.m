@@ -49,7 +49,7 @@ else
     experimentStruct.interpMS = true; % Flag for interpolating MS data (true) or flow data (false)
     % Call reconcileData function to get the output mole fraction for a
     % real experiment
-    outputStruct = concatenateData(experimentStruct);
+    [outputStruct,~] = concatenateData(experimentStruct);
     
     % Clean mole fraction to remove negative values (due to calibration)
     % Replace all negative molefraction with eps

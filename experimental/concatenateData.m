@@ -13,6 +13,7 @@
 % 
 %
 % Last modified:
+% - 2021-03-26, AK: Add expInfo to output
 % - 2021-03-22, AK: Bug fixes for finding indices
 % - 2021-03-22, AK: Add checks for MS concatenation
 % - 2021-03-18, AK: Add interpolation based on MS or flow meter
@@ -24,7 +25,7 @@
 % Output arguments:
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function reconciledData = concatenateData(fileToLoad)
+function [reconciledData, expInfo] = concatenateData(fileToLoad)
     % Load flow data
     flowMS = load(fileToLoad.flow);
     if ~isfield(fileToLoad,'calibrationFlow')
@@ -32,6 +33,8 @@ function reconciledData = concatenateData(fileToLoad)
     end
     % Flow Calibration File
     load(fileToLoad.calibrationFlow);
+    % Return expInfo
+    expInfo = flowMS.expInfo;
     % Analyse flow data
     MFC1 = [flowMS.outputStruct.MFC1]; % MFC1 - He
     % Done right now to check if calibration of MS is preesnt or not
