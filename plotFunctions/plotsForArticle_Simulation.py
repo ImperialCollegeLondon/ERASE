@@ -12,6 +12,7 @@
 # Plots for the simulation manuscript
 #
 # Last modified:
+# - 2021-04-07, AK: Add plot for design variables
 # - 2021-03-05, AK: Add plot for full model
 # - 2021-03-05, AK: Add plot for three materials
 # - 2021-03-05, AK: Add plot for comparing sensor array with graphical tool
@@ -80,6 +81,12 @@ def plotsForArticle_Simulation(**kwargs):
             plotForArticle_KineticsImportance(gitCommitID, currentDT, 
                                        saveFlag, saveFileExtension)
 
+    # If kinetic importance needs to be plotted
+    if 'designVariables' in kwargs:
+        if kwargs["designVariables"]:
+            plotForArticle_DesignVariables(gitCommitID, currentDT, 
+                                       saveFlag, saveFileExtension)
+
 # fun: plotForArticle_SensorArray
 # Plots the histogram of gas compositions for a one and two material 
 # sensor array
@@ -90,13 +97,13 @@ def plotForArticle_SensorArray(gitCommitID, currentDT,
     import os
     import matplotlib.pyplot as plt
     plt.style.use('doubleColumn2Row.mplstyle') # Custom matplotlib style file
-    # For now load a given adsorbent isotherm material file
+    # For now load the results file
     loadFileName = ("arrayConcentration_20210211_1818_b02f8c3.npz", # 1 material w/o constraint
                     "arrayConcentration_20210212_1055_b02f8c3.npz", # 2 material w/o constraint
                     "arrayConcentration_20210212_1050_b02f8c3.npz", # 1 material with constraint
                     "arrayConcentration_20210211_1822_b02f8c3.npz") # 2 material with constraint
     
-    # Git commit id of the loaded isotherm file
+    # Git commit id of the loaded file
     simID_loadedFile = loadFileName[0][-11:-4]
     
     # Loop through the two files to get the histogram
@@ -182,6 +189,11 @@ def plotForArticle_SensorArray(gitCommitID, currentDT,
                     backgroundcolor = 'w', color = '#e5383b')
             ax.text(0.705, 25, "$y_2$ = 0.95", fontsize=10, 
                     backgroundcolor = 'w', color = '#343a40')
+        # Remove tick labels
+        if ii == 0 or ii == 1:
+            ax.axes.xaxis.set_ticklabels([])
+        if ii == 1 or ii == 3:
+            ax.axes.yaxis.set_ticklabels([])
             
     #  Save the figure
     if saveFlag:
@@ -719,8 +731,8 @@ def plotForArticle_ThreeMaterials(gitCommitID, currentDT,
         plt.savefig (savePath)
     plt.show()
 
-# fun: plotForArticle_GraphicalTool
-# Plots the analaysis for three material arrays
+# fun: plotForArticle_KineticsImportance
+# Plots to highlight the importance of incorporating kinetics
 def plotForArticle_KineticsImportance(gitCommitID, currentDT,
                                   saveFlag, saveFileExtension):
     import numpy as np
@@ -823,7 +835,7 @@ def plotForArticle_KineticsImportance(gitCommitID, currentDT,
     
     #  Save the figure
     if saveFlag:
-        # FileName: threeMaterials_<currentDateTime>_<GitCommitID_Current>
+        # FileName: kineticsImportance_<currentDateTime>_<GitCommitID_Current>
         saveFileName = "kineticsImportance_" + currentDT + "_" + gitCommitID + saveFileExtension
         savePath = os.path.join('..','simulationFigures','simulationManuscript',saveFileName)
         # Check if inputResources directory exists or not. If not, create the folder
@@ -831,6 +843,117 @@ def plotForArticle_KineticsImportance(gitCommitID, currentDT,
             os.mkdir(os.path.join('..','simulationFigures','simulationManuscript'))
         plt.savefig (savePath)
     plt.show()
+
+# fun: plotForArticle_DesignVariables
+# Plots to highlight the effect of different design variables
+def plotForArticle_DesignVariables(gitCommitID, currentDT,
+                                   saveFlag, saveFileExtension):
+    import numpy as np
+    from numpy import load
+    import os
+    import matplotlib.pyplot as plt
+    import matplotlib.patches as patches
+    plt.style.use('doubleColumn2Row.mplstyle') # Custom matplotlib style file   
+
+    # Curved arrow properties    
+    style = "Simple, tail_width=0.5, head_width=4, head_length=8"
+    kw = dict(arrowstyle=style, color="#0077b6")
+    
+    colorsForPlot = ["#E5383B","#CD4448","#B55055",
+                     "#9C5D63","#846970","#6C757D"]
+    plotIndex = ["(a)", "(b)", "(c)", "(d)"]
+    
+    # For now load the results file
+    loadFileName = ("fullModelSensitivity_rateConstant_20210324_0957_c9e8179.npz", # Varying rate constant
+                    "fullModelSensitivity_flowIn_20210407_1656_c9e8179.npz", # Varying flow in 
+                    "fullModelSensitivity_volTotal_20210324_1013_c9e8179.npz", # Varying total volume 
+                    "fullModelSensitivity_voidFrac_20210324_1006_c9e8179.npz") # Varying void fraction
+        
+    # Loop through the two files to get the histogram
+    for ii in range(len(loadFileName)):
+        ax = plt.subplot(2,2,ii+1)
+        # Create the file name with the path to be loaded
+        simResultsFile = os.path.join('..','simulationResults',loadFileName[ii]);
+    
+        # Check if the file with the simultaion results exist 
+        if os.path.exists(simResultsFile):
+            # Load the file
+            loadedFileTemp = load(simResultsFile,allow_pickle=True)["outputStruct"]
+             # Unpack to get the dictionary
+            loadedFile = loadedFileTemp[()]
+            
+        # Prepare the data for plotting
+        timeSim = loadedFile[0]["timeSim"]; # Time elapsed [s]
+        adsorbentDensity = loadedFile[0]["inputParameters"][1]; # [kg/m3]        
+        sensorFingerPrint = np.zeros((len(timeSim),len(loadedFile)));
+        adsorbentVolume = np.zeros((len(loadedFile),1));
+        # Loop over to get the sensor finger print and adsorbent volume
+        for jj in range(len(loadedFile)):
+            fingerPrintTemp = (loadedFile[jj]["sensorFingerPrint"]
+                               *loadedFile[jj]["inputParameters"][9]
+                               *adsorbentDensity) # Compute true response [g]
+            ax.plot(timeSim, fingerPrintTemp,
+                     linewidth=1.5,color=colorsForPlot[jj])
+        ax.set(xlim = [timeSim[0], 2000], ylim = [0, 0.12])
+        ax.locator_params(axis="x", nbins=4)
+        ax.locator_params(axis="y", nbins=5)
+        if ii == 2 or ii  == 3:
+            ax.set(xlabel = '$t$ [s]')
+        if ii == 0 or ii  == 2:
+            ax.set(ylabel = '$m_i$ [g]')
+        # Remove ticks
+        if ii == 0 or ii == 1:
+            ax.axes.xaxis.set_ticklabels([])            
+        if ii == 1 or ii == 3:
+            ax.axes.yaxis.set_ticklabels([])
+        # Create labels for the plots
+        ax.text(50, 0.11, plotIndex[ii], fontsize=10)
+        ax.text(1600, 0.11, "Array D", fontsize=10, 
+             color = '#0077b6')
+        if ii == 0:
+            curvArr = patches.FancyArrowPatch((800, 0.02), (300, 0.06),
+                                 connectionstyle="arc3,rad=0.35", **kw)
+            ax.add_patch(curvArr)            
+            ax.text(300, 0.065, "$k$", fontsize=10, 
+                    color = '#0077b6')
+            ax.text(1240, 0.101, "Varying Kinetics", fontsize=10, 
+                    color = '#0077b6')
+        if ii == 1:
+            curvArr = patches.FancyArrowPatch((800, 0.02), (300, 0.06),
+                                 connectionstyle="arc3,rad=0.35", **kw)
+            ax.add_patch(curvArr)   
+            ax.text(300, 0.065, "$F^\mathregular{in}$", fontsize=10, 
+                    color = '#0077b6')
+            ax.text(1140, 0.101, "Varying Flow Rate", fontsize=10, 
+                    color = '#0077b6')
+        if ii == 2:
+            curvArr = patches.FancyArrowPatch((800, 0.01), (300, 0.06),
+                                 connectionstyle="arc3,rad=0.35", **kw)
+            ax.add_patch(curvArr)
+            ax.text(300, 0.065, "$V_\mathregular{T}$", fontsize=10, 
+                    color = '#0077b6')
+            ax.text(1020, 0.101, "Varying Total Volume", fontsize=10, 
+                    color = '#0077b6')
+        if ii == 3:
+            curvArr = patches.FancyArrowPatch((30, 0.08), (800, 0.015),
+                                 connectionstyle="arc3,rad=-0.35", **kw)
+            ax.add_patch(curvArr)
+            ax.text(800, 0.035, "$\epsilon$", fontsize=10, 
+                    color = '#0077b6')
+            ax.text(960, 0.101, "Varying Dead Voidage", fontsize=10, 
+                    color = '#0077b6')
+        
+    #  Save the figure
+    if saveFlag:
+        # FileName: designVariables_<currentDateTime>_<GitCommitID_Current>
+        saveFileName = "designVariables_" + currentDT + "_" + gitCommitID + saveFileExtension
+        savePath = os.path.join('..','simulationFigures','simulationManuscript',saveFileName)
+        # Check if inputResources directory exists or not. If not, create the folder
+        if not os.path.exists(os.path.join('..','simulationFigures','simulationManuscript')):
+            os.mkdir(os.path.join('..','simulationFigures','simulationManuscript'))
+        plt.savefig (savePath)
+    plt.show()
+
 
 # fun: getSensorSensitiveRegion
 # Simulate the sensor array and obtain the region of sensitivity
