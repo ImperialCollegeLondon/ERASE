@@ -13,6 +13,7 @@
 %
 %
 % Last modified:
+% - 2021-04-07, AK: Modify for addition of MFM
 % - 2021-03-26, AK: Fix for number of repetitions
 % - 2021-03-19, HA: Add legends to the plots
 % - 2021-03-24, AK: Remove k-means and replace with averaging of n points
@@ -113,7 +114,7 @@ if ~isempty(parametersMS)
     [reconciledData, expInfo] = concatenateData(parametersMS);
     % Find the index that corresponds to the last time for a given set
     % point
-    setPtMFC = unique(reconciledData.flow(:,4));
+    setPtMFC = unique(reconciledData.flow(:,5));
     % Find total number of data points
     numDataPoints = length(reconciledData.flow(:,1));
     % Total number of points per set point

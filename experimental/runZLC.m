@@ -14,6 +14,8 @@
 % controllers, will read flow data.
 %
 % Last modified:
+% - 2021-04-07, AK: Add MFM with MFC1 and MFC2, add interval for MFC
+%                   collection
 % - 2021-03-25, AK: Fix rounding errors
 % - 2021-03-24, AK: Cosmetic changes
 % - 2021-03-16, AK: Add MFC2 and fix for MS calibration
@@ -41,6 +43,8 @@ function runZLC(varargin)
         expInfo.maxTime = 300;
         % Sampling time for the device
         expInfo.samplingTime = 2;
+        % Intervals for collecting MFC data
+        expInfo.MFCInterval = 10;
         % Define gas for MFM
         expInfo.gasName_MFM = 'He';
         % Define gas for MFC1
@@ -63,24 +67,28 @@ function runZLC(varargin)
     % Initatlize ports
     portMFM = []; portMFC1 = []; portMFC2 = []; portUMFM = [];
     % Find COM port for MFM
-    portText = matchUSBport({'FT1EQDD6A'});
+    portText = matchUSBport({'FT4U1GABA'});
     if ~isempty(portText{1})
-        portMFM = ['COM',portText{1}(regexp(portText{1},'COM[123456789] - FTDI')+3)];
+        [startInd, stopInd] = regexp(portText{1},'COM(\d+)');
+        portMFM = portText{1}(startInd(1):stopInd(1));
     end
     % Find COM port for MFC1
     portText = matchUSBport({'FT1EU0ACA'});
     if ~isempty(portText{1})
-        portMFC1 = ['COM',portText{1}(regexp(portText{1},'COM[123456789] - FTDI')+3)];
+        [startInd, stopInd] = regexp(portText{1},'COM(\d+)');
+        portMFC1 = portText{1}(startInd(1):stopInd(1));
     end
     % Find COM port for MFC2
-    portText = matchUSBport({'FT1EQDD6M'});
+    portText = matchUSBport({'FT1EQDD6A'});
     if ~isempty(portText{1})
-        portMFC2 = ['COM',portText{1}(regexp(portText{1},'COM[123456789] - FTDI')+3)];
+        [startInd, stopInd] = regexp(portText{1},'COM(\d+)');
+        portMFC2 = portText{1}(startInd(1):stopInd(1));
     end
     % Find COM port for UMFM
     portText = matchUSBport({'3065335A3235'});
     if ~isempty(portText{1})
-        portUMFM = ['COM',portText{1}(regexp(portText{1},'COM[1234567891011]')+3)];
+        [startInd, stopInd] = regexp(portText{1},'COM(\d+)');
+        portUMFM = portText{1}(startInd(1):stopInd(1));
     end
     % Comm setup for the flow meter and controller
     serialObj.MFM = struct('portName',portMFM,'baudRate',19200,'terminator','CR');
@@ -198,8 +206,12 @@ function executeTimerDevice(timerObj, thisEvent, expInfo, serialObj)
         MFM.massFlow = str2double(outputMFMTemp(5)); % standard units [sccm]
         MFM.gas = outputMFMTemp(6); % gas in the meter
     end
+    % Generate a flag to collect MFC data
+    flagCollect = expInfo.calibrateMeters ...
+        || (mod(timerObj.tasksExecuted,expInfo.MFCInterval)==0 ...
+        || timerObj.tasksExecuted == 1 || timerObj.tasksExecuted == timerObj.TasksToExecute);
     % Get the current state of the flow controller 1
-    if ~isempty(serialObj.MFC1.portName)
+    if ~isempty(serialObj.MFC1.portName) && flagCollect
         outputMFC1 = controlAuxiliaryEquipments(serialObj.MFC1, serialObj.cmdPollData,1);
         outputMFC1Temp = strsplit(outputMFC1,' '); % Split the output string
         MFC1.pressure = str2double(outputMFC1Temp(2)); % [bar]
@@ -210,7 +222,7 @@ function executeTimerDevice(timerObj, thisEvent, expInfo, serialObj)
         MFC1.gas = outputMFC1Temp(7); % gas in the controller
     end
     % Get the current state of the flow controller 2
-    if ~isempty(serialObj.MFC2.portName)
+    if ~isempty(serialObj.MFC2.portName) && flagCollect
         outputMFC2 = controlAuxiliaryEquipments(serialObj.MFC2, serialObj.cmdPollData,1);
         outputMFC2Temp = strsplit(outputMFC2,' '); % Split the output string
         MFC2.pressure = str2double(outputMFC2Temp(2)); % [bar]

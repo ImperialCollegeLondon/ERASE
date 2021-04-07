@@ -13,6 +13,7 @@
 % 
 %
 % Last modified:
+% - 2021-04-07, AK: Modify for addition of MFM
 % - 2021-03-26, AK: Add expInfo to output
 % - 2021-03-22, AK: Bug fixes for finding indices
 % - 2021-03-22, AK: Add checks for MS concatenation
@@ -37,30 +38,21 @@ function [reconciledData, expInfo] = concatenateData(fileToLoad)
     expInfo = flowMS.expInfo;
     % Analyse flow data
     MFC1 = [flowMS.outputStruct.MFC1]; % MFC1 - He
-    % Done right now to check if calibration of MS is preesnt or not
-    if ~isfield(fileToLoad,'calibrationMS')
-        MFC2 = [flowMS.outputStruct.MFC2]; % MFC2 - CO2
-    else
-        MFC2 = [flowMS.outputStruct.MFM]; % MFM - CO2
-    end
+	MFC2 = [flowMS.outputStruct.MFC2]; % MFC2 - CO2
+    MFM = [flowMS.outputStruct.MFM]; % MFM - He
     % Get the datetime and volumetric flow rate
     dateTimeFlow = datetime({flowMS.outputStruct.samplingDateTime},...
         'InputFormat','yyyyMMdd_HHmmss');
     volFlow_MFC1 = [MFC1.volFlow]; % He
     setPt_MFC1 = [MFC1.setpoint]; % He setpoint for calibration
     volFlow_MFC2 = [MFC2.volFlow]; % CO2
+    volFlow_MFM = [MFM.volFlow]; % CO2
     % Apply the calibration for the flows
     volFlow_He = volFlow_MFC1*calibrationFlow.MFC_He;
-    % For calibration both MFCs are present
-    % Done right now to check if calibration of MS is preesnt or not
-    if ~isfield(fileToLoad,'calibrationMS')
-        volFlow_CO2 = volFlow_MFC2*calibrationFlow.MFC_CO2;
-    % For actual measurements, one MFC and one MFM present
-    % NOTE: Here MFC2 = MFM!!!!!
-    else
-        % Flow is converted assuming helium calibration for MFM
-        volFlow_CO2 = volFlow_MFC2*calibrationFlow.MFM_He;
-    end
+	volFlow_CO2 = volFlow_MFC2*calibrationFlow.MFC_CO2;
+    % Flow is converted assuming helium calibration for MFM
+    volFlow_MFM = volFlow_MFM*calibrationFlow.MFM_He;
+    
     % Load MS Ascii data
     % Create file identifier
     fileId = fopen(fileToLoad.MS);
@@ -97,6 +89,7 @@ function [reconciledData, expInfo] = concatenateData(fileToLoad)
     reconciledData.raw.dateTimeFlow = dateTimeFlow(indexInitial_Flow:end);
     reconciledData.raw.volFlow_He = volFlow_He(indexInitial_Flow:end);
     reconciledData.raw.volFlow_CO2 = volFlow_CO2(indexInitial_Flow:end);
+    reconciledData.raw.volFlow_MFM = volFlow_MFM(indexInitial_Flow:end);
     reconciledData.raw.setPt_He = setPt_MFC1(indexInitial_Flow:end);
     
     % MS    
@@ -133,7 +126,8 @@ function [reconciledData, expInfo] = concatenateData(fileToLoad)
             -reconciledData.raw.dateTimeFlow(1)); % Time elapsed [s]
         reconciledData.flow(:,2) = reconciledData.raw.volFlow_He; % He Flow [ccm]
         reconciledData.flow(:,3) = reconciledData.raw.volFlow_CO2; % CO2 flow [ccm]
-        reconciledData.flow(:,4) = reconciledData.raw.setPt_He; % He set point [ccm]
+        reconciledData.flow(:,4) = reconciledData.raw.volFlow_MFM; % MFM flow [ccm]
+        reconciledData.flow(:,5) = reconciledData.raw.setPt_He; % He set point [ccm]
 
         % MS
         rawTimeElapsedHe = seconds(reconciledData.raw.dateTimeMS_He ...
@@ -167,7 +161,9 @@ function [reconciledData, expInfo] = concatenateData(fileToLoad)
                                         reconciledData.MS(:,1)); % Interpoloted He Flow [ccm]
         reconciledData.flow(:,3) = interp1(rawTimeElapsedFlow,reconciledData.raw.volFlow_CO2,...
                                         reconciledData.MS(:,1)); % Interpoloted CO2 flow [ccm]
-        reconciledData.flow(:,4) = interp1(rawTimeElapsedFlow,reconciledData.raw.setPt_He,...
+        reconciledData.flow(:,4) = interp1(rawTimeElapsedFlow,reconciledData.raw.volFlow_MFM,...
+                                        reconciledData.MS(:,1)); % Interpoloted MFM flow [ccm]
+        reconciledData.flow(:,5) = interp1(rawTimeElapsedFlow,reconciledData.raw.setPt_He,...
                                         reconciledData.MS(:,1)); % Interpoloted He setpoint[ccm]                                    
     end
                                     
