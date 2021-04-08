@@ -908,7 +908,7 @@ def plotForArticle_DesignVariables(gitCommitID, currentDT,
             ax.axes.yaxis.set_ticklabels([])
         # Create labels for the plots
         ax.text(50, 0.11, plotIndex[ii], fontsize=10)
-        ax.text(1600, 0.11, "Array D", fontsize=10, 
+        ax.text(1600, 0.11, "Array C", fontsize=10, 
              color = '#0077b6')
         if ii == 0:
             curvArr = patches.FancyArrowPatch((800, 0.02), (300, 0.06),
