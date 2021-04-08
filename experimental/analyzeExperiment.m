@@ -14,6 +14,7 @@
 % real experiment using calibrated flow meters and MS
 %
 % Last modified:
+% - 2021-04-08, AK: Add ratio of gas for calibration
 % - 2021-03-24, AK: Add flow rate computation and prepare structure for
 %                   Python script
 % - 2021-03-18, AK: Updates to structure
@@ -28,24 +29,26 @@
 % Get the git commit ID
 gitCommitID = getGitCommit;
 
-flagCalibration = false; % Flag to decide calibration or analysis
+% Flag to decide calibration or analysis
+flagCalibration = true;
 
 % Mode to switch between calibration and analyzing real experiment
 if flagCalibration
     experimentStruct.calibrationFlow = 'ZLCCalibrateMeters_20210316__Model'; % Calibration file for meters (.mat)
-    experimentStruct.flow = 'ZLCCalibrateMS_20210324'; % Experimental flow file (.mat)
-    experimentStruct.MS = 'C:\Users\QCPML\Desktop\Ashwin\MS\ZLCCalibrateMS_20210324.asc'; % Experimental MS file (.asc)
+    experimentStruct.flow = 'ZLCCalibrateMS_20210408'; % Experimental flow file (.mat)
+    experimentStruct.MS = 'C:\Users\QCPML\Desktop\Ashwin\MS\ZLCCalibrateMS_20210408.asc'; % Experimental MS file (.asc)
     experimentStruct.interpMS = true; % Flag for interpolating MS data (true) or flow data (false)
     experimentStruct.numMean = 10; % Number of points for averaging
-    experimentStruct.polyDeg = 3; % Degree of polynomial fit
+    experimentStruct.flagUseIndGas = false; % Flag to determine whether independent (true) or ratio of signals used for calibration
+    experimentStruct.polyDeg = 3; % Degree of polynomial fit for independent gas calibraiton
     % Call reconcileData function for calibration of the MS
     analyzeCalibration([],experimentStruct) % Call the function to generate the calibration file
 else
     setTotalFlowRate = 15;
     experimentStruct.calibrationFlow = 'ZLCCalibrateMeters_20210316__Model'; % Calibration file for meters (.mat)
-    experimentStruct.flow = 'ZLC_DeadVolume_Exp05A'; % Experimental flow file (.mat)
-    experimentStruct.calibrationMS = 'ZLCCalibrateMS_20210323_Model'; % Experimental flow file (.mat)
-    experimentStruct.MS = 'C:\Users\QCPML\Desktop\Ashwin\MS\ZLC_DeadVolume_Exp05A.asc'; % Experimental MS file (.asc)
+    experimentStruct.flow = 'ZLCCalibrateMS_20210408'; % Experimental flow file (.mat)
+    experimentStruct.calibrationMS = 'ZLCCalibrateMS_20210408_Model'; % Experimental calibration file (.mat)
+    experimentStruct.MS = 'C:\Users\QCPML\Desktop\Ashwin\MS\ZLCCalibrateMS_20210408.asc'; % Experimental MS file (.asc)
     experimentStruct.interpMS = true; % Flag for interpolating MS data (true) or flow data (false)
     % Call reconcileData function to get the output mole fraction for a
     % real experiment
@@ -53,8 +56,8 @@ else
     
     % Clean mole fraction to remove negative values (due to calibration)
     % Replace all negative molefraction with eps
-    outputStruct.moleFrac(outputStruct.moleFrac(:,1)<0,1)=eps; % He
-    outputStruct.moleFrac(:,2)=1-outputStruct.moleFrac(:,1); % Compute CO2 with mass balance
+    outputStruct.moleFrac(outputStruct.moleFrac(:,2)<0,1)=eps; % CO2
+    outputStruct.moleFrac(:,1)=1-outputStruct.moleFrac(:,2); % Compute He with mass balance
     
     % Convert the MFM flow to real flow
     % Load the meter calibrations

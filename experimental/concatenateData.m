@@ -13,6 +13,7 @@
 % 
 %
 % Last modified:
+% - 2021-04-08, AK: Add ratio of gas for calibration
 % - 2021-04-07, AK: Modify for addition of MFM
 % - 2021-03-26, AK: Add expInfo to output
 % - 2021-03-22, AK: Bug fixes for finding indices
@@ -178,7 +179,19 @@ function [reconciledData, expInfo] = concatenateData(fileToLoad)
         % MS Calibration File
         load(fileToLoad.calibrationMS);
         % Convert the raw signal to concentration
-        reconciledData.moleFrac(:,1) = polyval(calibrationMS.He,reconciledData.MS(:,2)); % He [-]
-        reconciledData.moleFrac(:,2) = polyval(calibrationMS.CO2,reconciledData.MS(:,3)); % CO2 [-]
+        % When independent gas signals are used
+        if calibrationMS.flagUseIndGas
+            reconciledData.moleFrac(:,1) = polyval(calibrationMS.He,reconciledData.MS(:,2)); % He [-]
+            reconciledData.moleFrac(:,2) = polyval(calibrationMS.CO2,reconciledData.MS(:,3)); % CO2 [-]
+        % When ratio of gas signals are used
+        else
+            % Parse out the fitting parameters
+            paramFit = calibrationMS.ratioHeCO2;
+            % Use a generalized logistic function
+            reconciledData.moleFrac(:,1) = 1./(1+paramFit(1)...
+                .*exp(-paramFit(2).*log(reconciledData.MS(:,2)./reconciledData.MS(:,3))))...
+                .^(1/paramFit(3)); % He [-]
+            reconciledData.moleFrac(:,2) = 1 - reconciledData.moleFrac(:,1); % CO2 [-]
+        end
     end
 end

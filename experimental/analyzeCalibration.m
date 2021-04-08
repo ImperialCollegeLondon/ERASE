@@ -13,6 +13,7 @@
 %
 %
 % Last modified:
+% - 2021-04-08, AK: Add ratio of gas for calibration
 % - 2021-04-07, AK: Modify for addition of MFM
 % - 2021-03-26, AK: Fix for number of repetitions
 % - 2021-03-19, HA: Add legends to the plots
@@ -158,8 +159,17 @@ if ~isempty(parametersMS)
     
     % Fit a polynomial function to get the model for MS
     % Fitting a 3rd order polynomial (check before accepting this)
-    calibrationMS.He = polyfit(meanHeSignal,meanMoleFrac(:,1),parametersMS.polyDeg); % He
-    calibrationMS.CO2 = polyfit(meanCO2Signal,meanMoleFrac(:,2),parametersMS.polyDeg); % COo2
+    calibrationMS.flagUseIndGas = parametersMS.flagUseIndGas;
+    if parametersMS.flagUseIndGas
+        calibrationMS.He = polyfit(meanHeSignal,meanMoleFrac(:,1),parametersMS.polyDeg); % He
+        calibrationMS.CO2 = polyfit(meanCO2Signal,meanMoleFrac(:,2),parametersMS.polyDeg); % COo2
+    else
+        % Perform an optimization to obtain parameter estimates to fit the
+        % ratio of the helium signal to CO2 signal w.r.t He concentration
+        y0 = [1, 0.5, 0.5]; % Initial conditions
+        [paramFit,resErr] = fminunc(@(p) objectiveFunction(meanMoleFrac(:,1),log(meanHeSignal./meanCO2Signal),p),y0);
+        calibrationMS.ratioHeCO2 = paramFit;
+    end
     
     % Save the calibration data into a .mat file
     % Check if calibration data folder exists
@@ -180,24 +190,45 @@ if ~isempty(parametersMS)
     
     % Plot the raw and the calibrated data
     figure(1)
-    % He
-    subplot(1,2,1)
-    hold on
-    plot(1e-13:1e-13:1e-8,polyval(calibrationMS.He,1e-13:1e-13:1e-8))
-    scatter(meanHeSignal,meanMoleFrac(:,1))
-    xlim([0 1.1*max(meanHeSignal)]);
-    ylim([0 1]);
-    xlabel('Helium Signal [A]')
-    ylabel('Helium mole frac [-]')
-    
-    % CO2
-    subplot(1,2,2)
-    hold on
-    plot(1e-13:1e-13:1e-8,polyval(calibrationMS.CO2,1e-13:1e-13:1e-8))
-    scatter(meanCO2Signal,meanMoleFrac(:,2))
-    xlim([0 1.1*max(meanCO2Signal)]);
-    ylim([0 1]);
-    xlabel('CO2 Signal [A]')
-    ylabel('CO2 mole frac [-]')
+    % Plot for independent gas calibrations
+    if parametersMS.flagUseIndGas
+        % He
+        subplot(1,2,1)
+        hold on
+        plot(1e-13:1e-13:1e-8,polyval(calibrationMS.He,1e-13:1e-13:1e-8))
+        scatter(meanHeSignal,meanMoleFrac(:,1))
+        xlim([0 1.1*max(meanHeSignal)]);
+        ylim([0 1]);
+        box on; grid on;
+        xlabel('Helium Signal [A]')
+        ylabel('Helium mole frac [-]')
+
+        % CO2
+        subplot(1,2,2)
+        hold on
+        plot(1e-13:1e-13:1e-8,polyval(calibrationMS.CO2,1e-13:1e-13:1e-8),'b')
+        plot(meanCO2Signal,meanMoleFrac(:,2),'or')
+        xlim([0 1.1*max(meanCO2Signal)]);
+        ylim([0 1]);
+        box on; grid on;
+        xlabel('CO2 Signal [A]')
+        ylabel('CO2 mole frac [-]')
+    % Ratio of He to CO2
+    else
+        plot(log(meanHeSignal./meanCO2Signal),meanMoleFrac(:,1),'or') % Experimental
+        hold on
+        plot(-10:1:10,1./(1+paramFit(1).*exp(-paramFit(2).*(-10:1:10))).^(1/paramFit(3)),'b')
+        xlim([-10 10]);
+        ylim([0 1]);
+        box on; grid on;
+        xlabel('log(Helium/CO2 Signal) [-]')
+        ylabel('Helium mole frac [-]')
+    end
 end
+end
+% Objective function to evaluate model parameters for the logistic
+% function (generalized)
+function errSignal = objectiveFunction(meanMoleFrac,expSignal,p)
+    % Calculate the sum of errors
+    errSignal = sum((meanMoleFrac' - 1./(1+p(1).*exp(-p(2).*expSignal)).^(1/p(3))).^2);
 end
