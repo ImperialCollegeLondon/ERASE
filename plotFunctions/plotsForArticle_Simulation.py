@@ -900,7 +900,7 @@ def plotForArticle_DesignVariables(gitCommitID, currentDT,
         if ii == 2 or ii  == 3:
             ax.set(xlabel = '$t$ [s]')
         if ii == 0 or ii  == 2:
-            ax.set(ylabel = '$m_i$ [g]')
+            ax.set(ylabel = '$m$ [g]')
         # Remove ticks
         if ii == 0 or ii == 1:
             ax.axes.xaxis.set_ticklabels([])            
