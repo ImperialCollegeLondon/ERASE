@@ -13,6 +13,7 @@
 % 
 %
 % Last modified:
+% - 2021-04-09, AK: Change output for calibration or non calibrate mode
 % - 2021-04-08, AK: Add ratio of gas for calibration
 % - 2021-04-07, AK: Modify for addition of MFM
 % - 2021-03-26, AK: Add expInfo to output
@@ -39,7 +40,7 @@ function [reconciledData, expInfo] = concatenateData(fileToLoad)
     expInfo = flowMS.expInfo;
     % Analyse flow data
     MFC1 = [flowMS.outputStruct.MFC1]; % MFC1 - He
-	MFC2 = [flowMS.outputStruct.MFC2]; % MFC2 - CO2
+    MFC2 = [flowMS.outputStruct.MFC2]; % MFC2 - CO2
     MFM = [flowMS.outputStruct.MFM]; % MFM - He
     % Get the datetime and volumetric flow rate
     dateTimeFlow = datetime({flowMS.outputStruct.samplingDateTime},...
@@ -125,11 +126,17 @@ function [reconciledData, expInfo] = concatenateData(fileToLoad)
         % Meters and the controllers
         reconciledData.flow(:,1) = seconds(reconciledData.raw.dateTimeFlow...
             -reconciledData.raw.dateTimeFlow(1)); % Time elapsed [s]
-        reconciledData.flow(:,2) = reconciledData.raw.volFlow_He; % He Flow [ccm]
-        reconciledData.flow(:,3) = reconciledData.raw.volFlow_CO2; % CO2 flow [ccm]
-        reconciledData.flow(:,4) = reconciledData.raw.volFlow_MFM; % MFM flow [ccm]
-        reconciledData.flow(:,5) = reconciledData.raw.setPt_He; % He set point [ccm]
-
+        % Save the MFC and MFM values for the calibrate meters experiments
+        if expInfo.calibrateMeters
+            reconciledData.flow(:,2) = reconciledData.raw.volFlow_He; % He Flow [ccm]
+            reconciledData.flow(:,3) = reconciledData.raw.volFlow_CO2; % CO2 flow [ccm]
+            reconciledData.flow(:,4) = reconciledData.raw.volFlow_MFM; % MFM flow [ccm]
+            reconciledData.flow(:,5) = reconciledData.raw.setPt_He; % He set point [ccm]
+        % Save only the MFM values for the true experiments
+        else
+            reconciledData.flow(:,2) = reconciledData.raw.volFlow_MFM; % He set point [ccm]
+        end
+        
         % MS
         rawTimeElapsedHe = seconds(reconciledData.raw.dateTimeMS_He ...
             - reconciledData.raw.dateTimeMS_He(1)); % Time elapsed He [s]
@@ -158,14 +165,21 @@ function [reconciledData, expInfo] = concatenateData(fileToLoad)
         rawTimeElapsedFlow = seconds(reconciledData.raw.dateTimeFlow...
                                     -reconciledData.raw.dateTimeFlow(1)); 
         reconciledData.flow(:,1) = reconciledData.MS(:,1); % Time elapsed of MS [s]
-        reconciledData.flow(:,2) = interp1(rawTimeElapsedFlow,reconciledData.raw.volFlow_He,...
-                                        reconciledData.MS(:,1)); % Interpoloted He Flow [ccm]
-        reconciledData.flow(:,3) = interp1(rawTimeElapsedFlow,reconciledData.raw.volFlow_CO2,...
-                                        reconciledData.MS(:,1)); % Interpoloted CO2 flow [ccm]
-        reconciledData.flow(:,4) = interp1(rawTimeElapsedFlow,reconciledData.raw.volFlow_MFM,...
-                                        reconciledData.MS(:,1)); % Interpoloted MFM flow [ccm]
-        reconciledData.flow(:,5) = interp1(rawTimeElapsedFlow,reconciledData.raw.setPt_He,...
-                                        reconciledData.MS(:,1)); % Interpoloted He setpoint[ccm]                                    
+        % Save the MFC and MFM values for the calibrate meters experiments
+        if expInfo.calibrateMeters
+            reconciledData.flow(:,2) = interp1(rawTimeElapsedFlow,reconciledData.raw.volFlow_He,...
+                                            reconciledData.MS(:,1)); % Interpoloted He Flow [ccm]
+            reconciledData.flow(:,3) = interp1(rawTimeElapsedFlow,reconciledData.raw.volFlow_CO2,...
+                                            reconciledData.MS(:,1)); % Interpoloted CO2 flow [ccm]
+            reconciledData.flow(:,4) = interp1(rawTimeElapsedFlow,reconciledData.raw.volFlow_MFM,...
+                                            reconciledData.MS(:,1)); % Interpoloted MFM flow [ccm]
+            reconciledData.flow(:,5) = interp1(rawTimeElapsedFlow,reconciledData.raw.setPt_He,...
+                                            reconciledData.MS(:,1)); % Interpoloted He setpoint[ccm]                                    
+        % Save only the MFM values for the true experiments
+        else
+            reconciledData.flow(:,2) = interp1(rawTimeElapsedFlow,reconciledData.raw.volFlow_MFM,...
+                                            reconciledData.MS(:,1)); % Interpoloted MFM flow [ccm]
+        end
     end
                                     
     % Get the mole fraction used for the calibration
