@@ -13,6 +13,7 @@
 # Reference: 10.1016/j.ces.2008.02.023
 #
 # Last modified:
+# - 2021-04-12, AK: Small fixed
 # - 2021-03-25, AK: Fix for plot
 # - 2021-03-18, AK: Fix for inlet concentration
 # - 2021-03-17, AK: Initial creation
@@ -59,12 +60,12 @@ def simulateDeadVolume(**kwargs):
     if 'feedMoleFrac' in kwargs:
         feedMoleFrac = np.array(kwargs["feedMoleFrac"])
     else:
-        feedMoleFrac = np.array([1.])
+        feedMoleFrac = np.array([0.])
     # Time span for integration [tuple with t0 and tf]
     if 'timeInt' in kwargs:
         timeInt = kwargs["timeInt"]
     else:
-        timeInt = (0.0,20)
+        timeInt = (0.0,1000)
     
     # Prepare tuple of input parameters for the ode solver
     inputParameters = (flowRate, deadVolume, numberOfTanks, feedMoleFrac)            

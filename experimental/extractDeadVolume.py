@@ -14,6 +14,7 @@
 # Reference: 10.1016/j.ces.2008.02.023
 #
 # Last modified:
+# - 2021-04-12, AK: Add functionality for multiple experiments
 # - 2021-03-25, AK: Estimate parameters using experimental data
 # - 2021-03-17, AK: Initial creation
 #
@@ -86,24 +87,44 @@ def deadVolObjectiveFunction(x):
     
     # Directory of raw data
     mainDir = '/Users/ash23win/Google Drive/ERASE/experimental/runData/'
-    # File name of the experinent
-    fileName = 'ZLC_DeadVolume_Exp05A_Output_0cf1b97.npz'
-    # Path of the file name
-    fileToLoad = mainDir + fileName   
-    # Load experimental molefraction
-    timeElapsedExp = load(fileToLoad)["timeElapsed"].flatten()
-    moleFracExp = load(fileToLoad)["moleFrac"].flatten()
+    # File name of the experiments
+    fileName = ['ZLC_DeadVolume_Exp10A_Output_5fac6fa.npz',
+                'ZLC_DeadVolume_Exp10B_Output_5fac6fa.npz',
+                'ZLC_DeadVolume_Exp10C_Output_5fac6fa.npz',
+                'ZLC_DeadVolume_Exp10D_Output_5fac6fa.npz']
     
-    # Compute the dead volume response using the optimizer parameters
-    timeSimOut , _ , moleFracOut = simulateDeadVolume(deadVolume = x[0],
-                                                      numberOfTanks = int(x[1]))
-    
-    # Interpolate simulation data (generate function)
-    interpSim = interp1d(timeSimOut, moleFracOut)    
-    
-    # Find the interpolated simulation mole fraction at times corresponding to 
-    # the experimental ones
-    moleFracSim = interpSim(timeElapsedExp)
+    # Initialize error for objective function
+    computedError = 0
+    # Loop over all available files    
+    for ii in range(len(fileName)):
+        # Initialize outputs
+        timeSimOut = []
+        moleFracOut = []
+        moleFracSim = []
+        # Path of the file name
+        fileToLoad = mainDir + fileName[ii]   
+        # Load experimental molefraction
+        timeElapsedExp = load(fileToLoad)["timeElapsed"].flatten()
+        moleFracExp = load(fileToLoad)["moleFrac"].flatten()
+        # Parse out flow rate of the experiment
+        # Obtain the mean and round it to the 2 decimal to be used in the 
+        # simulation
+        flowRate = round(np.mean(load(fileToLoad)["flowRate"]),2)
+        
+        # Compute the dead volume response using the optimizer parameters
+        timeSimOut , _ , moleFracOut = simulateDeadVolume(deadVolume = x[0],
+                                                          numberOfTanks = int(x[1]),
+                                                          flowRate = flowRate)
+        
+        # Interpolate simulation data (generate function)
+        interpSim = interp1d(timeSimOut, moleFracOut)    
+        
+        # Find the interpolated simulation mole fraction at times corresponding to 
+        # the experimental ones
+        moleFracSim = interpSim(timeElapsedExp)
+        
+        # Compute the sum of the error for the difference between exp. and sim.
+        computedError += np.sum(np.power(moleFracExp - moleFracSim,2))
     
     # Compute the sum of the error for the difference between exp. and sim.
-    return np.sum(np.power(moleFracExp - moleFracSim,2))
+    return computedError
