@@ -14,6 +14,7 @@
 % real experiment using calibrated flow meters and MS
 %
 % Last modified:
+% - 2021-04-13, AK: Add threshold to cut data below a given mole fraction
 % - 2021-04-08, AK: Add ratio of gas for calibration
 % - 2021-03-24, AK: Add flow rate computation and prepare structure for
 %                   Python script
@@ -30,13 +31,13 @@
 gitCommitID = getGitCommit;
 
 % Flag to decide calibration or analysis
-flagCalibration = true;
+flagCalibration = false;
 
 % Mode to switch between calibration and analyzing real experiment
 if flagCalibration
     experimentStruct.calibrationFlow = 'ZLCCalibrateMeters_20210316__Model'; % Calibration file for meters (.mat)
-    experimentStruct.flow = 'ZLCCalibrateMS_20210408'; % Experimental flow file (.mat)
-    experimentStruct.MS = 'C:\Users\QCPML\Desktop\Ashwin\MS\ZLCCalibrateMS_20210408.asc'; % Experimental MS file (.asc)
+    experimentStruct.flow = 'ZLCCalibrateMS_20210413'; % Experimental flow file (.mat)
+    experimentStruct.MS = 'C:\Users\QCPML\Desktop\Ashwin\MS\ZLCCalibrateMS_20210413.asc'; % Experimental MS file (.asc)
     experimentStruct.interpMS = true; % Flag for interpolating MS data (true) or flow data (false)
     experimentStruct.numMean = 10; % Number of points for averaging
     experimentStruct.flagUseIndGas = false; % Flag to determine whether independent (true) or ratio of signals used for calibration
@@ -44,11 +45,12 @@ if flagCalibration
     % Call reconcileData function for calibration of the MS
     analyzeCalibration([],experimentStruct) % Call the function to generate the calibration file
 else
-    setTotalFlowRate = 15;
+    setTotalFlowRate = 15; % Total flow rate of the experiment [ccm]
+    moleFracThreshold = 1e-4; % Threshold to cut data below a given mole fraction [-]
     experimentStruct.calibrationFlow = 'ZLCCalibrateMeters_20210316__Model'; % Calibration file for meters (.mat)
-    experimentStruct.flow = 'ZLCCalibrateMS_20210408'; % Experimental flow file (.mat)
-    experimentStruct.calibrationMS = 'ZLCCalibrateMS_20210408_Model'; % Experimental calibration file (.mat)
-    experimentStruct.MS = 'C:\Users\QCPML\Desktop\Ashwin\MS\ZLCCalibrateMS_20210408.asc'; % Experimental MS file (.asc)
+    experimentStruct.flow = 'ZLC_DeadVolume_Exp12D'; % Experimental flow file (.mat)
+    experimentStruct.calibrationMS = 'ZLCCalibrateMS_20210413_Model'; % Experimental calibration file (.mat)
+    experimentStruct.MS = 'C:\Users\QCPML\Desktop\Ashwin\MS\ZLC_DeadVolume_Exp12D.asc'; % Experimental MS file (.asc)
     experimentStruct.interpMS = true; % Flag for interpolating MS data (true) or flow data (false)
     % Call reconcileData function to get the output mole fraction for a
     % real experiment
@@ -85,9 +87,12 @@ else
     totalFlowRate = realFlowRateHe+realFlowRateCO2;
     
     % Input for the ZLC script (Python)
-    experimentOutput.timeExp = outputStruct.flow(:,1); % Time elapsed [s]
-    experimentOutput.moleFrac = outputStruct.moleFrac(:,2); % Mole fraction CO2 [-]
-    experimentOutput.totalFlowRate = totalFlowRate./60; % Total flow rate of the gas [ccs]
+    % Find the index for the mole fraction that corresponds to the
+    % threshold mole fraction
+    moleFracThresholdInd = find(outputStruct.moleFrac(:,2)<moleFracThreshold,1,'first');
+    experimentOutput.timeExp = outputStruct.flow(1:moleFracThresholdInd,1); % Time elapsed [s]
+    experimentOutput.moleFrac = outputStruct.moleFrac(1:moleFracThresholdInd,2); % Mole fraction CO2 [-]
+    experimentOutput.totalFlowRate = totalFlowRate(1:moleFracThresholdInd)./60; % Total flow rate of the gas [ccs]
     experimentOutput.setTotalFlowRate = setTotalFlowRate/60; % Set point for total flow rate [ccs]
     % Save the experimental output into a .mat file
     % Check if runData data folder exists
