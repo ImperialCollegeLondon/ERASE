@@ -14,6 +14,7 @@
 # Reference: 10.1016/j.ces.2008.02.023
 #
 # Last modified:
+# - 2021-04-14, AK: Bug fix
 # - 2021-04-14, AK: Change strucure and perform series of parallel CSTRs
 # - 2021-04-12, AK: Add functionality for multiple experiments
 # - 2021-03-25, AK: Estimate parameters using experimental data
@@ -49,10 +50,11 @@ def extractDeadVolume():
     currentDT = auxiliaryFunctions.getCurrentDateTime()
     
     # Directory of raw data
-    mainDir = '/Users/ash23win/Google Drive/ERASE/experimental/runData/'
+    mainDir = 'runData/'
     # File name of the experiments
     fileName = ['ZLC_DeadVolume_Exp12D_Output.mat',
-                'ZLC_DeadVolume_Exp12E_Output.mat']
+                'ZLC_DeadVolume_Exp12E_Output.mat',
+                'ZLC_DeadVolume_Exp12F_Output.mat']
     # Generate .npz file for python processing of the .mat file 
     filesToProcess(True,mainDir,fileName)
 
@@ -65,7 +67,7 @@ def extractDeadVolume():
                          
     optType=np.array(['real','real','real','real','int','int','int','int','real','real'])
     # Algorithm parameters for GA
-    algorithm_param = {'max_num_iteration':20,
+    algorithm_param = {'max_num_iteration':25,
                        'population_size':400,
                        'mutation_probability':0.1,
                        'crossover_probability': 0.55,
@@ -98,7 +100,7 @@ def extractDeadVolume():
     
     # Check if inputResources directory exists or not. If not, create the folder
     if not os.path.exists(os.path.join('..','simulationResults')):
-        os.mkdir('simulationResults')
+        os.mkdir(os.path.join('..','simulationResults'))
     
 
     # Save the output into a .npz file
