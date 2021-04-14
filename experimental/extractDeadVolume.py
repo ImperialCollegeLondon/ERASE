@@ -50,7 +50,7 @@ def extractDeadVolume():
     currentDT = auxiliaryFunctions.getCurrentDateTime()
     
     # Directory of raw data
-    mainDir = 'runData/'
+    mainDir = 'experimental/runData'
     # File name of the experiments
     fileName = ['ZLC_DeadVolume_Exp12D_Output.mat',
                 'ZLC_DeadVolume_Exp12E_Output.mat',

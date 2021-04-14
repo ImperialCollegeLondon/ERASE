@@ -30,12 +30,12 @@ def processExpMatFile(mainDir, fileName):
     import os
     from numpy import savez
     import socket
-    
+
     # Get the commit ID of the current repository
     gitCommitID = auxiliaryFunctions.getCommitID()
-    
+
     # Path of the file name
-    fileToLoad = mainDir + fileName
+    fileToLoad = os.path.join(mainDir,fileName)
     
     # Load .mat file
     rawData = sio.loadmat(fileToLoad)["experimentOutput"]
