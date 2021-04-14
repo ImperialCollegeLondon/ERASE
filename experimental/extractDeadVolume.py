@@ -14,6 +14,7 @@
 # Reference: 10.1016/j.ces.2008.02.023
 #
 # Last modified:
+# - 2021-04-14, AK: Change strucure and perform series of parallel CSTRs
 # - 2021-04-12, AK: Add functionality for multiple experiments
 # - 2021-03-25, AK: Estimate parameters using experimental data
 # - 2021-03-17, AK: Initial creation
@@ -30,26 +31,42 @@ def extractDeadVolume():
     import numpy as np
     from geneticalgorithm2 import geneticalgorithm2 as ga # GA
     import auxiliaryFunctions
+    import os
+    from numpy import savez
     import multiprocessing # For parallel processing
+    import socket
     
     # Find out the total number of cores available for parallel processing
     num_cores = multiprocessing.cpu_count()
     
     # Number of times optimization repeated
-    numOptRepeat = 3
+    numOptRepeat = 10
     
     # Get the commit ID of the current repository
     gitCommitID = auxiliaryFunctions.getCommitID()
     
     # Get the current date and time for saving purposes    
     currentDT = auxiliaryFunctions.getCurrentDateTime()
+    
+    # Directory of raw data
+    mainDir = '/Users/ash23win/Google Drive/ERASE/experimental/runData/'
+    # File name of the experiments
+    fileName = ['ZLC_DeadVolume_Exp12D_Output.mat',
+                'ZLC_DeadVolume_Exp12E_Output.mat']
+    # Generate .npz file for python processing of the .mat file 
+    filesToProcess(True,mainDir,fileName)
 
-    # Define the bounds and the type of the parameters to be optimized
-    optBounds = np.array(([np.finfo(float).eps,100], [1,30]))
-    optType=np.array(['real','int'])
+    # Define the bounds and the type of the parameters to be optimized                       
+    optBounds = np.array(([np.finfo(float).eps,100], [np.finfo(float).eps,100],
+                          [np.finfo(float).eps,100], [np.finfo(float).eps,100],
+                          [1,30], [1,30], [1,30], [1,30],
+                          [np.finfo(float).eps,1-np.finfo(float).eps],
+                          [np.finfo(float).eps,1-np.finfo(float).eps]))
+                         
+    optType=np.array(['real','real','real','real','int','int','int','int','real','real'])
     # Algorithm parameters for GA
-    algorithm_param = {'max_num_iteration':25,
-                       'population_size':100,
+    algorithm_param = {'max_num_iteration':20,
+                       'population_size':400,
                        'mutation_probability':0.1,
                        'crossover_probability': 0.55,
                        'parents_portion': 0.15,
@@ -57,7 +74,7 @@ def extractDeadVolume():
 
     # Minimize an objective function to compute the dead volume and the number of 
     # tanks for the dead volume using GA
-    model = ga(function = deadVolObjectiveFunction, dimension=2, 
+    model = ga(function = deadVolObjectiveFunction, dimension=10, 
                                variable_type_mixed = optType,
                                variable_boundaries = optBounds,
                                algorithm_parameters=algorithm_param)
@@ -73,6 +90,24 @@ def extractDeadVolume():
                                                              n_jobs = num_cores),
                   start_generation=model.output_dict['last_generation'], no_plot = True)
     
+    # Save the array concentration into a native numpy file
+    # The .npz file is saved in a folder called simulationResults (hardcoded)
+    filePrefix = "deadVolumeCharacteristics"
+    saveFileName = filePrefix + "_" + currentDT + "_" + gitCommitID;
+    savePath = os.path.join('..','simulationResults',saveFileName)
+    
+    # Check if inputResources directory exists or not. If not, create the folder
+    if not os.path.exists(os.path.join('..','simulationResults')):
+        os.mkdir('simulationResults')
+    
+
+    # Save the output into a .npz file
+    savez (savePath, modelOutput = model.output_dict, # Model output
+           optBounds = optBounds, # Optimizer bounds
+           algoParameters = algorithm_param, # Algorithm parameters
+           fileName = fileName, # Names of file used for fitting
+           hostName = socket.gethostname()) # Hostname of the computer) 
+        
     # Return the optimized values
     return model.output_dict
 
@@ -85,35 +120,48 @@ def deadVolObjectiveFunction(x):
     from numpy import load
     from scipy.interpolate import interp1d
     
-    # Directory of raw data
-    mainDir = '/Users/ash23win/Google Drive/ERASE/experimental/runData/'
-    # File name of the experiments
-    fileName = ['ZLC_DeadVolume_Exp10A_Output_5fac6fa.npz',
-                'ZLC_DeadVolume_Exp10B_Output_5fac6fa.npz',
-                'ZLC_DeadVolume_Exp10C_Output_5fac6fa.npz',
-                'ZLC_DeadVolume_Exp10D_Output_5fac6fa.npz']
+    # Load the names of the file to be used for estimating dead volume characteristics
+    filePath = filesToProcess(False,[],[])
     
+    numPointsExp = np.zeros(len(filePath))
+    for ii in range(len(filePath)): 
+        # Load experimental molefraction
+        timeElapsedExp = load(filePath[ii])["timeElapsed"].flatten()
+        numPointsExp[ii] = len(timeElapsedExp)
+        
+    # Downsample intervals
+    downsampleInt = numPointsExp/np.min(numPointsExp)
+        
     # Initialize error for objective function
     computedError = 0
+    numPoints = 0
     # Loop over all available files    
-    for ii in range(len(fileName)):
+    for ii in range(len(filePath)):
         # Initialize outputs
         timeSimOut = []
         moleFracOut = []
-        moleFracSim = []
-        # Path of the file name
-        fileToLoad = mainDir + fileName[ii]   
+        moleFracSim = []  
         # Load experimental molefraction
-        timeElapsedExp = load(fileToLoad)["timeElapsed"].flatten()
-        moleFracExp = load(fileToLoad)["moleFrac"].flatten()
+        timeElapsedExpTemp = load(filePath[ii])["timeElapsed"].flatten()
+        moleFracExpTemp = load(filePath[ii])["moleFrac"].flatten()
+        timeElapsedExp = timeElapsedExpTemp[::int(np.round(downsampleInt[ii]))]
+        moleFracExp = moleFracExpTemp[::int(np.round(downsampleInt[ii]))]
         # Parse out flow rate of the experiment
         # Obtain the mean and round it to the 2 decimal to be used in the 
         # simulation
-        flowRate = round(np.mean(load(fileToLoad)["flowRate"]),2)
+        flowRate = round(np.mean(load(filePath[ii])["flowRate"]),2)
         
         # Compute the dead volume response using the optimizer parameters
-        timeSimOut , _ , moleFracOut = simulateDeadVolume(deadVolume = x[0],
-                                                          numberOfTanks = int(x[1]),
+        timeSimOut , _ , moleFracOut = simulateDeadVolume(deadVolume_1M = x[0],
+                                                          deadVolume_1D = x[1],
+                                                          deadVolume_2M = x[2],
+                                                          deadVolume_2D = x[3],
+                                                          numTanks_1M = int(x[4]),
+                                                          numTanks_1D = int(x[5]),
+                                                          numTanks_2M = int(x[6]),
+                                                          numTanks_2D = int(x[7]),
+                                                          splitRatio_1 = x[8],
+                                                          splitRatio_2 = x[9],
                                                           flowRate = flowRate)
         
         # Interpolate simulation data (generate function)
@@ -124,7 +172,27 @@ def deadVolObjectiveFunction(x):
         moleFracSim = interpSim(timeElapsedExp)
         
         # Compute the sum of the error for the difference between exp. and sim.
-        computedError += np.sum(np.power(moleFracExp - moleFracSim,2))
+        numPoints += len(moleFracExp)
+        computedError += np.log(np.sum(np.power(moleFracExp - moleFracSim,2)))
     
     # Compute the sum of the error for the difference between exp. and sim.
-    return computedError
+    return (numPoints/2)*computedError
+
+# func: filesToProcess
+# Loads .mat experimental file and processes it for python
+def filesToProcess(initFlag,mainDir,fileName):
+    from processExpMatFile import processExpMatFile
+    from numpy import savez
+    from numpy import load
+    # Process the data for python (if needed)
+    if initFlag:
+        savePath=list()
+        for ii in range(len(fileName)):
+            savePath.append(processExpMatFile(mainDir, fileName[ii]))
+        # Save the .npz file names in a dummy file
+        savez ('tempCreation.npz', savePath = savePath)
+    # Returns the path of the .npz file to be used 
+    else:
+    # Load the dummy file with file names for processing
+        savePath = load ('tempCreation.npz')["savePath"]
+        return savePath
