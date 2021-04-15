@@ -14,6 +14,7 @@
 # Reference: 10.1016/j.ces.2008.02.023
 #
 # Last modified:
+# - 2021-04-15, AK: Modify GA parameters and add penalty function
 # - 2021-04-14, AK: Bug fix
 # - 2021-04-14, AK: Change strucure and perform series of parallel CSTRs
 # - 2021-04-12, AK: Add functionality for multiple experiments
@@ -67,11 +68,12 @@ def extractDeadVolume():
                          
     optType=np.array(['real','real','real','real','int','int','int','int','real','real'])
     # Algorithm parameters for GA
-    algorithm_param = {'max_num_iteration':25,
-                       'population_size':400,
+    algorithm_param = {'max_num_iteration':10,
+                       'population_size':800,
                        'mutation_probability':0.1,
                        'crossover_probability': 0.55,
                        'parents_portion': 0.15,
+                       'elit_ratio': 0.01,
                        'max_iteration_without_improv':None}
 
     # Minimize an objective function to compute the dead volume and the number of 
@@ -137,6 +139,7 @@ def deadVolObjectiveFunction(x):
     # Initialize error for objective function
     computedError = 0
     numPoints = 0
+    expVolume = 0
     # Loop over all available files    
     for ii in range(len(filePath)):
         # Initialize outputs
@@ -152,6 +155,9 @@ def deadVolObjectiveFunction(x):
         # Obtain the mean and round it to the 2 decimal to be used in the 
         # simulation
         flowRate = round(np.mean(load(filePath[ii])["flowRate"]),2)
+
+        # Compute the experimental volume (using trapz)
+        expVolume = max([expVolume, np.trapz(moleFracExp,flowRate*timeElapsedExp)])
         
         # Compute the dead volume response using the optimizer parameters
         timeSimOut , _ , moleFracOut = simulateDeadVolume(deadVolume_1M = x[0],
@@ -177,8 +183,14 @@ def deadVolObjectiveFunction(x):
         numPoints += len(moleFracExp)
         computedError += np.log(np.sum(np.power(moleFracExp - moleFracSim,2)))
     
-    # Compute the sum of the error for the difference between exp. and sim.
-    return (numPoints/2)*computedError
+    # Penalize if the total volume of the system is greater than experiemntal 
+    # volume
+    penaltyObj = 0
+    if sum(x[0:4])>1.5*expVolume:
+        penaltyObj = 10000
+    # Compute the sum of the error for the difference between exp. and sim. and
+    # add a penalty if needed
+    return (numPoints/2)*computedError + penaltyObj
 
 # func: filesToProcess
 # Loads .mat experimental file and processes it for python
