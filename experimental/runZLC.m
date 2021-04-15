@@ -14,6 +14,7 @@
 % controllers, will read flow data.
 %
 % Last modified:
+% - 2021-04-15, AK: Modify function for mixture experiments
 % - 2021-04-07, AK: Add MFM with MFC1 and MFC2, add interval for MFC
 %                   collection
 % - 2021-03-25, AK: Fix rounding errors
@@ -55,8 +56,12 @@ function runZLC(varargin)
         expInfo.MFC1_SP = 15.0;
         % Define gas for MFC2
         expInfo.MFC2_SP = 15.0;
+        % Adsorbemt equilibration time (start delay for the timer)
+        expInfo.equilibrationTime = 5; % [s]
         % Calibrate meters flag
         expInfo.calibrateMeters = false;
+        % Mixtures Flag - When a T junction instead of 6 way valve used
+        expInfo.runMixtures = false; % Cannot be true for calibration meters
     else
         % Use the value passed to the function
         currentDateTime = datestr(now,'yyyymmdd_HHMMSS');
@@ -104,7 +109,7 @@ function runZLC(varargin)
     timerDevice.ExecutionMode = 'fixedRate';
     timerDevice.BusyMode = 'drop';
     timerDevice.Period = expInfo.samplingTime; % [s]
-    timerDevice.StartDelay = 5; % [s]
+    timerDevice.StartDelay = expInfo.equilibrationTime; % [s]
     timerDevice.TasksToExecute = floor((expInfo.maxTime)/expInfo.samplingTime);
 
     % Specify timer callbacks
@@ -188,10 +193,29 @@ function executeTimerDevice(timerObj, thisEvent, expInfo, serialObj)
     % Initialize outputs
     MFM = []; MFC1 = []; MFC2 = []; UMFM = [];
     % Get user input to indicate switching of the valve
-    if timerObj.tasksExecuted == 1 && ~expInfo.calibrateMeters
+    if timerObj.tasksExecuted == 1 && ~expInfo.calibrateMeters && ~expInfo.runMixtures
         % Waiting for user to switch the valve
         promptUser = 'Switch asap! When you press Y, the gas switches (you wish)! [Y/N]: ';
         userInput = input(promptUser,'s');
+    end
+    % If mixtures is run, at the first instant turn off CO2 (MFC2)
+    if timerObj.tasksExecuted == 1 && expInfo.runMixtures && ~isempty(serialObj.MFC2.portName)
+        % Parse out gas name from expInfo
+        gasName_MFC2 = expInfo.gasName_MFC2;
+        % Generate Gas ID for Alicat devices
+        gasID_MFC2 = checkGasName(gasName_MFC2);
+        [~] = controlAuxiliaryEquipments(serialObj.MFC2, gasID_MFC2,1); % Set gas for MFC2
+        % Generate serial command for volumteric flow rate set point
+        cmdSetPt = generateSerialCommand('setPoint',1,0); % Same units as device
+        [~] = controlAuxiliaryEquipments(serialObj.MFC2, cmdSetPt,1); % Set gas for MFC1
+        % Check if the set point was sent to the controller
+        outputMFC2 = controlAuxiliaryEquipments(serialObj.MFC2, serialObj.cmdPollData,1);
+        outputMFC2Temp = strsplit(outputMFC2,' '); % Split the output string
+        % Rounding required due to rounding errors. Differences of around
+        % eps can be observed        
+        if round(str2double(outputMFC2Temp(6)),4) ~= round(0,4)
+            error("You should not be here!!!")
+        end
     end
     % Get the sampling date/time
     currentDateTime = datestr(now,'yyyymmdd_HHMMSS');
