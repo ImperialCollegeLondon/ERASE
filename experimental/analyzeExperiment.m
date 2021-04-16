@@ -36,8 +36,8 @@ flagCalibration = false;
 % Mode to switch between calibration and analyzing real experiment
 if flagCalibration
     experimentStruct.calibrationFlow = 'ZLCCalibrateMeters_20210316__Model'; % Calibration file for meters (.mat)
-    experimentStruct.flow = 'ZLCCalibrateMS_20210413'; % Experimental flow file (.mat)
-    experimentStruct.MS = 'C:\Users\QCPML\Desktop\Ashwin\MS\ZLCCalibrateMS_20210413.asc'; % Experimental MS file (.asc)
+    experimentStruct.flow = 'ZLCCalibrateMS_20210414'; % Experimental flow file (.mat)
+    experimentStruct.MS = 'C:\Users\QCPML\Desktop\Ashwin\MS\ZLCCalibrateMS_20210414.asc'; % Experimental MS file (.asc)
     experimentStruct.interpMS = true; % Flag for interpolating MS data (true) or flow data (false)
     experimentStruct.numMean = 10; % Number of points for averaging
     experimentStruct.flagUseIndGas = false; % Flag to determine whether independent (true) or ratio of signals used for calibration
@@ -45,12 +45,12 @@ if flagCalibration
     % Call reconcileData function for calibration of the MS
     analyzeCalibration([],experimentStruct) % Call the function to generate the calibration file
 else
-    setTotalFlowRate = 15; % Total flow rate of the experiment [ccm]
-    moleFracThreshold = 1e-4; % Threshold to cut data below a given mole fraction [-]
+    setTotalFlowRate = 60; % Total flow rate of the experiment [ccm]
+    moleFracThreshold = 1e-3; % Threshold to cut data below a given mole fraction [-]
     experimentStruct.calibrationFlow = 'ZLCCalibrateMeters_20210316__Model'; % Calibration file for meters (.mat)
-    experimentStruct.flow = 'ZLC_DeadVolume_Exp12D'; % Experimental flow file (.mat)
-    experimentStruct.calibrationMS = 'ZLCCalibrateMS_20210413_Model'; % Experimental calibration file (.mat)
-    experimentStruct.MS = 'C:\Users\QCPML\Desktop\Ashwin\MS\ZLC_DeadVolume_Exp12D.asc'; % Experimental MS file (.asc)
+    experimentStruct.flow = 'ZLC_ActivatedCarbon_Exp10G'; % Experimental flow file (.mat)
+    experimentStruct.calibrationMS = 'ZLCCalibrateMS_20210414_Model'; % Experimental calibration file (.mat)
+    experimentStruct.MS = 'C:\Users\QCPML\Desktop\Ashwin\MS\ZLC_ActivatedCarbon_Exp10.asc'; % Experimental MS file (.asc)
     experimentStruct.interpMS = true; % Flag for interpolating MS data (true) or flow data (false)
     % Call reconcileData function to get the output mole fraction for a
     % real experiment
@@ -90,6 +90,11 @@ else
     % Find the index for the mole fraction that corresponds to the
     % threshold mole fraction
     moleFracThresholdInd = find(outputStruct.moleFrac(:,2)<moleFracThreshold,1,'first');
+    % Set the final index to be the length of the series, if threshold not
+    % reached
+    if isempty(moleFracThresholdInd)
+        moleFracThresholdInd = length(outputStruct.moleFrac(:,2));
+    end
     experimentOutput.timeExp = outputStruct.flow(1:moleFracThresholdInd,1); % Time elapsed [s]
     experimentOutput.moleFrac = outputStruct.moleFrac(1:moleFracThresholdInd,2); % Mole fraction CO2 [-]
     experimentOutput.totalFlowRate = totalFlowRate(1:moleFracThresholdInd)./60; % Total flow rate of the gas [ccs]
