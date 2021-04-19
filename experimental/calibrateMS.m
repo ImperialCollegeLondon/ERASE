@@ -33,9 +33,13 @@ function calibrateMS
     % Define gas for MFC2
     expInfo.gasName_MFC2 = 'CO2';
     % Define set point for MFC1
-    MFC1_SP = repmat([0.0 0.2 1.5 3.0 4.5, 6.0 7.5, 9.0 10.5 12.0 13.5 14.8 15.0],[1,2]);
+    % Round the flow rate to the nearest first decimal (as this is the
+    % resolution of the meter)    
+    MFC1_SP = round(repmat([0.0 0.2 1.5 3.0 4.5, 6.0 7.5, 9.0 10.5 12.0 13.5 14.8 15.0],[1,2]),1);
     % Define set point for MFC2
-    MFC2_SP = 15.0-MFC1_SP;
+    % Round the flow rate to the nearest first decimal (as this is the
+    % resolution of the meter)    
+    MFC2_SP = round(15.0-MFC1_SP,1);
     % Start delay
     expInfo.equilibrationTime = 5; % [s]
     % Flag for meter calibration

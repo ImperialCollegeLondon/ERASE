@@ -39,9 +39,13 @@ function runMultipleZLC
     % Fraction CO2
     fracCO2 = 0.05;
     % Define set point for MFC1
-    MFC1_SP = expTotalFlowRate;
+    % Round the flow rate to the nearest first decimal (as this is the
+    % resolution of the meter)    
+    MFC1_SP = round(expTotalFlowRate,1);
     % Define set point for MFC2
-    MFC2_SP = fracCO2*expTotalFlowRate;
+    % Round the flow rate to the nearest first decimal (as this is the
+    % resolution of the meter)    
+    MFC2_SP = round(fracCO2*expTotalFlowRate,1);
     % Start delay (used for adsorbent equilibration)
     expInfo.equilibrationTime = 1800; % [s]        
     % Flag for meter calibration

@@ -41,9 +41,13 @@ function calibrateMeters
     % Mole fraction of CO2 desired
     moleFracCO2 = 0:0.1:1;
     % Define set point for MFC1
-    MFC1_SP = totalFlowRate'*(1-moleFracCO2);
+    % Round the flow rate to the nearest first decimal (as this is the
+    % resolution of the meter)    
+    MFC1_SP = round(totalFlowRate'*(1-moleFracCO2),1);
     % Define set point for MFC2
-    MFC2_SP = totalFlowRate'*moleFracCO2;
+    % Round the flow rate to the nearest first decimal (as this is the
+    % resolution of the meter)    
+    MFC2_SP = round(totalFlowRate'*moleFracCO2,1);
     % Start delay
     expInfo.equilibrationTime = 10; % [s]
     % Flag for meter calibration

@@ -165,7 +165,9 @@ function initializeTimerDevice(~, thisEvent, expInfo, serialObj)
         outputMFC1Temp = strsplit(outputMFC1,' '); % Split the output string
         % Rounding required due to rounding errors. Differences of around
         % eps can be observed
-        if round(str2double(outputMFC1Temp(6)),4) ~= round(expInfo.MFC1_SP,4)
+        % Round the flow rate to the nearest first decimal (as this is the
+        % resolution of the meter)        
+        if round(str2double(outputMFC1Temp(6)),1) ~= round(expInfo.MFC1_SP,1)
             error("You should not be here!!!")
         end
     end
@@ -179,8 +181,10 @@ function initializeTimerDevice(~, thisEvent, expInfo, serialObj)
         outputMFC2 = controlAuxiliaryEquipments(serialObj.MFC2, serialObj.cmdPollData,1);
         outputMFC2Temp = strsplit(outputMFC2,' '); % Split the output string
         % Rounding required due to rounding errors. Differences of around
-        % eps can be observed        
-        if round(str2double(outputMFC2Temp(6)),4) ~= round(expInfo.MFC2_SP,4)
+        % eps can be observed     
+        % Round the flow rate to the nearest first decimal (as this is the
+        % resolution of the meter)        
+        if round(str2double(outputMFC2Temp(6)),1) ~= round(expInfo.MFC2_SP,1)
             error("You should not be here!!!")
         end
     end
@@ -213,7 +217,7 @@ function executeTimerDevice(timerObj, thisEvent, expInfo, serialObj)
         outputMFC2Temp = strsplit(outputMFC2,' '); % Split the output string
         % Rounding required due to rounding errors. Differences of around
         % eps can be observed        
-        if round(str2double(outputMFC2Temp(6)),4) ~= round(0,4)
+        if round(str2double(outputMFC2Temp(6)),1) ~= round(0,1)
             error("You should not be here!!!")
         end
     end
