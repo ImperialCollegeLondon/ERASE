@@ -13,6 +13,7 @@
 %
 %
 % Last modified:
+% - 2021-04-19, AK: Change MFC and MFM calibration (for mixtures)
 % - 2021-04-08, AK: Add ratio of gas for calibration
 % - 2021-04-07, AK: Modify for addition of MFM
 % - 2021-03-26, AK: Fix for number of repetitions
@@ -47,30 +48,38 @@ if ~isempty(parametersFlow)
     UMFM = [flowData.outputStruct.UMFM]; % UMFM
     % Get the volumetric flow rate
     volFlow_MFM = [MFM.volFlow];
-    volFlow_MFC1 = [MFC1.volFlow];
-    gas_MFC1 = [MFC1.gas];
-    volFlow_UMFM = [UMFM.volFlow];
-    % Find indices that corresponds to He/CO2 in the MFC
-    indexHe = find(gas_MFC1 == 'He');
-    indexCO2 = find(gas_MFC1 == 'CO2');
-    % Parse the flow rate from the MFC, MFM, and UMFM for each gas
+    volFlow_MFC1 = [MFC1.volFlow]; % Flow rate for MFC1 [ccm]
+    setPt_MFC1 = [MFC1.setpoint]; % Set point for MFC1
+    volFlow_MFC2 = [MFC2.volFlow]; % Flow rate for MFC2 [ccm]
+    setPt_MFC2 = [MFC2.setpoint]; % Set point for MFC2
+    volFlow_UMFM = [UMFM.volFlow]; % Flow rate for UMFM [ccm]
+    % Find indices corresponding to pure gases
+    indexPureHe = find(setPt_MFC2 == 0); % Find pure He index
+    indexPureCO2 = find(setPt_MFC1 == 0); % Find pure CO2 index   
+    % Parse the flow rate from the MFC, MFM, and UMFM for pure gas
     % MFC
-    volFlow_MFC1_He = volFlow_MFC1(indexHe);
-    volFlow_MFC1_CO2 = volFlow_MFC1(indexCO2);
-    % MFM
-    volFlow_MFM_He = volFlow_MFM(indexHe);
-    volFlow_MFM_CO2 = volFlow_MFM(indexCO2);
-    % UMFM
-    volFlow_UMFM_He = volFlow_UMFM(indexHe);
-    volFlow_UMFM_CO2 = volFlow_UMFM(indexCO2);
+    volFlow_MFC1_PureHe = volFlow_MFC1(indexPureHe);
+    volFlow_MFC2_PureCO2 = volFlow_MFC2(indexPureCO2);
+    % UMFM for pure gases
+    volFlow_UMFM_PureHe = volFlow_UMFM(indexPureHe);
+    volFlow_UMFM_PureCO2 = volFlow_UMFM(indexPureCO2);
+    % Calibrate the MFC
+    calibrationFlow.MFC_He = volFlow_MFC1_PureHe'\volFlow_UMFM_PureHe'; % MFC 1
+    calibrationFlow.MFC_CO2 = volFlow_MFC2_PureCO2'\volFlow_UMFM_PureCO2'; % MFC 2
     
-    % Calibrate the meters
-    % MFC
-    calibrationFlow.MFC_He = volFlow_MFC1_He'\volFlow_UMFM_He';
-    calibrationFlow.MFC_CO2 = volFlow_MFC1_CO2'\volFlow_UMFM_CO2';
-    % MFM
-    calibrationFlow.MFM_He = volFlow_MFM_He'\volFlow_UMFM_He';
-    calibrationFlow.MFM_CO2 = volFlow_MFM_CO2'\volFlow_UMFM_CO2';
+    % Compute the mole fraction of CO2 using flow data
+    moleFracCO2 = (calibrationFlow.MFC_CO2*volFlow_MFC2)./...
+        (calibrationFlow.MFC_CO2*volFlow_MFC2 + calibrationFlow.MFC_He*volFlow_MFC1);
+    indNoNan = ~isnan(moleFracCO2); % Find indices correponsing to no Nan
+    % Calibrate the MFM
+    % Fit a 23 (2nd order in mole frac and 3rd order in MFM flow) to UMFM
+    % Note that the MFM flow rate corresponds to He gas configuration in
+    % the MFM
+    modelFlow = fit([moleFracCO2(indNoNan)',volFlow_MFM(indNoNan)'],volFlow_UMFM(indNoNan)','poly23');
+    calibrationFlow.MFM = modelFlow;
+    
+    % Also save the raw data into the calibration file
+    calibrationFlow.rawData = flowData;
     
     % Save the calibration data into a .mat file
     % Check if calibration data folder exists
@@ -89,26 +98,47 @@ if ~isempty(parametersFlow)
             'gitCommitID');
     end
     
-    % Plot the raw and the calibrated data
+    % Plot the raw and the calibrated data (for pure gases at MFC)
     figure
     MFC1Set = 0:80;
-    subplot(2,2,1)
+    subplot(1,2,1)
     hold on
-    scatter(volFlow_MFC1_He,volFlow_UMFM_He,'or')
+    scatter(volFlow_MFC1_PureHe,volFlow_UMFM_PureHe,'or')
     plot(MFC1Set,calibrationFlow.MFC_He*MFC1Set,'b')
-    subplot(2,2,2)
+    xlim([0 1.1*max(volFlow_MFC1_PureHe)]);
+    ylim([0 1.1*max(volFlow_UMFM_PureHe)]);
+    box on; grid on;
+    xlabel('He MFC Flow Rate [ccm]')
+    ylabel('He Actual Flow Rate [ccm]')    
+    subplot(1,2,2)
     hold on
-    scatter(volFlow_MFC1_CO2,volFlow_UMFM_CO2,'or')
+    scatter(volFlow_MFC2_PureCO2,volFlow_UMFM_PureCO2,'or')
     plot(MFC1Set,calibrationFlow.MFC_CO2*MFC1Set,'b')
-    subplot(2,2,3)
+    xlim([0 1.1*max(volFlow_MFC2_PureCO2)]);
+    ylim([0 1.1*max(volFlow_UMFM_PureCO2)]);
+    box on; grid on;
+    xlabel('CO2 MFC Flow Rate [ccm]')
+    ylabel('CO2 Actual Flow Rate [ccm]')    
+
+    % Plot the raw and the calibrated data (for mixtures at MFM)
+    figure 
+    x = 0:0.1:1; % Mole fraction
+    y = 0:1:150; % Total flow rate
+    [X,Y] = meshgrid(x,y); % Create a grid for the flow model
+    Z = modelFlow(X,Y); % Actual flow rate from the model % [ccm]
     hold on
-    scatter(volFlow_MFM_He,volFlow_UMFM_He,'or')
-    plot(MFC1Set,calibrationFlow.MFM_He*MFC1Set,'b')
-    subplot(2,2,4)
-    hold on
-    scatter(volFlow_MFM_CO2,volFlow_UMFM_CO2,'or')
-    plot(MFC1Set,calibrationFlow.MFM_CO2*MFC1Set,'b')
+    surf(X,Y,Z,'FaceAlpha',0.25,'EdgeColor','none');
+    scatter3(moleFracCO2,volFlow_MFM,volFlow_UMFM,'r');
+    xlim([0 1.1*max(X(:))]);
+    ylim([0 1.1*max(Y(:))]);
+    zlim([0 1.1*max(Z(:))]);
+    box on; grid on;
+    xlabel('CO2 Mole Fraction [-]')
+    ylabel('MFM Flow Rate [ccm]')
+    zlabel('Actual Flow Rate [ccm]')
+    view([30 30])
 end
+
 % Load the file that contains the MS calibration
 if ~isempty(parametersMS)
     % Call reconcileData function for calibration of the MS

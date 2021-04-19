@@ -13,6 +13,7 @@
 % 
 %
 % Last modified:
+% - 2021-04-19, AK: Remove MFM calibration (check analyzeExperiment)
 % - 2021-04-09, AK: Change output for calibration or non calibrate mode
 % - 2021-04-08, AK: Add ratio of gas for calibration
 % - 2021-04-07, AK: Modify for addition of MFM
@@ -52,8 +53,6 @@ function [reconciledData, expInfo] = concatenateData(fileToLoad)
     % Apply the calibration for the flows
     volFlow_He = volFlow_MFC1*calibrationFlow.MFC_He;
 	volFlow_CO2 = volFlow_MFC2*calibrationFlow.MFC_CO2;
-    % Flow is converted assuming helium calibration for MFM
-    volFlow_MFM = volFlow_MFM*calibrationFlow.MFM_He;
     
     % Load MS Ascii data
     % Create file identifier
@@ -184,7 +183,7 @@ function [reconciledData, expInfo] = concatenateData(fileToLoad)
                                     
     % Get the mole fraction used for the calibration
     % This will be used in the analyzeCalibration script
-    if ~isfield(fileToLoad,'calibrationMS')
+    if expInfo.calibrateMeters
         % Compute the mole fractions using the reconciled flow data
         reconciledData.moleFrac(:,1) = (reconciledData.flow(:,2))./(reconciledData.flow(:,2)+reconciledData.flow(:,3));
         reconciledData.moleFrac(:,2) = 1 - reconciledData.moleFrac(:,1);

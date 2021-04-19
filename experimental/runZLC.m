@@ -253,7 +253,7 @@ function executeTimerDevice(timerObj, thisEvent, expInfo, serialObj)
         MFC2.temperature = str2double(outputMFC2Temp(3)); % [C]
         MFC2.volFlow = str2double(outputMFC2Temp(4)); % device units [ml/min]
         MFC2.massFlow = str2double(outputMFC2Temp(5)); % standard units [sccm]
-        MFC2.setpoint = outputMFC2Temp(6); % device units [ml/min]
+        MFC2.setpoint = str2double(outputMFC2Temp(6)); % device units [ml/min]
         MFC2.gas = outputMFC2Temp(7); % gas in the controller
     end
     % Get the current state of the universal flow controller
