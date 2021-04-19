@@ -12,6 +12,7 @@
 % Calibrates the flow meter and controller for different set point values
 %
 % Last modified:
+% - 2021-04-19, AK: Change from individual flow to total flow rate
 % - 2021-04-19, AK: Change functionality for mixtures
 % - 2021-03-16, AK: Add calibrate meters flag
 % - 2021-03-12, AK: Initial creation
@@ -26,7 +27,7 @@ function calibrateMeters
     expInfo.expName = ['ZLCCalibrateMeters','_',...
         datestr(datetime('now'),'yyyymmdd')];
     % Maximum time of the experiment
-    expInfo.maxTime = 60;
+    expInfo.maxTime = 30;
     % Sampling time for the device
     expInfo.samplingTime = 5;
     % Define gas for MFM
@@ -35,22 +36,28 @@ function calibrateMeters
     expInfo.gasName_MFC1 = 'He';
     % Define gas for MFC2
     expInfo.gasName_MFC2 = 'CO2';
+    % Set the total flow rate for the calibration
+    totalFlowRate = [0.0, 2.0, 4.0, 15.0, 30.0, 45.0, 60.0, 80.0, 100.0];
+    % Mole fraction of CO2 desired
+    moleFracCO2 = 0:0.1:1;
     % Define set point for MFC1
-    MFC1_SP = [0.0, 15.0, 30.0, 45.0, 60.0];
+    MFC1_SP = totalFlowRate'*(1-moleFracCO2);
+    % Define set point for MFC2
+    MFC2_SP = totalFlowRate'*moleFracCO2;
     % Start delay
-    expInfo.equilibrationTime = 0; % [s]
+    expInfo.equilibrationTime = 10; % [s]
     % Flag for meter calibration
     expInfo.calibrateMeters = true;
     % Mixtures Flag - When a T junction instead of 6 way valve used
     expInfo.runMixtures = false;    
 
     % Loop through all setpoints to calibrate the meters
-    for ii=1:length(MFC1_SP)
-        for jj=1:length(MFC1_SP)
+    for ii=1:length(totalFlowRate)
+        for jj=1:length(moleFracCO2)
             % Set point for MFC1
-            expInfo.MFC1_SP = MFC1_SP(ii);
-            % Set point for MFC2 (same as MFC1)            
-            expInfo.MFC2_SP = MFC1_SP(jj);            
+            expInfo.MFC1_SP = MFC1_SP(ii,jj);
+            % Set point for MFC2           
+            expInfo.MFC2_SP = MFC2_SP(ii,jj);            
             % Flag for meter calibration
             expInfo.calibrateMeters = true;
             % Run the setup for different calibrations
