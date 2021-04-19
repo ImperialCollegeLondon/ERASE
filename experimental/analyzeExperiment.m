@@ -43,7 +43,7 @@ if flagCalibration
     % Calibrate flow meter
     if flagFlowMeter
         % File with the calibration data to build a model for MFC/MFM
-        experimentStruct = 'ZLCCalibrateMeters_20210419_E'; % Experimental flow file (.mat)     
+        experimentStruct = 'ZLCCalibrateMeters_20210419'; % Experimental flow file (.mat)     
         % Call analyzeCalibration function for calibration of the MS
         analyzeCalibration(experimentStruct,[]) % Call the function to generate the calibration file        
     % Calibrate MS
@@ -61,8 +61,8 @@ if flagCalibration
 % Analyze real experiment    
 else
     moleFracThreshold = 1e-3; % Threshold to cut data below a given mole fraction [-]
-    experimentStruct.calibrationFlow = 'ZLCCalibrateMeters_20210419_E_Model'; % Calibration file for meters (.mat)
-    experimentStruct.flow = 'ZLC_ActivatedCarbon_Exp10A'; % Experimental flow file (.mat)
+    experimentStruct.calibrationFlow = 'ZLCCalibrateMeters_20210419_Model'; % Calibration file for meters (.mat)
+    experimentStruct.flow = 'ZLC_ActivatedCarbon_Exp10F'; % Experimental flow file (.mat)
     experimentStruct.calibrationMS = 'ZLCCalibrateMS_20210414_Model'; % Experimental calibration file (.mat)
     experimentStruct.MS = 'C:\Users\QCPML\Desktop\Ashwin\MS\ZLC_ActivatedCarbon_Exp10.asc'; % Experimental MS file (.asc)
     experimentStruct.interpMS = true; % Flag for interpolating MS data (true) or flow data (false)
@@ -83,7 +83,9 @@ else
     % Get the CO2 mole fraction for obtaining real flow rate
     moleFracCO2 = outputStruct.moleFrac(:,2);
     % Compute the total flow rate of the gas [ccm]
-    totalFlowRate = calibrationFlow.MFM(moleFracCO2,volFlow_MFM);
+    % Round the flow rate to the nearest first decimal (as this is the
+    % resolution of the meter)
+    totalFlowRate = round(calibrationFlow.MFM(moleFracCO2,volFlow_MFM),1);
     
     % Input for the ZLC script (Python)
     % Find the index for the mole fraction that corresponds to the

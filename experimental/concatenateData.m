@@ -51,8 +51,10 @@ function [reconciledData, expInfo] = concatenateData(fileToLoad)
     volFlow_MFC2 = [MFC2.volFlow]; % CO2
     volFlow_MFM = [MFM.volFlow]; % CO2
     % Apply the calibration for the flows
-    volFlow_He = volFlow_MFC1*calibrationFlow.MFC_He;
-	volFlow_CO2 = volFlow_MFC2*calibrationFlow.MFC_CO2;
+    % Round the flow rate to the nearest first decimal (as this is the
+    % resolution of the meter)    
+    volFlow_He = round(volFlow_MFC1*calibrationFlow.MFC_He,1);
+	volFlow_CO2 = round(volFlow_MFC2*calibrationFlow.MFC_CO2,1);
     
     % Load MS Ascii data
     % Create file identifier
