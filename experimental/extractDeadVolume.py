@@ -69,7 +69,7 @@ def extractDeadVolume():
 
     # Define the bounds and the type of the parameters to be optimized                       
     optBounds = np.array(([np.finfo(float).eps,100], [np.finfo(float).eps,100],
-                          [1,30], [1,30], [np.finfo(float).eps,10]))
+                          [1,30], [1,30], [np.finfo(float).eps,1]))
                          
     optType=np.array(['real','real','int','int','real'])
     # Algorithm parameters for GA

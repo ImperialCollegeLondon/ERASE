@@ -134,8 +134,7 @@ def simulateDeadVolume(**kwargs):
     moleFracDiff = outputSol.y[-1]
 
     # Composition after mixing
-    splitRatio_1 = np.divide(np.multiply(splitRatioFactor,flowRate),
-                             (1+np.multiply(splitRatioFactor,flowRate)))
+    splitRatio_1 = splitRatioFactor
     moleFracOut = np.divide(np.multiply(splitRatio_1,np.multiply(flowRate,moleFracMix))
                     + np.multiply((1-splitRatio_1),np.multiply(flowRate,moleFracDiff)),flowRate)
 
@@ -182,7 +181,7 @@ def solveTanksInSeries(t, f, *inputParameters):
     volTank_1D = deadVolume_1D/numTanks_1D
     
     # Residence time of each tank in the mixing and diffusive volume
-    splitRatio_1 = splitRatioFactor*flowRate/(1+splitRatioFactor*flowRate)
+    splitRatio_1 = splitRatioFactor
     residenceTime_1M = volTank_1M/(splitRatio_1*flowRate)
     residenceTime_1D = volTank_1D/((1-splitRatio_1)*flowRate)
     
