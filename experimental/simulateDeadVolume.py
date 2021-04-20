@@ -177,16 +177,24 @@ def solveTanksInSeries(t, f, *inputParameters):
     from scipy.interpolate import interp1d
 
     # Unpack the tuple of input parameters used to solve equations
-    timeElapsed, flowRateALL, deadVolume_1M, deadVolume_1D, deadVolume_2M, deadVolume_2D, numTanks_1M, numTanks_1D, numTanks_2M, numTanks_2D, splitRatio_1, splitRatio_2, feedMoleFrac = inputParameters
+    timeElapsed, flowRateALL, deadVolume_1M, deadVolume_1D, deadVolume_2M, deadVolume_2D, numTanks_1M, numTanks_1D, numTanks_2M, numTanks_2D, splitRatio_1, splitRatio_2, feedMoleFracALL = inputParameters
 
     # Check if experimental data available
-    # If size of florate is one, then no need for interpolation
+    # If size of flowrate is one, then no need for interpolation
     # If one, then interpolate flow rate values to get at ode time
     if flowRateALL.size != 1:
         interpFlow = interp1d(timeElapsed, flowRateALL)
         flowRate = interpFlow(t)
     else:
         flowRate = flowRateALL
+        
+    # If size of mole fraction is one, then no need for interpolation
+    # If one, then interpolate mole fraction values to get at ode time
+    if feedMoleFracALL.size != 1:
+        interpMoleFrac = interp1d(timeElapsed, feedMoleFracALL)
+        feedMoleFrac = interpMoleFrac(t) 
+    else:
+        feedMoleFrac = feedMoleFracALL
         
     # Total number of tanks [-]
     numTanksTotal = numTanks_1M + numTanks_2M + numTanks_1D + numTanks_2D   
