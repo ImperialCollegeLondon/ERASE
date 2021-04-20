@@ -11,8 +11,12 @@
 # Purpose:
 # Simulates the dead volume using the tanks in series (TIS) for the ZLC
 # Reference: 10.1016/j.ces.2008.02.023
+# The methodolgy is slighlty modified to incorporate diffusive pockets using
+# compartment models (see Levenspiel, chapter 12) or Lisa Joss's article
+# Reference: 10.1007/s10450-012-9417-z
 #
 # Last modified:
+# - 2021-04-20, AK: Implement time-resolved experimental flow rate for DV
 # - 2021-04-14, AK: Change from simple TIS to series of parallel CSTRs
 # - 2021-04-12, AK: Small fixed
 # - 2021-03-25, AK: Fix for plot
@@ -45,7 +49,7 @@ def simulateDeadVolume(**kwargs):
     if 'flowRate' in kwargs:
         flowRate = kwargs["flowRate"]
     else:
-        flowRate = 0.25
+        flowRate = np.array([0.25])
     # Dead Volume of the first volume (mixing) [cc]
     if 'deadVolume_1M' in kwargs:
         deadVolume_1M = kwargs["deadVolume_1M"]
@@ -98,6 +102,11 @@ def simulateDeadVolume(**kwargs):
         splitRatio_2 = kwargs["splitRatio_2"]
     else:
         splitRatio_2 = 0.9
+    # Initial Mole Fraction [-]
+    if 'initMoleFrac' in kwargs:
+        initMoleFrac = np.array(kwargs["initMoleFrac"])
+    else:
+        initMoleFrac = np.array([1.])
     # Feed Mole Fraction [-]
     if 'feedMoleFrac' in kwargs:
         feedMoleFrac = np.array(kwargs["feedMoleFrac"])
@@ -109,8 +118,19 @@ def simulateDeadVolume(**kwargs):
     else:
         timeInt = (0.0,2000)
     
+    # If experimental data used, then initialize ode evaluation time to 
+    # experimental time, else use default
+    if flowRate.size == 1:
+        t_eval = np.arange(timeInt[0],timeInt[-1],0.1)
+    else:
+        # Use experimental time (from timeInt) for ode evaluations to avoid
+        # interpolating any data. t_eval is also used for interpolating
+        # flow rate in the ode equations
+        t_eval = timeInt
+        timeInt = (0.0,max(timeInt))
+
     # Prepare tuple of input parameters for the ode solver
-    inputParameters = (flowRate, deadVolume_1M,deadVolume_1D,
+    inputParameters = (t_eval,flowRate, deadVolume_1M,deadVolume_1D,
                        deadVolume_2M,deadVolume_2D,
                        numTanks_1M, numTanks_1D, numTanks_2M,
                        numTanks_2D, splitRatio_1, splitRatio_2,
@@ -122,10 +142,10 @@ def simulateDeadVolume(**kwargs):
     # Prepare initial conditions vector
     # The first element is the inlet composition and the rest is the dead 
     # volume
-    initialConditions = np.ones([numTanksTotal])*(1-feedMoleFrac)
+    initialConditions = np.ones([numTanksTotal])*initMoleFrac
     # Solve the system of equations
     outputSol = solve_ivp(solveTanksInSeries, timeInt, initialConditions, 
-                          method='Radau', t_eval = np.arange(timeInt[0],timeInt[1],0.1),
+                          method='Radau', t_eval = t_eval,
                           rtol = 1e-6, args = inputParameters)
     
     # Parse out the time
@@ -139,9 +159,10 @@ def simulateDeadVolume(**kwargs):
     moleFracMix = outputSol.y[numTanksTotal-numTanks_2D-1]
     # Diffusive volume
     moleFracDiff = outputSol.y[-1]
+
     # Composition after mixing
-    moleFracOut = (splitRatio_2*flowRate*moleFracMix
-                    + (1-splitRatio_2)*flowRate*moleFracDiff)/(flowRate)
+    moleFracOut = np.divide(splitRatio_2*np.multiply(flowRate,moleFracMix)
+                    + (1-splitRatio_2)*np.multiply(flowRate,moleFracDiff),flowRate)
     
     # Plot the dead volume response
     if plotFlag:
@@ -153,10 +174,20 @@ def simulateDeadVolume(**kwargs):
 # Solves the system of ODE for the tanks in series model for the dead volume        
 def solveTanksInSeries(t, f, *inputParameters):
     import numpy as np
+    from scipy.interpolate import interp1d
 
     # Unpack the tuple of input parameters used to solve equations
-    flowRate, deadVolume_1M, deadVolume_1D, deadVolume_2M, deadVolume_2D, numTanks_1M, numTanks_1D, numTanks_2M, numTanks_2D, splitRatio_1, splitRatio_2, feedMoleFrac = inputParameters
+    timeElapsed, flowRateALL, deadVolume_1M, deadVolume_1D, deadVolume_2M, deadVolume_2D, numTanks_1M, numTanks_1D, numTanks_2M, numTanks_2D, splitRatio_1, splitRatio_2, feedMoleFrac = inputParameters
 
+    # Check if experimental data available
+    # If size of florate is one, then no need for interpolation
+    # If one, then interpolate flow rate values to get at ode time
+    if flowRateALL.size != 1:
+        interpFlow = interp1d(timeElapsed, flowRateALL)
+        flowRate = interpFlow(t)
+    else:
+        flowRate = flowRateALL
+        
     # Total number of tanks [-]
     numTanksTotal = numTanks_1M + numTanks_2M + numTanks_1D + numTanks_2D   
 

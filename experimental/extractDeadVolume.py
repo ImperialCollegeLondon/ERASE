@@ -12,8 +12,12 @@
 # Find the dead volume and the number of tanks to describe the dead volume 
 # using the tanks in series (TIS) for the ZLC
 # Reference: 10.1016/j.ces.2008.02.023
+# The methodolgy is slighlty modified to incorporate diffusive pockets using
+# compartment models (see Levenspiel, chapter 12) or Lisa Joss's article
+# Reference: 10.1007/s10450-012-9417-z
 #
 # Last modified:
+# - 2021-04-20, AK: Implement time-resolved experimental flow rate for DV
 # - 2021-04-15, AK: Modify GA parameters and add penalty function
 # - 2021-04-14, AK: Bug fix
 # - 2021-04-14, AK: Change strucure and perform series of parallel CSTRs
@@ -104,7 +108,6 @@ def extractDeadVolume():
     if not os.path.exists(os.path.join('..','simulationResults')):
         os.mkdir(os.path.join('..','simulationResults'))
     
-
     # Save the output into a .npz file
     savez (savePath, modelOutput = model.output_dict, # Model output
            optBounds = optBounds, # Optimizer bounds
@@ -122,7 +125,6 @@ def deadVolObjectiveFunction(x):
     import numpy as np
     from simulateDeadVolume import simulateDeadVolume
     from numpy import load
-    from scipy.interpolate import interp1d
     
     # Load the names of the file to be used for estimating dead volume characteristics
     filePath = filesToProcess(False,[],[])
@@ -143,24 +145,23 @@ def deadVolObjectiveFunction(x):
     # Loop over all available files    
     for ii in range(len(filePath)):
         # Initialize outputs
-        timeSimOut = []
-        moleFracOut = []
         moleFracSim = []  
-        # Load experimental molefraction
+        # Load experimental time, molefraction and flowrate (accounting for downsampling)
         timeElapsedExpTemp = load(filePath[ii])["timeElapsed"].flatten()
         moleFracExpTemp = load(filePath[ii])["moleFrac"].flatten()
+        flowRateTemp = load(filePath[ii])["flowRate"].flatten()
         timeElapsedExp = timeElapsedExpTemp[::int(np.round(downsampleInt[ii]))]
         moleFracExp = moleFracExpTemp[::int(np.round(downsampleInt[ii]))]
-        # Parse out flow rate of the experiment
-        # Obtain the mean and round it to the 2 decimal to be used in the 
-        # simulation
-        flowRate = round(np.mean(load(filePath[ii])["flowRate"]),2)
+        flowRate = flowRateTemp[::int(np.round(downsampleInt[ii]))]
+                
+        # Integration and ode evaluation time (check simulateDeadVolume)
+        timeInt = timeElapsedExp
 
         # Compute the experimental volume (using trapz)
-        expVolume = max([expVolume, np.trapz(moleFracExp,flowRate*timeElapsedExp)])
+        expVolume = max([expVolume, np.trapz(moleFracExp,np.multiply(flowRate, timeElapsedExp))])
         
         # Compute the dead volume response using the optimizer parameters
-        timeSimOut , _ , moleFracOut = simulateDeadVolume(deadVolume_1M = x[0],
+        _ , _ , moleFracSim = simulateDeadVolume(deadVolume_1M = x[0],
                                                           deadVolume_1D = x[1],
                                                           deadVolume_2M = x[2],
                                                           deadVolume_2D = x[3],
@@ -170,15 +171,9 @@ def deadVolObjectiveFunction(x):
                                                           numTanks_2D = int(x[7]),
                                                           splitRatio_1 = x[8],
                                                           splitRatio_2 = x[9],
+                                                          timeInt = timeInt,
                                                           flowRate = flowRate)
-        
-        # Interpolate simulation data (generate function)
-        interpSim = interp1d(timeSimOut, moleFracOut)    
-        
-        # Find the interpolated simulation mole fraction at times corresponding to 
-        # the experimental ones
-        moleFracSim = interpSim(timeElapsedExp)
-        
+                
         # Compute the sum of the error for the difference between exp. and sim.
         numPoints += len(moleFracExp)
         computedError += np.log(np.sum(np.power(moleFracExp - moleFracSim,2)))
