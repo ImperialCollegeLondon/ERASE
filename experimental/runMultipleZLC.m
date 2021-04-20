@@ -12,6 +12,7 @@
 % Runs multiple ZLC experiments in series
 %
 % Last modified:
+% - 2021-04-20, AK: Add multiple equilibration time
 % - 2021-04-15, AK: Initial creation
 %
 % Input arguments:
@@ -21,13 +22,13 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function runMultipleZLC
     % Series name for the experiments
-    expSeries = 'ZLC_ActivatedCarbon_Exp10';
+    expSeries = 'ZLC_ActivatedCarbon_Exp11';
     % Maximum time of the experiment
     expInfo.maxTime = 3600;
     % Sampling time for the device
     expInfo.samplingTime = 1;
     % Intervals for collecting MFC data
-    expInfo.MFCInterval = 50;
+    expInfo.MFCInterval = 100;
     % Define gas for MFM
     expInfo.gasName_MFM = 'He';
     % Define gas for MFC1
@@ -35,7 +36,7 @@ function runMultipleZLC
     % Define gas for MFC2
     expInfo.gasName_MFC2 = 'CO2';
     % Total flow rate
-    expTotalFlowRate = [2 4 10 20 30 40 60];
+    expTotalFlowRate = [4 6 10 15 30];
     % Fraction CO2
     fracCO2 = 0.05;
     % Define set point for MFC1
@@ -47,7 +48,7 @@ function runMultipleZLC
     % resolution of the meter)    
     MFC2_SP = round(fracCO2*expTotalFlowRate,1);
     % Start delay (used for adsorbent equilibration)
-    expInfo.equilibrationTime = 1800; % [s]        
+    equilibrationTime = [14400 10800 7200 7200 3600]; % [s] 
     % Flag for meter calibration
     expInfo.calibrateMeters = false;    
     % Mixtures Flag - When a T junction instead of 6 way valve used
@@ -56,6 +57,7 @@ function runMultipleZLC
     for ii=1:length(MFC1_SP)
         % Experiment name
         expInfo.expName = [expSeries,char(64+ii)];
+        expInfo.equilibrationTime = equilibrationTime(ii);
         expInfo.MFC1_SP = MFC1_SP(ii);
         expInfo.MFC2_SP = MFC2_SP(ii);
         % Run the setup for different calibrations
