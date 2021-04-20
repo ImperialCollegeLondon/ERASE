@@ -17,6 +17,7 @@
 # Reference: 10.1007/s10450-012-9417-z
 #
 # Last modified:
+# - 2021-04-20, AK: Change model to flow dependent split
 # - 2021-04-20, AK: Implement time-resolved experimental flow rate for DV
 # - 2021-04-15, AK: Modify GA parameters and add penalty function
 # - 2021-04-14, AK: Bug fix
@@ -57,23 +58,23 @@ def extractDeadVolume():
     # Directory of raw data
     mainDir = 'experimental/runData'
     # File name of the experiments
-    fileName = ['ZLC_DeadVolume_Exp12D_Output.mat',
-                'ZLC_DeadVolume_Exp12E_Output.mat',
-                'ZLC_DeadVolume_Exp12F_Output.mat']
+    fileName = ['ZLC_DeadVolume_Exp13A_Output.mat',
+                'ZLC_DeadVolume_Exp13B_Output.mat',
+                'ZLC_DeadVolume_Exp13C_Output.mat',
+                'ZLC_DeadVolume_Exp13D_Output.mat',
+                'ZLC_DeadVolume_Exp13E_Output.mat',
+                'ZLC_DeadVolume_Exp13F_Output.mat']
     # Generate .npz file for python processing of the .mat file 
     filesToProcess(True,mainDir,fileName)
 
     # Define the bounds and the type of the parameters to be optimized                       
     optBounds = np.array(([np.finfo(float).eps,100], [np.finfo(float).eps,100],
-                          [np.finfo(float).eps,100], [np.finfo(float).eps,100],
-                          [1,30], [1,30], [1,30], [1,30],
-                          [np.finfo(float).eps,1-np.finfo(float).eps],
-                          [np.finfo(float).eps,1-np.finfo(float).eps]))
+                          [1,30], [1,30], [np.finfo(float).eps,10]))
                          
-    optType=np.array(['real','real','real','real','int','int','int','int','real','real'])
+    optType=np.array(['real','real','int','int','real'])
     # Algorithm parameters for GA
-    algorithm_param = {'max_num_iteration':10,
-                       'population_size':800,
+    algorithm_param = {'max_num_iteration':5,
+                       'population_size':1600,
                        'mutation_probability':0.1,
                        'crossover_probability': 0.55,
                        'parents_portion': 0.15,
@@ -82,7 +83,7 @@ def extractDeadVolume():
 
     # Minimize an objective function to compute the dead volume and the number of 
     # tanks for the dead volume using GA
-    model = ga(function = deadVolObjectiveFunction, dimension=10, 
+    model = ga(function = deadVolObjectiveFunction, dimension=5, 
                                variable_type_mixed = optType,
                                variable_boundaries = optBounds,
                                algorithm_parameters=algorithm_param)
@@ -163,14 +164,9 @@ def deadVolObjectiveFunction(x):
         # Compute the dead volume response using the optimizer parameters
         _ , _ , moleFracSim = simulateDeadVolume(deadVolume_1M = x[0],
                                                           deadVolume_1D = x[1],
-                                                          deadVolume_2M = x[2],
-                                                          deadVolume_2D = x[3],
-                                                          numTanks_1M = int(x[4]),
-                                                          numTanks_1D = int(x[5]),
-                                                          numTanks_2M = int(x[6]),
-                                                          numTanks_2D = int(x[7]),
-                                                          splitRatio_1 = x[8],
-                                                          splitRatio_2 = x[9],
+                                                          numTanks_1M = int(x[2]),
+                                                          numTanks_1D = int(x[3]),
+                                                          splitRatioFactor = x[4],
                                                           timeInt = timeInt,
                                                           flowRate = flowRate)
                 
@@ -181,7 +177,7 @@ def deadVolObjectiveFunction(x):
     # Penalize if the total volume of the system is greater than experiemntal 
     # volume
     penaltyObj = 0
-    if sum(x[0:4])>1.5*expVolume:
+    if sum(x[0:2])>1.5*expVolume:
         penaltyObj = 10000
     # Compute the sum of the error for the difference between exp. and sim. and
     # add a penalty if needed

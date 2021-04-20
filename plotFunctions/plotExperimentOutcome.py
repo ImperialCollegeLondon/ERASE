@@ -50,27 +50,30 @@ flagDeadVolume = True
 simulateModel = True
 
 # Flag to plot dead volume results
-plotFt = False
+plotFt = True
 
 # Directory of raw data
 mainDir = '/Users/ash23win/Google Drive/ERASE/experimental/runData/'
 
-colorsForPlot = ["#E5383B","#B55055","#6C757D"]
+colorsForPlot = ["#E5383B","#E5383B","#B55055","#B55055","#6C757D","#6C757D"]
+markerForPlot = ["o","v","o","v","o","v"]
 
 if flagDeadVolume:
     # File name of the experiments
-    fileName = ['ZLC_DeadVolume_Exp12D_Output_10f6fad.npz',
-                'ZLC_DeadVolume_Exp12E_Output_10f6fad.npz',
-                'ZLC_DeadVolume_Exp12F_Output_10f6fad.npz']
-    
+    fileName = ['ZLC_DeadVolume_Exp13A_Output_92e47e7.npz',
+                'ZLC_DeadVolume_Exp13B_Output_92e47e7.npz',
+                'ZLC_DeadVolume_Exp13C_Output_92e47e7.npz',
+                'ZLC_DeadVolume_Exp13D_Output_92e47e7.npz',
+                'ZLC_DeadVolume_Exp13E_Output_92e47e7.npz',
+                'ZLC_DeadVolume_Exp13F_Output_92e47e7.npz']
     # File with parameter estimates
     simulationDir = '/Users/ash23win/Google Drive/ERASE/simulationResults/'
-    fileParameter = 'deadVolumeCharacteristics_20210415_1657_a72563b.npz'
+    fileParameter = 'deadVolumeCharacteristics_20210420_1806_92e47e7.npz'
     modelOutputTemp = load(simulationDir+fileParameter, allow_pickle=True)["modelOutput"]
     x = modelOutputTemp[()]["variable"]
     # Print the objective function and volume from model parameters
     print("Objective Function",round(modelOutputTemp[()]["function"],0))
-    print("Model Volume",round(sum(x[0:4]),2))
+    print("Model Volume",round(sum(x[0:2]),2))
     # Initialize error for objective function
     # Loop over all available files    
     for ii in range(len(fileName)):
@@ -93,14 +96,9 @@ if flagDeadVolume:
             # Compute the dead volume response using the optimizer parameters
             _ , _ , moleFracSim = simulateDeadVolume(deadVolume_1M = x[0],
                                                                   deadVolume_1D = x[1],
-                                                                  deadVolume_2M = x[2],
-                                                                  deadVolume_2D = x[3],
-                                                                  numTanks_1M = int(x[4]),
-                                                                  numTanks_1D = int(x[5]),
-                                                                  numTanks_2M = int(x[6]),
-                                                                  numTanks_2D = int(x[7]),
-                                                                  splitRatio_1 = x[8],
-                                                                  splitRatio_2 = x[9],
+                                                                  numTanks_1M = int(x[2]),
+                                                                  numTanks_1D = int(x[3]),
+                                                                  splitRatioFactor = x[4],
                                                                   timeInt = timeInt,
                                                                   flowRate = flowRate)
 
@@ -115,7 +113,8 @@ if flagDeadVolume:
             fig = plt.figure
             ax1 = plt.subplot(1,2,1)        
             ax1.plot(timeElapsedExp,moleFracExp,
-                          'o',color=colorsForPlot[ii],alpha=0.2,label=str(round(np.mean(flowRate),2))+" ccs") # Experimental response
+                          marker = markerForPlot[ii],linewidth = 0,
+                          color=colorsForPlot[ii],alpha=0.2,label=str(round(np.mean(flowRate),2))+" ccs") # Experimental response
             if simulateModel:
                 ax1.plot(timeElapsedExp,moleFracSim,
                               color=colorsForPlot[ii]) # Simulation response    
@@ -127,12 +126,13 @@ if flagDeadVolume:
             # Log scale
             ax2 = plt.subplot(1,2,2)        
             ax2.semilogy(timeElapsedExp,moleFracExp,
-                          'o',color=colorsForPlot[ii],alpha=0.2,label=str(round(np.mean(flowRate),2))+" ccs") # Experimental response
+                          marker = markerForPlot[ii],linewidth = 0,
+                          color=colorsForPlot[ii],alpha=0.2,label=str(round(np.mean(flowRate),2))+" ccs") # Experimental response
             if simulateModel:
                 ax2.semilogy(timeElapsedExp,moleFracSim,
                               color=colorsForPlot[ii]) # Simulation response
             ax2.set(xlabel='$t$ [s]', 
-                    xlim = [0,250], ylim = [1e-3, 1])         
+                    xlim = [0,400], ylim = [1e-3, 1])         
             ax2.legend()
             
             #  Save the figure
@@ -149,7 +149,8 @@ if flagDeadVolume:
             fig = plt.figure
             ax1 = plt.subplot(1,2,1)        
             ax1.plot(np.multiply(flowRate,timeElapsedExp),moleFracExp,
-                          'o',color=colorsForPlot[ii],alpha=0.2,label=str(round(np.mean(flowRate),2))+" ccs") # Experimental response
+                          marker = markerForPlot[ii],linewidth = 0,
+                          color=colorsForPlot[ii],alpha=0.2,label=str(round(np.mean(flowRate),2))+" ccs") # Experimental response
             if simulateModel:
                 ax1.plot(np.multiply(flowRate,timeElapsedExp),moleFracSim,
                               color=colorsForPlot[ii]) # Simulation response    
@@ -161,12 +162,13 @@ if flagDeadVolume:
             # Log scale
             ax2 = plt.subplot(1,2,2)        
             ax2.semilogy(np.multiply(flowRate,timeElapsedExp),moleFracExp,
-                          'o',color=colorsForPlot[ii],alpha=0.2,label=str(round(np.mean(flowRate),2))+" ccs") # Experimental response
+                          marker = markerForPlot[ii],linewidth = 0,
+                          color=colorsForPlot[ii],alpha=0.2,label=str(round(np.mean(flowRate),2))+" ccs") # Experimental response
             if simulateModel:
                 ax2.semilogy(np.multiply(flowRate,timeElapsedExp),moleFracSim,
                               color=colorsForPlot[ii]) # Simulation response
             ax2.set(xlabel='$Ft$ [cc]', 
-                    xlim = [0,30], ylim = [1e-2, 1])         
+                    xlim = [0,100], ylim = [1e-3, 1])         
             ax2.legend()
             
             #  Save the figure
