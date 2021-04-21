@@ -13,6 +13,7 @@
 % 
 %
 % Last modified:
+% - 2021-04-21, AK: Change the calibration equation to mole fraction like
 % - 2021-04-19, AK: Remove MFM calibration (check analyzeExperiment)
 % - 2021-04-09, AK: Change output for calibration or non calibrate mode
 % - 2021-04-08, AK: Add ratio of gas for calibration
@@ -202,10 +203,9 @@ function [reconciledData, expInfo] = concatenateData(fileToLoad)
         else
             % Parse out the fitting parameters
             paramFit = calibrationMS.ratioHeCO2;
-            % Use a generalized logistic function
-            reconciledData.moleFrac(:,1) = 1./(1+paramFit(1)...
-                .*exp(-paramFit(2).*log(reconciledData.MS(:,2)./reconciledData.MS(:,3))))...
-                .^(1/paramFit(3)); % He [-]
+            % Use a power function
+            reconciledData.moleFrac(:,1) = (reconciledData.MS(:,2)./...
+                (reconciledData.MS(:,2)+reconciledData.MS(:,3))).^(paramFit(1)); % He [-]
             reconciledData.moleFrac(:,2) = 1 - reconciledData.moleFrac(:,1); % CO2 [-]
         end
     end

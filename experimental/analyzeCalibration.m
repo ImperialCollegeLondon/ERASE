@@ -13,6 +13,7 @@
 %
 %
 % Last modified:
+% - 2021-04-21, AK: Change the calibration equation to mole fraction like
 % - 2021-04-19, AK: Change MFC and MFM calibration (for mixtures)
 % - 2021-04-08, AK: Add ratio of gas for calibration
 % - 2021-04-07, AK: Modify for addition of MFM
@@ -195,9 +196,9 @@ if ~isempty(parametersMS)
         calibrationMS.CO2 = polyfit(meanCO2Signal,meanMoleFrac(:,2),parametersMS.polyDeg); % COo2
     else
         % Perform an optimization to obtain parameter estimates to fit the
-        % ratio of the helium signal to CO2 signal w.r.t He concentration
-        y0 = [1, 0.5, 0.5]; % Initial conditions
-        [paramFit,resErr] = fminunc(@(p) objectiveFunction(meanMoleFrac(:,1),log(meanHeSignal./meanCO2Signal),p),y0);
+        % signal fraction of the helium signal to He+CO2 signal 
+        y0 = [1]; % Initial conditions
+        [paramFit,resErr] = fminunc(@(p) objectiveFunction(meanMoleFrac(:,1),meanHeSignal./(meanCO2Signal+meanHeSignal),p),y0);
         calibrationMS.ratioHeCO2 = paramFit;
     end
     
@@ -245,13 +246,13 @@ if ~isempty(parametersMS)
         ylabel('CO2 mole frac [-]')
     % Ratio of He to CO2
     else
-        plot(log(meanHeSignal./meanCO2Signal),meanMoleFrac(:,1),'or') % Experimental
+        plot(meanHeSignal./(meanHeSignal+meanCO2Signal),meanMoleFrac(:,1),'or') % Experimental
         hold on
-        plot(-10:1:10,1./(1+paramFit(1).*exp(-paramFit(2).*(-10:1:10))).^(1/paramFit(3)),'b')
-        xlim([-10 10]);
+        plot(0:0.1:1,(0:0.1:1).^(paramFit(1)),'b')
+        xlim([0 1]);
         ylim([0 1]);
         box on; grid on;
-        xlabel('log(Helium/CO2 Signal) [-]')
+        xlabel('Helium Signal/(CO2 Signal+Helium Signal) [-]')
         ylabel('Helium mole frac [-]')
     end
 end
@@ -260,5 +261,5 @@ end
 % function (generalized)
 function errSignal = objectiveFunction(meanMoleFrac,expSignal,p)
     % Calculate the sum of errors
-    errSignal = sum((meanMoleFrac' - 1./(1+p(1).*exp(-p(2).*expSignal)).^(1/p(3))).^2);
+    errSignal = sum((meanMoleFrac' - expSignal.^p(1)).^2);
 end
