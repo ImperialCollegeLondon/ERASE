@@ -16,6 +16,7 @@
 # Reference: 10.1007/s10450-012-9417-z
 #
 # Last modified:
+# - 2021-04-21, AK: Change model to fix split velocity
 # - 2021-04-20, AK: Change model to flow dependent split
 # - 2021-04-20, AK: Change model to flow dependent split
 # - 2021-04-20, AK: Implement time-resolved experimental flow rate for DV
@@ -56,27 +57,27 @@ def simulateDeadVolume(**kwargs):
     if 'deadVolume_1M' in kwargs:
         deadVolume_1M = kwargs["deadVolume_1M"]
     else:
-        deadVolume_1M = 5
+        deadVolume_1M = 2.62
     # Dead Volume of the first volume (diffusive) [cc]
     if 'deadVolume_1D' in kwargs:
         deadVolume_1D = kwargs["deadVolume_1D"]
     else:
-        deadVolume_1D = 1                
+        deadVolume_1D = 0.67             
     # Number of tanks of the first volume (mixing) [-]
     if 'numTanks_1M' in kwargs:
         numTanks_1M = kwargs["numTanks_1M"]
     else:
-        numTanks_1M = 10
+        numTanks_1M = 1
     # Number of tanks of the first volume (mixing) [-]
     if 'numTanks_1D' in kwargs:
         numTanks_1D = kwargs["numTanks_1D"]
     else:
         numTanks_1D = 1
-    # Split ratio for flow rate of the first volume [-]
-    if 'splitRatioFactor' in kwargs:
-        splitRatioFactor = kwargs["splitRatioFactor"]
+    # Flow rate in the diffusive volume [-]
+    if 'flowRate_D' in kwargs:
+        flowRate_D = kwargs["flowRate_D"]
     else:
-        splitRatioFactor = 1.1
+        flowRate_D = 0.1
     # Initial Mole Fraction [-]
     if 'initMoleFrac' in kwargs:
         initMoleFrac = np.array(kwargs["initMoleFrac"])
@@ -106,7 +107,7 @@ def simulateDeadVolume(**kwargs):
 
     # Prepare tuple of input parameters for the ode solver
     inputParameters = (t_eval,flowRate, deadVolume_1M,deadVolume_1D,
-                       numTanks_1M, numTanks_1D, splitRatioFactor,
+                       numTanks_1M, numTanks_1D, flowRate_D,
                        feedMoleFrac)
     
     # Total number of tanks[-]
@@ -134,9 +135,9 @@ def simulateDeadVolume(**kwargs):
     moleFracDiff = outputSol.y[-1]
 
     # Composition after mixing
-    splitRatio_1 = splitRatioFactor
-    moleFracOut = np.divide(np.multiply(splitRatio_1,np.multiply(flowRate,moleFracMix))
-                    + np.multiply((1-splitRatio_1),np.multiply(flowRate,moleFracDiff)),flowRate)
+    flowRate_M = flowRate - flowRate_D
+    moleFracOut = np.divide(np.multiply(flowRate_M,moleFracMix)
+                    + np.multiply(flowRate_D,moleFracDiff),flowRate)
 
     # Plot the dead volume response
     if plotFlag:
@@ -151,7 +152,7 @@ def solveTanksInSeries(t, f, *inputParameters):
     from scipy.interpolate import interp1d
 
     # Unpack the tuple of input parameters used to solve equations
-    timeElapsed, flowRateALL, deadVolume_1M, deadVolume_1D, numTanks_1M, numTanks_1D, splitRatioFactor, feedMoleFracALL = inputParameters
+    timeElapsed, flowRateALL, deadVolume_1M, deadVolume_1D, numTanks_1M, numTanks_1D, flowRate_D, feedMoleFracALL = inputParameters
 
     # Check if experimental data available
     # If size of flowrate is one, then no need for interpolation
@@ -181,9 +182,9 @@ def solveTanksInSeries(t, f, *inputParameters):
     volTank_1D = deadVolume_1D/numTanks_1D
     
     # Residence time of each tank in the mixing and diffusive volume
-    splitRatio_1 = splitRatioFactor
-    residenceTime_1M = volTank_1M/(splitRatio_1*flowRate)
-    residenceTime_1D = volTank_1D/((1-splitRatio_1)*flowRate)
+    flowRate_M = flowRate - flowRate_D
+    residenceTime_1M = volTank_1M/(flowRate_M)
+    residenceTime_1D = volTank_1D/(flowRate_D)
     
     # Solve the odes
     # Volume 1: Mixing volume

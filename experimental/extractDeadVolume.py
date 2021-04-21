@@ -17,6 +17,7 @@
 # Reference: 10.1007/s10450-012-9417-z
 #
 # Last modified:
+# - 2021-04-21, AK: Change model to fix split velocity
 # - 2021-04-20, AK: Change model to flow dependent split
 # - 2021-04-20, AK: Implement time-resolved experimental flow rate for DV
 # - 2021-04-15, AK: Modify GA parameters and add penalty function
@@ -69,7 +70,7 @@ def extractDeadVolume():
 
     # Define the bounds and the type of the parameters to be optimized                       
     optBounds = np.array(([np.finfo(float).eps,100], [np.finfo(float).eps,100],
-                          [1,30], [1,30], [np.finfo(float).eps,1]))
+                          [1,30], [1,30], [np.finfo(float).eps,0.05]))
                          
     optType=np.array(['real','real','int','int','real'])
     # Algorithm parameters for GA
@@ -166,7 +167,7 @@ def deadVolObjectiveFunction(x):
                                                           deadVolume_1D = x[1],
                                                           numTanks_1M = int(x[2]),
                                                           numTanks_1D = int(x[3]),
-                                                          splitRatioFactor = x[4],
+                                                          flowRate_D = x[4],
                                                           timeInt = timeInt,
                                                           flowRate = flowRate)
                 
