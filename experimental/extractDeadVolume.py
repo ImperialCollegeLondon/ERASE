@@ -69,10 +69,10 @@ def extractDeadVolume():
     filesToProcess(True,mainDir,fileName)
 
     # Define the bounds and the type of the parameters to be optimized                       
-    optBounds = np.array(([np.finfo(float).eps,100], [np.finfo(float).eps,100],
-                          [1,30], [1,30], [np.finfo(float).eps,0.05]))
+    optBounds = np.array(([np.finfo(float).eps,10], [np.finfo(float).eps,10],
+                          [np.finfo(float).eps,10], [1,30], [np.finfo(float).eps,0.05]))
                          
-    optType=np.array(['real','real','int','int','real'])
+    optType=np.array(['real','real','real','int','real'])
     # Algorithm parameters for GA
     algorithm_param = {'max_num_iteration':5,
                        'population_size':1600,
@@ -163,13 +163,13 @@ def deadVolObjectiveFunction(x):
         expVolume = max([expVolume, np.trapz(moleFracExp,np.multiply(flowRate, timeElapsedExp))])
         
         # Compute the dead volume response using the optimizer parameters
-        _ , _ , moleFracSim = simulateDeadVolume(deadVolume_1M = x[0],
-                                                          deadVolume_1D = x[1],
-                                                          numTanks_1M = int(x[2]),
-                                                          numTanks_1D = int(x[3]),
-                                                          flowRate_D = x[4],
-                                                          timeInt = timeInt,
-                                                          flowRate = flowRate)
+        _ , _ , moleFracSim = simulateDeadVolume(deadVolume_1 = x[0],
+                                                deadVolume_2M = x[1],
+                                                deadVolume_2D = x[2],                                      
+                                                numTanks_1 = int(x[3]),
+                                                flowRate_D = x[4],
+                                                timeInt = timeInt,
+                                                flowRate = flowRate)
                 
         # Compute the sum of the error for the difference between exp. and sim.
         numPoints += len(moleFracExp)
@@ -178,7 +178,7 @@ def deadVolObjectiveFunction(x):
     # Penalize if the total volume of the system is greater than experiemntal 
     # volume
     penaltyObj = 0
-    if sum(x[0:2])>1.5*expVolume:
+    if sum(x[0:3])>1.5*expVolume:
         penaltyObj = 10000
     # Compute the sum of the error for the difference between exp. and sim. and
     # add a penalty if needed

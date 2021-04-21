@@ -50,7 +50,7 @@ flagDeadVolume = True
 simulateModel = True
 
 # Flag to plot dead volume results
-plotFt = True
+plotFt = False
 
 # Directory of raw data
 mainDir = '/Users/ash23win/Google Drive/ERASE/experimental/runData/'
@@ -68,9 +68,10 @@ if flagDeadVolume:
                 'ZLC_DeadVolume_Exp13F_Output_92e47e7.npz']
     # File with parameter estimates
     simulationDir = '/Users/ash23win/Google Drive/ERASE/simulationResults/'
-    fileParameter = 'deadVolumeCharacteristics_20210420_1806_92e47e7.npz'
+    fileParameter = 'deadVolumeCharacteristics_20210421_1125_1b02ca7.npz'
     modelOutputTemp = load(simulationDir+fileParameter, allow_pickle=True)["modelOutput"]
     x = modelOutputTemp[()]["variable"]
+
     # Print the objective function and volume from model parameters
     print("Objective Function",round(modelOutputTemp[()]["function"],0))
     print("Model Volume",round(sum(x[0:2]),2))
@@ -94,13 +95,13 @@ if flagDeadVolume:
                                                     np.multiply(flowRate,timeElapsedExp)),2))
         if simulateModel:
             # Compute the dead volume response using the optimizer parameters
-            _ , _ , moleFracSim = simulateDeadVolume(deadVolume_1M = x[0],
-                                                                  deadVolume_1D = x[1],
-                                                                  numTanks_1M = int(x[2]),
-                                                                  numTanks_1D = int(x[3]),
-                                                                  splitRatioFactor = x[4],
-                                                                  timeInt = timeInt,
-                                                                  flowRate = flowRate)
+            _ , _ , moleFracSim = simulateDeadVolume(deadVolume_1 = x[0],
+                                                    deadVolume_2M = x[1],
+                                                    deadVolume_2D = x[2],
+                                                    numTanks_1 = int(x[3]),
+                                                    flowRate_D = x[4],
+                                                    timeInt = timeInt,
+                                                    flowRate = flowRate)
 
              # Print simulation volume    
             print("Simulation",str(ii+1),round(np.trapz(moleFracSim,
@@ -120,7 +121,7 @@ if flagDeadVolume:
                               color=colorsForPlot[ii]) # Simulation response    
             ax1.set(xlabel='$t$ [s]', 
                     ylabel='$y_1$ [-]',
-                    xlim = [0,50], ylim = [0, 1])         
+                    xlim = [0,200], ylim = [0, 1])         
             ax1.legend()
     
             # Log scale

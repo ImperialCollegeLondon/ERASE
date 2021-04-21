@@ -53,31 +53,31 @@ def simulateDeadVolume(**kwargs):
         flowRate = kwargs["flowRate"]
     else:
         flowRate = np.array([0.25])
-    # Dead Volume of the first volume (mixing) [cc]
-    if 'deadVolume_1M' in kwargs:
-        deadVolume_1M = kwargs["deadVolume_1M"]
+    # Dead Volume of the first volume [cc]
+    if 'deadVolume_1' in kwargs:
+        deadVolume_1 = kwargs["deadVolume_1"]
     else:
-        deadVolume_1M = 2.62
-    # Dead Volume of the first volume (diffusive) [cc]
-    if 'deadVolume_1D' in kwargs:
-        deadVolume_1D = kwargs["deadVolume_1D"]
+        deadVolume_1 = 3     
+    # Number of tanks of the first volume [-]
+    if 'numTanks_1' in kwargs:
+        numTanks_1 = kwargs["numTanks_1"]
     else:
-        deadVolume_1D = 0.67             
-    # Number of tanks of the first volume (mixing) [-]
-    if 'numTanks_1M' in kwargs:
-        numTanks_1M = kwargs["numTanks_1M"]
+        numTanks_1 = 20
+    # Dead Volume of the second volume (mixing) [cc]
+    if 'deadVolume_2M' in kwargs:
+        deadVolume_2M = kwargs["deadVolume_2M"]
     else:
-        numTanks_1M = 1
-    # Number of tanks of the first volume (mixing) [-]
-    if 'numTanks_1D' in kwargs:
-        numTanks_1D = kwargs["numTanks_1D"]
+        deadVolume_2M = 0.2     
+    # Dead Volume of the second volume (diffusive) [cc]
+    if 'deadVolume_2D' in kwargs:
+        deadVolume_2D = kwargs["deadVolume_2D"]
     else:
-        numTanks_1D = 1
+        deadVolume_2D = 0.1      
     # Flow rate in the diffusive volume [-]
     if 'flowRate_D' in kwargs:
         flowRate_D = kwargs["flowRate_D"]
     else:
-        flowRate_D = 0.1
+        flowRate_D = 0.05
     # Initial Mole Fraction [-]
     if 'initMoleFrac' in kwargs:
         initMoleFrac = np.array(kwargs["initMoleFrac"])
@@ -106,12 +106,12 @@ def simulateDeadVolume(**kwargs):
         timeInt = (0.0,max(timeInt))
 
     # Prepare tuple of input parameters for the ode solver
-    inputParameters = (t_eval,flowRate, deadVolume_1M,deadVolume_1D,
-                       numTanks_1M, numTanks_1D, flowRate_D,
+    inputParameters = (t_eval,flowRate, deadVolume_1,deadVolume_2M,
+                       deadVolume_2D, numTanks_1, flowRate_D,
                        feedMoleFrac)
     
     # Total number of tanks[-]
-    numTanksTotal = numTanks_1M + numTanks_1D
+    numTanksTotal = numTanks_1 + 2
 
     # Prepare initial conditions vector
     # The first element is the inlet composition and the rest is the dead 
@@ -130,7 +130,7 @@ def simulateDeadVolume(**kwargs):
 
     # Mole fraction at the outlet
     # Mixing volume
-    moleFracMix = outputSol.y[numTanks_1M-1]
+    moleFracMix = outputSol.y[numTanks_1]
     # Diffusive volume
     moleFracDiff = outputSol.y[-1]
 
@@ -152,7 +152,7 @@ def solveTanksInSeries(t, f, *inputParameters):
     from scipy.interpolate import interp1d
 
     # Unpack the tuple of input parameters used to solve equations
-    timeElapsed, flowRateALL, deadVolume_1M, deadVolume_1D, numTanks_1M, numTanks_1D, flowRate_D, feedMoleFracALL = inputParameters
+    timeElapsed, flowRateALL, deadVolume_1, deadVolume_2M, deadVolume_2D, numTanks_1, flowRate_D, feedMoleFracALL = inputParameters
 
     # Check if experimental data available
     # If size of flowrate is one, then no need for interpolation
@@ -172,32 +172,38 @@ def solveTanksInSeries(t, f, *inputParameters):
         feedMoleFrac = feedMoleFracALL
         
     # Total number of tanks [-]
-    numTanksTotal = numTanks_1M + numTanks_1D
+    numTanksTotal = numTanks_1 + 2
 
-    # Initialize the derivatives to zero
+   # Initialize the derivatives to zero
     df = np.zeros([numTanksTotal])
 
-    # Volume of each tank in each section
-    volTank_1M = deadVolume_1M/numTanks_1M
-    volTank_1D = deadVolume_1D/numTanks_1D
+    # Volume 1: Mixing volume
+    # Volume of each tank in the mixing volume
+    volTank_1 = deadVolume_1/numTanks_1
+    residenceTime_1 = volTank_1/(flowRate)
+    
+    # Solve the odes
+    df[0] = ((1/residenceTime_1)*(feedMoleFrac - f[0]))
+    df[1:numTanks_1] = ((1/residenceTime_1)
+                         *(f[0:numTanks_1-1] - f[1:numTanks_1]))
+  
+    # Volume 2: Diffusive volume
+    # Volume of each tank in the mixing volume
+    volTank_2M = deadVolume_2M
+    volTank_2D = deadVolume_2D
     
     # Residence time of each tank in the mixing and diffusive volume
     flowRate_M = flowRate - flowRate_D
-    residenceTime_1M = volTank_1M/(flowRate_M)
-    residenceTime_1D = volTank_1D/(flowRate_D)
+    residenceTime_2M = volTank_2M/(flowRate_M)
+    residenceTime_2D = volTank_2D/(flowRate_D)
     
     # Solve the odes
-    # Volume 1: Mixing volume
-    df[0] = ((1/residenceTime_1M)*(feedMoleFrac - f[0]))
-    df[1:numTanks_1M] = ((1/residenceTime_1M)
-                         *(f[0:numTanks_1M-1] - f[1:numTanks_1M]))
+    # Volume 2: Mixing volume
+    df[numTanks_1] = ((1/residenceTime_2M)*(f[numTanks_1-1] - f[numTanks_1]))
     
-    # Volume 1: Diffusive volume    
-    df[numTanks_1M] = ((1/residenceTime_1D)*(feedMoleFrac - f[numTanks_1M]))
-    df[numTanks_1M+1:numTanksTotal] = ((1/residenceTime_1D)
-                                       *(f[numTanks_1M:numTanksTotal-1] 
-                                         - f[numTanks_1M+1:numTanksTotal]))
-    
+    # Volume 2: Diffusive volume    
+    df[numTanks_1+1] = ((1/residenceTime_2D)*(f[numTanks_1-1] - f[numTanks_1+1]))
+
     # Return the derivatives for the solver
     return df
 
