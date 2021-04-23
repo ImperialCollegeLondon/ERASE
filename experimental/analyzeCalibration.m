@@ -13,6 +13,7 @@
 %
 %
 % Last modified:
+% - 2021-04-23, AK: Change the calibration model to Fourier series based 
 % - 2021-04-21, AK: Change the calibration equation to mole fraction like
 % - 2021-04-19, AK: Change MFC and MFM calibration (for mixtures)
 % - 2021-04-08, AK: Add ratio of gas for calibration
@@ -197,9 +198,8 @@ if ~isempty(parametersMS)
     else
         % Perform an optimization to obtain parameter estimates to fit the
         % signal fraction of the helium signal to He+CO2 signal 
-        y0 = [1]; % Initial conditions
-        [paramFit,resErr] = fminunc(@(p) objectiveFunction(meanMoleFrac(:,1),meanHeSignal./(meanCO2Signal+meanHeSignal),p),y0);
-        calibrationMS.ratioHeCO2 = paramFit;
+        % Use a fourier series to fit the calibration data
+        calibrationMS.ratioHeCO2 = fit((meanHeSignal./(meanCO2Signal+meanHeSignal))',meanMoleFrac(:,1),'fourier2');
     end
     
     % Save the calibration data into a .mat file
@@ -248,7 +248,7 @@ if ~isempty(parametersMS)
     else
         plot(meanHeSignal./(meanHeSignal+meanCO2Signal),meanMoleFrac(:,1),'or') % Experimental
         hold on
-        plot(0:0.1:1,(0:0.1:1).^(paramFit(1)),'b')
+        plot(0:0.01:1,calibrationMS.ratioHeCO2(0:0.01:1),'b')
         xlim([0 1]);
         ylim([0 1]);
         box on; grid on;
@@ -256,10 +256,4 @@ if ~isempty(parametersMS)
         ylabel('Helium mole frac [-]')
     end
 end
-end
-% Objective function to evaluate model parameters for the logistic
-% function (generalized)
-function errSignal = objectiveFunction(meanMoleFrac,expSignal,p)
-    % Calculate the sum of errors
-    errSignal = sum((meanMoleFrac' - expSignal.^p(1)).^2);
 end
