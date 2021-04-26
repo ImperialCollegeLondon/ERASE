@@ -56,25 +56,25 @@ _ , _ , moleFracOut = simulateDeadVolume(timeInt = timeZLC,
 
 # Plot the model response
 # Linear scale
-# os.chdir("plotFunctions")
-# import matplotlib.pyplot as plt
-# plt.style.use('doubleColumn.mplstyle') # Custom matplotlib style file
-# fig = plt.figure
-# ax1 = plt.subplot(1,2,1)        
-# ax1.plot(timeZLC,moleFracZLC,linewidth = 2,color='b',label = 'ZLC') # ZLC response
-# ax1.plot(timeZLC,moleFracOut,linewidth = 2,color='r',label = 'ZLC+DV') # Combined model response
-# ax1.set(xlabel='$t$ [s]', 
-#         ylabel='$y_1$ [-]',
-#         xlim = [0,300], ylim = [0, 1])   
-# ax1.locator_params(axis="x", nbins=4)
-# ax1.locator_params(axis="y", nbins=4)      
-# ax1.legend()
+os.chdir("plotFunctions")
+import matplotlib.pyplot as plt
+plt.style.use('doubleColumn.mplstyle') # Custom matplotlib style file
+fig = plt.figure
+ax1 = plt.subplot(1,2,1)        
+ax1.plot(timeZLC,moleFracZLC,linewidth = 2,color='b',label = 'ZLC') # ZLC response
+ax1.plot(timeZLC,moleFracOut,linewidth = 2,color='r',label = 'ZLC+DV') # Combined model response
+ax1.set(xlabel='$t$ [s]', 
+        ylabel='$y_1$ [-]',
+        xlim = [0,300], ylim = [0, 1])   
+ax1.locator_params(axis="x", nbins=4)
+ax1.locator_params(axis="y", nbins=4)      
+ax1.legend()
 
-# # Log scale
-# ax2 = plt.subplot(1,2,2)   
-# ax2.semilogy(timeZLC,moleFracZLC,linewidth = 2,color='b',label = 'ZLC') # ZLC response       
-# ax2.semilogy(timeZLC,moleFracOut,linewidth = 2,color='r',label = 'ZLC+DV') # Combined model response    
-# ax2.set(xlabel='$t$ [s]', 
-#         xlim = [0,300], ylim = [1e-3, 1])         
-# ax2.locator_params(axis="x", nbins=4)
-# ax2.legend()
+# Log scale
+ax2 = plt.subplot(1,2,2)   
+ax2.semilogy(timeZLC,moleFracZLC,linewidth = 2,color='b',label = 'ZLC') # ZLC response       
+ax2.semilogy(timeZLC,moleFracOut,linewidth = 2,color='r',label = 'ZLC+DV') # Combined model response    
+ax2.set(xlabel='$t$ [s]', 
+        xlim = [0,300], ylim = [1e-3, 1])         
+ax2.locator_params(axis="x", nbins=4)
+ax2.legend()
