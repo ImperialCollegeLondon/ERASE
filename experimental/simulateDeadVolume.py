@@ -12,10 +12,11 @@
 # Simulates the dead volume using the tanks in series (TIS) for the ZLC
 # Reference: 10.1016/j.ces.2008.02.023
 # The methodolgy is slighlty modified to incorporate diffusive pockets using
-# compartment models (see Levenspiel, chapter 12) or Lisa Joss's article
+# compartment models (see Levenspiel, chapter 12 or Lisa Joss's article)
 # Reference: 10.1007/s10450-012-9417-z
 #
 # Last modified:
+# - 2021-04-26, AK: Change default model parameter values
 # - 2021-04-21, AK: Change model to fix split velocity
 # - 2021-04-20, AK: Change model to flow dependent split
 # - 2021-04-20, AK: Change model to flow dependent split
@@ -57,27 +58,27 @@ def simulateDeadVolume(**kwargs):
     if 'deadVolume_1' in kwargs:
         deadVolume_1 = kwargs["deadVolume_1"]
     else:
-        deadVolume_1 = 3     
+        deadVolume_1 = 3.67
     # Number of tanks of the first volume [-]
     if 'numTanks_1' in kwargs:
         numTanks_1 = kwargs["numTanks_1"]
     else:
-        numTanks_1 = 20
+        numTanks_1 = 16
     # Dead Volume of the second volume (mixing) [cc]
     if 'deadVolume_2M' in kwargs:
         deadVolume_2M = kwargs["deadVolume_2M"]
     else:
-        deadVolume_2M = 0.2     
+        deadVolume_2M = 1.10 
     # Dead Volume of the second volume (diffusive) [cc]
     if 'deadVolume_2D' in kwargs:
         deadVolume_2D = kwargs["deadVolume_2D"]
     else:
-        deadVolume_2D = 0.1      
+        deadVolume_2D = 0.51 
     # Flow rate in the diffusive volume [-]
     if 'flowRate_D' in kwargs:
         flowRate_D = kwargs["flowRate_D"]
     else:
-        flowRate_D = 0.05
+        flowRate_D = 0.009
     # Initial Mole Fraction [-]
     if 'initMoleFrac' in kwargs:
         initMoleFrac = np.array(kwargs["initMoleFrac"])
@@ -92,7 +93,7 @@ def simulateDeadVolume(**kwargs):
     if 'timeInt' in kwargs:
         timeInt = kwargs["timeInt"]
     else:
-        timeInt = (0.0,2000)
+        timeInt = (0.0,3600)
     
     # If experimental data used, then initialize ode evaluation time to 
     # experimental time, else use default
