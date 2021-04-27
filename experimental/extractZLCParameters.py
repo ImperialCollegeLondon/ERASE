@@ -169,7 +169,7 @@ def ZLCObjectiveFunction(x):
         flowRateTemp = load(filePath[ii])["flowRate"].flatten()
         timeElapsedExp = timeElapsedExpTemp[::int(np.round(downsampleInt[ii]))]
         moleFracExp = moleFracExpTemp[::int(np.round(downsampleInt[ii]))]
-        flowRateExp = flowRateTemp[::int(np.round(downsampleInt[ii]))]
+        flowRateExp = flowRateTemp[::int(np.round(downsampleInt[ii]))] # [cc/s]
                 
         # Integration and ode evaluation time (check simulateZLC/simulateDeadVolume)
         timeInt = timeElapsedExp
@@ -179,7 +179,7 @@ def ZLCObjectiveFunction(x):
                                                     rateConstant = x[-1], # Last element is rate constant
                                                     timeInt = timeInt,
                                                     initMoleFrac = [moleFracExp[0]], # Initial mole fraction assumed to be the first experimental point
-                                                    flowIn = np.mean(flowRateExp[-1:-10:-1]), # Flow rate for ZLC considered to be the mean of last 10 points (equilibrium)
+                                                    flowIn = np.mean(flowRateExp[-1:-10:-1]*1e-6), # Flow rate [m3/s] for ZLC considered to be the mean of last 10 points (equilibrium)
                                                     expFlag = True)
 
         # Compute the sum of the error for the difference between exp. and sim.
