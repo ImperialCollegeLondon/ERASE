@@ -14,6 +14,7 @@
 # model with mass transfer defined using linear driving force.
 #
 # Last modified:
+# - 2021-04-27, AK: Fix inputs and add isotherm model as input
 # - 2021-04-26, AK: Revamp the code for real sorbent simulation
 # - 2021-03-25, AK: Remove the constant F model
 # - 2021-03-01, AK: Initial creation
@@ -74,6 +75,23 @@ def simulateZLC(**kwargs):
         timeInt = kwargs["timeInt"]
     else:
         timeInt = (0.0,300)
+        
+    # Flag to check if experimental data used
+    if 'expFlag' in kwargs:
+        expFlag = kwargs["expFlag"]
+    else:
+        expFlag = False
+
+    # If experimental data used, then initialize ode evaluation time to 
+    # experimental time, else use default
+    if expFlag is False:
+        t_eval = np.arange(timeInt[0],timeInt[-1],0.1)
+    else:
+        # Use experimental time (from timeInt) for ode evaluations to avoid
+        # interpolating any data. t_eval is also used for interpolating
+        # flow rate in the ode equations
+        t_eval = timeInt
+        timeInt = (0.0,max(timeInt))
                     
     # Volume of sorbent material [m3]
     if 'volSorbent' in kwargs:
@@ -87,6 +105,14 @@ def simulateZLC(**kwargs):
     else:
         volGas = 2.5e-8
         
+    # Isotherm model parameters  (SSL or DSL)
+    if 'isothermModel' in kwargs:
+        isothermModel = kwargs["isothermModel"]
+    else:
+        # Default isotherm model is DSL and uses CO2 isotherm on AC8
+        # Reference: 10.1007/s10450-020-00268-7
+        isothermModel = [0.44, 3.17e-6, 28.63e3, 6.10, 3.21e-6, 20.37e3]
+
     # Adsorbent density [kg/m3]
     if 'adsorbentDensity' in kwargs:
         adsorbentDensity = kwargs["adsorbentDensity"]
@@ -109,10 +135,11 @@ def simulateZLC(**kwargs):
     # Compute the initial sensor loading [mol/m3] @ initMoleFrac
     equilibriumLoading  = computeEquilibriumLoading(pressureTotal=pressureTotal,
                                                     temperature=temperature,
-                                                    moleFrac=initMoleFrac)*adsorbentDensity # [mol/m3]
+                                                    moleFrac=initMoleFrac,
+                                                    isothermModel=isothermModel)*adsorbentDensity # [mol/m3]
     
     # Prepare tuple of input parameters for the ode solver
-    inputParameters = (adsorbentDensity, rateConstant, flowIn, feedMoleFrac, 
+    inputParameters = (adsorbentDensity, isothermModel, rateConstant, flowIn, feedMoleFrac, 
                        initMoleFrac, pressureTotal, temperature, volSorbent, volGas)
             
     # Solve the system of ordinary differential equations
@@ -125,7 +152,7 @@ def simulateZLC(**kwargs):
     initialConditions[1] = equilibriumLoading # Initial Loading
 
     outputSol = solve_ivp(solveSorptionEquation, timeInt, initialConditions, 
-                          method='Radau', t_eval = np.arange(timeInt[0],timeInt[1],0.1),
+                          method='Radau', t_eval = t_eval,
                           rtol = 1e-8, args = inputParameters)
     
     # Presure vector in output
@@ -147,6 +174,9 @@ def simulateZLC(**kwargs):
         plotFullModelResult(timeSim, resultMat, inputParameters,
                             gitCommitID, currentDT)
     
+    # Move to local folder (to avoid path issues)
+    os.chdir("experimental")
+    
     # Return time and the output matrix
     return timeSim, resultMat, inputParameters
 
@@ -160,7 +190,7 @@ def solveSorptionEquation(t, f, *inputParameters):
     Rg = 8.314; # [J/mol K]
 
     # Unpack the tuple of input parameters used to solve equations
-    adsorbentDensity, rateConstant, flowIn, feedMoleFrac, _ , pressureTotal, temperature, volSorbent, volGas = inputParameters
+    adsorbentDensity, isothermModel, rateConstant, flowIn, feedMoleFrac, _ , pressureTotal, temperature, volSorbent, volGas = inputParameters
 
     # Initialize the derivatives to zero
     df = np.zeros([2])
@@ -168,7 +198,8 @@ def solveSorptionEquation(t, f, *inputParameters):
     # Compute the initial sensor loading [mol/m3] @ initMoleFrac
     equilibriumLoading  = computeEquilibriumLoading(pressureTotal=pressureTotal,
                                                     temperature=temperature,
-                                                    moleFrac=f[0])*adsorbentDensity # [mol/m3]
+                                                    moleFrac=f[0],
+                                                    isothermModel=isothermModel)*adsorbentDensity # [mol/m3]
 
     # Linear driving force model (derivative of solid phase loadings)
     df[1] = rateConstant*(equilibriumLoading-f[1])
@@ -199,7 +230,7 @@ def plotFullModelResult(timeSim, resultMat, inputParameters,
     saveFileExtension = ".png"
     
     # Unpack the tuple of input parameters used to solve equations
-    adsorbentDensity , _ , flowIn, _ , _ , _ , temperature, _ , _ = inputParameters
+    adsorbentDensity , _ , _ , flowIn, _ , _ , _ , temperature, _ , _ = inputParameters
 
     os.chdir("plotFunctions")
     # Plot the solid phase compositions

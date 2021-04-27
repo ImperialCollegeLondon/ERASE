@@ -17,6 +17,7 @@
 # Reference: 10.1007/s10450-012-9417-z
 #
 # Last modified:
+# - 2021-04-27, AK: Cosmetic changes to structure
 # - 2021-04-21, AK: Change model to fix split velocity
 # - 2021-04-20, AK: Change model to flow dependent split
 # - 2021-04-20, AK: Implement time-resolved experimental flow rate for DV
@@ -57,7 +58,7 @@ def extractDeadVolume():
     currentDT = auxiliaryFunctions.getCurrentDateTime()
     
     # Directory of raw data
-    mainDir = 'experimental/runData'
+    mainDir = 'runData'
     # File name of the experiments
     fileName = ['ZLC_DeadVolume_Exp13A_Output.mat',
                 'ZLC_DeadVolume_Exp13B_Output.mat',
@@ -65,6 +66,7 @@ def extractDeadVolume():
                 'ZLC_DeadVolume_Exp13D_Output.mat',
                 'ZLC_DeadVolume_Exp13E_Output.mat',
                 'ZLC_DeadVolume_Exp13F_Output.mat']
+    
     # Generate .npz file for python processing of the .mat file 
     filesToProcess(True,mainDir,fileName)
 
@@ -154,13 +156,13 @@ def deadVolObjectiveFunction(x):
         flowRateTemp = load(filePath[ii])["flowRate"].flatten()
         timeElapsedExp = timeElapsedExpTemp[::int(np.round(downsampleInt[ii]))]
         moleFracExp = moleFracExpTemp[::int(np.round(downsampleInt[ii]))]
-        flowRate = flowRateTemp[::int(np.round(downsampleInt[ii]))]
+        flowRateExp = flowRateTemp[::int(np.round(downsampleInt[ii]))]
                 
         # Integration and ode evaluation time (check simulateDeadVolume)
         timeInt = timeElapsedExp
 
         # Compute the experimental volume (using trapz)
-        expVolume = max([expVolume, np.trapz(moleFracExp,np.multiply(flowRate, timeElapsedExp))])
+        expVolume = max([expVolume, np.trapz(moleFracExp,np.multiply(flowRateExp, timeElapsedExp))])
         
         # Compute the dead volume response using the optimizer parameters
         _ , _ , moleFracSim = simulateDeadVolume(deadVolume_1 = x[0],
@@ -169,7 +171,8 @@ def deadVolObjectiveFunction(x):
                                                 numTanks_1 = int(x[3]),
                                                 flowRate_D = x[4],
                                                 timeInt = timeInt,
-                                                flowRate = flowRate)
+                                                flowRate = flowRateExp,
+                                                expFlag = True)
                 
         # Compute the sum of the error for the difference between exp. and sim.
         numPoints += len(moleFracExp)

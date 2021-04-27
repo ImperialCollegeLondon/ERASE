@@ -39,6 +39,10 @@ def simulateDeadVolume(**kwargs):
     import numpy as np
     from scipy.integrate import solve_ivp
     import auxiliaryFunctions
+    import os
+    
+    # Move to top level folder (to avoid path issues)
+    os.chdir("..")
 
     # Plot flag
     plotFlag = False
@@ -95,9 +99,15 @@ def simulateDeadVolume(**kwargs):
     else:
         timeInt = (0.0,3600)
     
+    # Flag to check if experimental data used
+    if 'expFlag' in kwargs:
+        expFlag = kwargs["expFlag"]
+    else:
+        expFlag = False
+    
     # If experimental data used, then initialize ode evaluation time to 
     # experimental time, else use default
-    if flowRate.size == 1:
+    if expFlag is False:
         t_eval = np.arange(timeInt[0],timeInt[-1],0.1)
     else:
         # Use experimental time (from timeInt) for ode evaluations to avoid
@@ -143,6 +153,9 @@ def simulateDeadVolume(**kwargs):
     # Plot the dead volume response
     if plotFlag:
         plotOutletConcentration(timeSim,moleFracIn,moleFracOut)
+        
+    # Move to local folder (to avoid path issues)
+    os.chdir("experimental")
 
     return timeSim, moleFracIn, moleFracOut
 
@@ -216,7 +229,7 @@ def plotOutletConcentration(timeSim, moleFracIn, moleFracOut):
     import matplotlib.pyplot as plt
 
     # Plot the solid phase compositions
-    os.chdir(".."+os.path.sep+"plotFunctions")
+    os.chdir("plotFunctions")
     plt.style.use('singleColumn.mplstyle') # Custom matplotlib style file
     fig = plt.figure        
     ax = plt.subplot(1,1,1)
@@ -231,4 +244,4 @@ def plotOutletConcentration(timeSim, moleFracIn, moleFracOut):
            xlim = [timeSim[0], 1000], ylim = [1e-4, 1.1*np.max(moleFracOut)])
     ax.legend()
     plt.show()
-    os.chdir(".."+os.path.sep+"experimental")
+    os.chdir("..")
