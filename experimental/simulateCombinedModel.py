@@ -26,20 +26,23 @@
 
 def simulateCombinedModel(**kwargs):
     import numpy as np
-    import auxiliaryFunctions
     from simulateZLC import simulateZLC
     from simulateDeadVolume import simulateDeadVolume
     from numpy import load
     import os
 
-    # Plot flag
-    plotFlag = False
-    
+    # Move to top level folder (to avoid path issues)    
+    os.chdir("..")
+    import auxiliaryFunctions    
     # Get the commit ID of the current repository
     gitCommitID = auxiliaryFunctions.getCommitID()
+    os.chdir("experimental")
     
     # Get the current date and time for saving purposes    
     currentDT = auxiliaryFunctions.getCurrentDateTime()
+    
+    # Plot flag
+    plotFlag = False
 
     # Isotherm model parameters  (SSL or DSL)
     if 'isothermModel' in kwargs:
@@ -53,7 +56,7 @@ def simulateCombinedModel(**kwargs):
     if 'rateConstant' in kwargs:
         rateConstant = kwargs["rateConstant"]
     else:
-        rateConstant = [0.5]
+        rateConstant = [0.3]
 
     # Feed flow rate [m3/s]
     if 'flowIn' in kwargs:
