@@ -13,6 +13,7 @@
 %
 %
 % Last modified:
+% - 2021-04-27, AK: Change the calibration model to linear interpolation 
 % - 2021-04-23, AK: Change the calibration model to Fourier series based 
 % - 2021-04-21, AK: Change the calibration equation to mole fraction like
 % - 2021-04-19, AK: Change MFC and MFM calibration (for mixtures)
@@ -199,7 +200,7 @@ if ~isempty(parametersMS)
         % Perform an optimization to obtain parameter estimates to fit the
         % signal fraction of the helium signal to He+CO2 signal 
         % Use a fourier series to fit the calibration data
-        calibrationMS.ratioHeCO2 = fit((meanHeSignal./(meanCO2Signal+meanHeSignal))',meanMoleFrac(:,1),'fourier2');
+        calibrationMS.ratioHeCO2 = fit((meanHeSignal./(meanCO2Signal+meanHeSignal))',meanMoleFrac(:,1),'linearinterp');
     end
     
     % Save the calibration data into a .mat file
@@ -209,14 +210,14 @@ if ~isempty(parametersMS)
         % Save the calibration data for further use
         save(['experimentalData',filesep,...
             'calibrationData',filesep,parametersMS.flow,'_Model'],'calibrationMS',...
-            'gitCommitID');
+            'gitCommitID','parametersMS');
     else
         % Create the calibration data folder if it does not exist
         mkdir(['experimentalData',filesep,'calibrationData'])
         % Save the calibration data for further use
         save(['experimentalData',filesep,...
             'calibrationData',filesep,parametersMS.flow,'_Model'],'calibrationMS',...
-            'gitCommitID');
+            'gitCommitID','parametersMS');
     end
     
     % Plot the raw and the calibrated data
@@ -248,7 +249,7 @@ if ~isempty(parametersMS)
     else
         plot(meanHeSignal./(meanHeSignal+meanCO2Signal),meanMoleFrac(:,1),'or') % Experimental
         hold on
-        plot(0:0.01:1,calibrationMS.ratioHeCO2(0:0.01:1),'b')
+        plot(0:0.001:1,calibrationMS.ratioHeCO2(0:0.001:1),'b')
         xlim([0 1]);
         ylim([0 1]);
         box on; grid on;
