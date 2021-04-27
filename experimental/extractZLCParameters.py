@@ -35,6 +35,12 @@ def extractZLCParameters():
     import multiprocessing # For parallel processing
     import socket
     
+    # Change path directory
+    # Assumes either running from ERASE or from experimental. Either ways
+    # this has to be run from experimental
+    if not os.getcwd().split(os.path.sep)[-1] == 'experimental':
+        os.chdir("experimental")
+    
     # Find out the total number of cores available for parallel processing
     num_cores = multiprocessing.cpu_count()
     
