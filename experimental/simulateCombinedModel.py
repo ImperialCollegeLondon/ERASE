@@ -43,7 +43,7 @@ def simulateCombinedModel(**kwargs):
 
     # Isotherm model parameters  (SSL or DSL)
     if 'isothermModel' in kwargs:
-        isothermModel = ["isothermModel"]
+        isothermModel = kwargs["isothermModel"]
     else:
         # Default isotherm model is DSL and uses CO2 isotherm on AC8
         # Reference: 10.1007/s10450-020-00268-7
@@ -65,8 +65,7 @@ def simulateCombinedModel(**kwargs):
     if 'initMoleFrac' in kwargs:
         initMoleFrac = kwargs["initMoleFrac"]
     else:
-        # Equilibrium process
-        initMoleFrac = [0.8]
+        initMoleFrac = [1.]
 
     # Time span for integration [tuple with t0 and tf]
     if 'timeInt' in kwargs:
@@ -156,12 +155,12 @@ def plotCombinedModel(timeZLC,moleFracOut,moleFracZLC,flowRateZLC):
     ax2.legend()
 
     # Ft - Log scale
-    ax2 = plt.subplot(1,3,3)   
-    ax2.semilogy(np.multiply(flowRateZLC,timeZLC),moleFracZLC,linewidth = 2,color='b') # ZLC response       
-    ax2.semilogy(np.multiply(flowRateZLC,timeZLC),moleFracOut,linewidth = 2,color='r') # Combined model response    
-    ax2.set(xlabel='$t$ [s]', 
+    ax3 = plt.subplot(1,3,3)   
+    ax3.semilogy(np.multiply(flowRateZLC,timeZLC),moleFracZLC,linewidth = 2,color='b') # ZLC response       
+    ax3.semilogy(np.multiply(flowRateZLC,timeZLC),moleFracOut,linewidth = 2,color='r') # Combined model response    
+    ax3.set(xlabel='$t$ [s]', 
             xlim = [0,300], ylim = [1e-4, 1.])         
-    ax2.locator_params(axis="x", nbins=4)
-    ax2.legend()
+    ax3.locator_params(axis="x", nbins=4)
+    ax3.legend()
     plt.show()
     os.chdir("..")
