@@ -16,6 +16,7 @@
 # Reference: 10.1016/j.ces.2014.12.062
 #
 # Last modified:
+# - 2021-04-28, AK: Add reference values for isotherm parameters
 # - 2021-04-27, AK: Initial creation
 #
 # Input arguments:
@@ -59,12 +60,12 @@ def extractZLCParameters():
     # Directory of raw data
     mainDir = 'runData'
     # File name of the experiments
-    fileName = ['ZLC_ActivatedCarbon_Exp15A_Output.mat',
-                'ZLC_ActivatedCarbon_Exp15B_Output.mat',
-                'ZLC_ActivatedCarbon_Exp15C_Output.mat',
-                'ZLC_ActivatedCarbon_Exp15D_Output.mat',
-                'ZLC_ActivatedCarbon_Exp15E_Output.mat',
-                'ZLC_ActivatedCarbon_Exp15F_Output.mat']
+    fileName = ['ZLC_ActivatedCarbon_Exp17A_Output.mat',
+                'ZLC_ActivatedCarbon_Exp17B_Output.mat',
+                'ZLC_ActivatedCarbon_Exp17C_Output.mat',
+                'ZLC_ActivatedCarbon_Exp17D_Output.mat',
+                'ZLC_ActivatedCarbon_Exp17E_Output.mat',
+                'ZLC_ActivatedCarbon_Exp17F_Output.mat']
     
     # NOTE: Dead volume characteristics filename is hardcoded in 
     # simulateCombinedModel. This is because of the python GA function unable
@@ -82,10 +83,10 @@ def extractZLCParameters():
         problemDimension = len(optType)
     # Dual-site Langmuir
     elif modelType == 'DSL':
-        optBounds = np.array(([np.finfo(float).eps,10], [np.finfo(float).eps,1],
-                              [np.finfo(float).eps,50e3], [np.finfo(float).eps,10],
-                              [np.finfo(float).eps,1], [np.finfo(float).eps,50e3],
-                              [np.finfo(float).eps,100]))
+        optBounds = np.array(([np.finfo(float).eps,1], [np.finfo(float).eps,1],
+                              [np.finfo(float).eps,1], [np.finfo(float).eps,1],
+                              [np.finfo(float).eps,1], [np.finfo(float).eps,1],
+                              [np.finfo(float).eps,1]))
         optType=np.array(['real','real','real','real','real','real','real'])
         problemDimension = len(optType)
 
@@ -145,8 +146,16 @@ def ZLCObjectiveFunction(x):
     from extractDeadVolume import filesToProcess # File processing script
     from simulateCombinedModel import simulateCombinedModel
     
+    # Reference for the isotherm parameters
+    # For SSL isotherm
+    if len(x) == 5:
+        isoRef = [10, 1e-5, 50e3, 100]
+    # For DSL isotherm
+    elif len(x) == 7:
+        isoRef = [10, 1e-5, 50e3, 10, 1e-5, 50e3, 100]
+
     # Prepare isotherm model (the first n-1 parameters are for the isotherm model)
-    isothermModel = x[0:-1]
+    isothermModel = np.multiply(x[0:-1],isoRef[0:-1])
 
     # Load the names of the file to be used for estimating dead volume characteristics
     filePath = filesToProcess(False,[],[])
@@ -182,7 +191,7 @@ def ZLCObjectiveFunction(x):
 
         # Compute the dead volume response using the optimizer parameters
         _ , moleFracSim , _ = simulateCombinedModel(isothermModel = isothermModel,
-                                                    rateConstant = x[-1], # Last element is rate constant
+                                                    rateConstant = x[-1]*isoRef[-1], # Last element is rate constant
                                                     timeInt = timeInt,
                                                     initMoleFrac = [moleFracExp[0]], # Initial mole fraction assumed to be the first experimental point
                                                     flowIn = np.mean(flowRateExp[-1:-10:-1]*1e-6), # Flow rate [m3/s] for ZLC considered to be the mean of last 10 points (equilibrium)

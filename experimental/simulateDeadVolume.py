@@ -131,7 +131,7 @@ def simulateDeadVolume(**kwargs):
     # Solve the system of equations
     outputSol = solve_ivp(solveTanksInSeries, timeInt, initialConditions, 
                           method='Radau', t_eval = t_eval,
-                          rtol = 1e-6, args = inputParameters)
+                          rtol = 1e-8, args = inputParameters)
     
     # Parse out the time
     timeSim = outputSol.t
