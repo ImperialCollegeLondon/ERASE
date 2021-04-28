@@ -203,7 +203,7 @@ function executeTimerDevice(timerObj, thisEvent, expInfo, serialObj)
         userInput = input(promptUser,'s');
     end
     % If mixtures is run, at the first instant turn off CO2 (MFC2)
-    if timerObj.tasksExecuted == 1 && expInfo.runMixtures && ~isempty(serialObj.MFC2.portName)
+    if expInfo.runMixtures && ~isempty(serialObj.MFC2.portName)
         % Parse out gas name from expInfo
         gasName_MFC2 = expInfo.gasName_MFC2;
         % Generate Gas ID for Alicat devices
