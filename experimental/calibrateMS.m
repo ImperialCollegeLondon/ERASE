@@ -12,6 +12,7 @@
 % Calibrates the mass specfor different set point values
 %
 % Last modified:
+% - 2021-04-30, AK: Add flow rate sweep
 % - 2021-04-15, AK: Modify function for mixture experiments
 % - 2021-03-16, AK: Initial creation
 %
@@ -20,10 +21,7 @@
 % Output arguments:
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function calibrateMS
-    % Experiment name
-    expInfo.expName = ['ZLCCalibrateMS','_',...
-        datestr(datetime('now'),'yyyymmdd')];
+function calibrateMS(varargin)
     % Sampling time for the device
     expInfo.samplingTime = 2;
     % Define gas for MFM
@@ -32,14 +30,21 @@ function calibrateMS
     expInfo.gasName_MFC1 = 'He';
     % Define gas for MFC2
     expInfo.gasName_MFC2 = 'CO2';
+    % Define set point for MFC2
+    % Round the flow rate to the nearest first decimal (as this is the
+    % resolution of the meter)
+    if ~varargin{1}
+        MFC2_SP = round(repmat([0.0 0.2 0.4 3.0 6.0 9.0 10.5 12.0 15 29.6 29.8 30.0],[1,1]),1);
+    else
+        MFC2_SP = varargin{1};
+    end
     % Define set point for MFC1
     % Round the flow rate to the nearest first decimal (as this is the
     % resolution of the meter)    
-    MFC1_SP = round(repmat([0.0 0.2 1.5 3.0 4.5, 6.0 7.5, 9.0 10.5 12.0 13.5 14.8 15.0],[1,2]),1);
-    % Define set point for MFC2
-    % Round the flow rate to the nearest first decimal (as this is the
-    % resolution of the meter)    
-    MFC2_SP = round(15.0-MFC1_SP,1);
+    MFC1_SP = round(max(MFC2_SP)-MFC2_SP,1);
+    % Experiment name
+    expInfo.expName = ['ZLCCalibrateMS','_',...
+        datestr(datetime('now'),'yyyymmdd'),'_',num2str(max(MFC2_SP)),'ccm'];
     % Start delay
     expInfo.equilibrationTime = 5; % [s]
     % Flag for meter calibration
@@ -58,7 +63,7 @@ function calibrateMS
             expInfo.maxTime = 600;
         else
             % Else use 5 min
-            expInfo.maxTime = 300;
+            expInfo.maxTime = 600;
         end
         % Run the setup for different calibrations
         runZLC(expInfo)
