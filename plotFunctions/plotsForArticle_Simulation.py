@@ -589,11 +589,11 @@ def plotForArticle_ThreeMaterials(gitCommitID, currentDT,
     meanErr["x"] = pd.to_numeric(meanErr["x"], downcast="float")
     sns.lineplot(data=meanErr, x='x', y='y1', hue='dataType', style='dataType',
                  dashes = [(1,1)], markers = ['o'],
-                 palette = colorLeft, linewidth = 0.5)
+                 palette = colorLeft, linewidth = 0.5,markersize = 6)
     meanErrRef["x"] = pd.to_numeric(meanErrRef["x"], downcast="float")
     sns.lineplot(data=meanErrRef, x='x', y='y1', hue='dataType', style='dataType',
                  dashes = [(5,5)], markers = ['o'],
-                 palette = colorLeft, linewidth = 0.5, alpha = 0.35)
+                 palette = colorLeft, linewidth = 0.5, alpha = 0.35,markersize = 6)
     ax2.set(ylabel='$\psi$ [-]',
             xlim = [0.,1.], ylim = [1e-8,1])
     ax2.locator_params(axis="x", nbins=4)
@@ -608,12 +608,12 @@ def plotForArticle_ThreeMaterials(gitCommitID, currentDT,
     cvData["x"] = pd.to_numeric(cvData["x"], downcast="float")
     sns.lineplot(data=cvData, x='x', y='y1', hue='dataType', style='dataType',
                  dashes = [(1,1)], markers = ['D'],
-                 palette = colorRight, linewidth = 0.5,
+                 palette = colorRight, linewidth = 0.5,markersize = 6,
                  ax = ax2r)
     cvDataRef["x"] = pd.to_numeric(cvDataRef["x"], downcast="float")
     sns.lineplot(data=cvDataRef, x='x', y='y1', hue='dataType', style='dataType',
                  dashes = [(5,5)], markers = ['D'],
-                 palette = colorRight, linewidth = 0.5, alpha = 0.35,
+                 palette = colorRight, linewidth = 0.5, alpha = 0.35,markersize = 6,
                  ax = ax2r)
     # Plot sensitive region
     for kk in range(arraySimResponse.shape[1]):
@@ -677,10 +677,10 @@ def plotForArticle_ThreeMaterials(gitCommitID, currentDT,
     meanErr["x"] = pd.to_numeric(meanErr["x"], downcast="float")
     sns.lineplot(data=meanErr, x='x', y='y1', hue='dataType', style='dataType',
                  dashes = [(1,1)], markers = ['o'],
-                 palette = colorLeft, linewidth = 0.5)
+                 palette = colorLeft, linewidth = 0.5,markersize = 6)
     sns.lineplot(data=meanErrRef, x='x', y='y1', hue='dataType', style='dataType',
                  dashes = [(5,5)], markers = ['o'],
-                 palette = colorLeft, linewidth = 0.5, alpha = 0.35)
+                 palette = colorLeft, linewidth = 0.5, alpha = 0.35,markersize = 6)
     ax4.set(xlabel='$y_1$ [-]',
             ylabel='$\psi$ [-]',
             xlim = [0.,1.], ylim = [1e-8,1])
@@ -694,11 +694,11 @@ def plotForArticle_ThreeMaterials(gitCommitID, currentDT,
     cvData["x"] = pd.to_numeric(cvData["x"], downcast="float")
     sns.lineplot(data=cvData, x='x', y='y1', hue='dataType', style='dataType',
                  dashes = [(1,1)], markers = ['D'],
-                 palette = colorRight, linewidth = 0.5,
+                 palette = colorRight, linewidth = 0.5,markersize = 6,
                  ax = ax4r)
     sns.lineplot(data=cvDataRef, x='x', y='y1', hue='dataType', style='dataType',
                  dashes = [(5,5)], markers = ['o'],
-                 palette = colorRight, linewidth = 0.5, alpha = 0.35,
+                 palette = colorRight, linewidth = 0.5, alpha = 0.35,markersize = 6,
                  ax = ax4r)
     # Plot sensitive region
     for kk in range(arraySimResponse.shape[1]):
