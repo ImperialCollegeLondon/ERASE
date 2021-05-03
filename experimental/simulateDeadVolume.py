@@ -16,6 +16,7 @@
 # Reference: 10.1007/s10450-012-9417-z
 #
 # Last modified:
+# - 2021-05-03, AK: Fix path issues
 # - 2021-04-26, AK: Change default model parameter values
 # - 2021-04-21, AK: Change model to fix split velocity
 # - 2021-04-20, AK: Change model to flow dependent split
@@ -38,21 +39,14 @@
 def simulateDeadVolume(**kwargs):
     import numpy as np
     from scipy.integrate import solve_ivp
-    import auxiliaryFunctions
     import os
     
     # Move to top level folder (to avoid path issues)
     os.chdir("..")
-
+    
     # Plot flag
     plotFlag = False
-    
-    # Get the commit ID of the current repository
-    gitCommitID = auxiliaryFunctions.getCommitID()
-    
-    # Get the current date and time for saving purposes    
-    currentDT = auxiliaryFunctions.getCurrentDateTime()
-    
+        
     # Flow rate of the gas [cc/s]
     if 'flowRate' in kwargs:
         flowRate = kwargs["flowRate"]

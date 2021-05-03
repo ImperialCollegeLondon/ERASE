@@ -57,15 +57,18 @@ def extractDeadVolume():
     # Get the current date and time for saving purposes    
     currentDT = auxiliaryFunctions.getCurrentDateTime()
     
+    # Change path directory
+    # Assumes either running from ERASE or from experimental. Either ways
+    # this has to be run from experimental
+    if not os.getcwd().split(os.path.sep)[-1] == 'experimental':
+        os.chdir("experimental")
+    
     # Directory of raw data
     mainDir = 'runData'
     # File name of the experiments
-    fileName = ['ZLC_DeadVolume_Exp13A_Output.mat',
-                'ZLC_DeadVolume_Exp13B_Output.mat',
-                'ZLC_DeadVolume_Exp13C_Output.mat',
-                'ZLC_DeadVolume_Exp13D_Output.mat',
-                'ZLC_DeadVolume_Exp13E_Output.mat',
-                'ZLC_DeadVolume_Exp13F_Output.mat']
+    fileName = ['ZLC_DeadVolume_Exp15A_Output.mat',
+                'ZLC_DeadVolume_Exp15B_Output.mat',
+                'ZLC_DeadVolume_Exp15C_Output.mat']
     
     # Generate .npz file for python processing of the .mat file 
     filesToProcess(True,mainDir,fileName)
