@@ -12,6 +12,7 @@
 # Plots for the simulation manuscript
 #
 # Last modified:
+# - 2021-05-03, AK: Cosmetic changes to all plots
 # - 2021-04-07, AK: Add plot for design variables
 # - 2021-03-05, AK: Add plot for full model
 # - 2021-03-05, AK: Add plot for three materials
@@ -154,36 +155,36 @@ def plotForArticle_SensorArray(gitCommitID, currentDT,
         ax.locator_params(axis="y", nbins=4)
         if ii == 0 or ii == 2:
             ax.set(ylabel='$f$ [-]')
-            ax.text(0.85, 55, "$n$ = 1", fontsize=10, 
+            ax.text(0.82, 55, "$n$ = 1", fontsize=10, 
                     backgroundcolor = 'w', color = '#0077b6')
             if ii == 0:
-                ax.text(0.025, 55, "(a)", fontsize=10, 
+                ax.text(0.075, 55, "(a)", fontsize=10, 
                         backgroundcolor = 'w')
-                ax.text(0.56, 51, "Without Constraint", fontsize=10, 
+                ax.text(0.53, 51, "Without Constraint", fontsize=10, 
                         backgroundcolor = 'w', color = '#0077b6')
             else:
                 ax.set(xlabel='$y$ [-]')
-                ax.text(0.025, 55, "(c)", fontsize=10, 
+                ax.text(0.075, 55, "(c)", fontsize=10, 
                     backgroundcolor = 'w')
-                ax.text(0.625, 51, "With Constraint", fontsize=10, 
+                ax.text(0.595, 51, "With Constraint", fontsize=10, 
                         backgroundcolor = 'w', color = '#0077b6')
             ax.text(0.085, 25, "$y_1$ = 0.05", fontsize=10, 
                     backgroundcolor = 'w', color = '#e5383b')
             ax.text(0.705, 25, "$y_2$ = 0.95", fontsize=10, 
                     backgroundcolor = 'w', color = '#343a40')
         elif ii == 1 or ii == 3:
-            ax.text(0.85, 55, "$n$ = 2", fontsize=10, 
+            ax.text(0.81, 55, "$n$ = 2", fontsize=10, 
                     backgroundcolor = 'w', color = '#0077b6')
             if ii == 1:
-                ax.text(0.025, 55, "(b)", fontsize=10, 
+                ax.text(0.075, 55, "(b)", fontsize=10, 
                         backgroundcolor = 'w')
-                ax.text(0.56, 51, "Without Constraint", fontsize=10, 
+                ax.text(0.53, 51, "Without Constraint", fontsize=10, 
                         backgroundcolor = 'w', color = '#0077b6')
             else:
                 ax.set(xlabel='$y$ [-]')
-                ax.text(0.025, 55, "(d)", fontsize=10, 
+                ax.text(0.075, 55, "(d)", fontsize=10, 
                         backgroundcolor = 'w')
-                ax.text(0.625, 51, "With Constraint", fontsize=10, 
+                ax.text(0.595, 51, "With Constraint", fontsize=10, 
                         backgroundcolor = 'w', color = '#0077b6')
             ax.text(0.085, 25, "$y_1$ = 0.05", fontsize=10, 
                     backgroundcolor = 'w', color = '#e5383b')
@@ -271,7 +272,8 @@ def plotForArticle_ResponseShape(gitCommitID, currentDT,
     meanErr["x"] = pd.to_numeric(meanErr["x"], downcast="float")
     sns.lineplot(data=meanErr, x='x', y='y1', hue='dataType', style='dataType',
                  dashes = [(1,1),(1,1),(1,1)], markers = ['o','s','D'],
-                 palette = colorsForPlot[0:len(loadFileName)], linewidth = 0.5)
+                 palette = colorsForPlot[0:len(loadFileName)], linewidth = 0.5,
+                 markersize = 5)
         
     ax2.set(xlabel='$y_1$ [-]', 
             ylabel='$\psi$ [-]',
@@ -299,7 +301,8 @@ def plotForArticle_ResponseShape(gitCommitID, currentDT,
     cvData["x"] = pd.to_numeric(cvData["x"], downcast="float")
     sns.lineplot(data=cvData, x='x', y='y1', hue='dataType', style='dataType',
                  dashes = [(1,1),(1,1),(1,1)], markers = ['o','s','D'],
-                 palette = colorsForPlot[0:len(loadFileName)], linewidth = 0.5)
+                 palette = colorsForPlot[0:len(loadFileName)], linewidth = 0.5,
+                 markersize = 5)
         
     ax3.set(xlabel='$y_1$ [-]', 
             ylabel='$\chi$ [-]',
@@ -396,7 +399,7 @@ def plotForArticle_GraphicalTool(gitCommitID, currentDT,
     meanErr["x"] = pd.to_numeric(meanErr["x"], downcast="float")
     sns.lineplot(data=meanErr, x='x', y='y1', hue='dataType', style='dataType',
                  dashes = [(1,1)], markers = ['o'],
-                 palette = colorLeft, linewidth = 0.5)
+                 palette = colorLeft, linewidth = 0.5,markersize = 6)
     ax2.set(ylabel='$\psi$ [-]',
             xlim = [0.,1.], ylim = [1e-8,1])
     ax2.locator_params(axis="x", nbins=4)
@@ -411,7 +414,7 @@ def plotForArticle_GraphicalTool(gitCommitID, currentDT,
     cvData["x"] = pd.to_numeric(cvData["x"], downcast="float")
     sns.lineplot(data=cvData, x='x', y='y1', hue='dataType', style='dataType',
                  dashes = [(1,1)], markers = ['D'],
-                 palette = colorRight, linewidth = 0.5,
+                 palette = colorRight, linewidth = 0.5,markersize = 6,
                  ax = ax2r)
     # Plot sensitive region
     for kk in range(arraySimResponse.shape[1]):
@@ -471,7 +474,7 @@ def plotForArticle_GraphicalTool(gitCommitID, currentDT,
     meanErr["x"] = pd.to_numeric(meanErr["x"], downcast="float")
     sns.lineplot(data=meanErr, x='x', y='y1', hue='dataType', style='dataType',
                  dashes = [(1,1)], markers = ['o'],
-                 palette = colorLeft, linewidth = 0.5)
+                 palette = colorLeft, linewidth = 0.5,markersize = 6)
     ax4.set(xlabel='$y_1$ [-]',
             ylabel='$\psi$ [-]',
             xlim = [0.,1.], ylim = [1e-8,1])
@@ -485,7 +488,7 @@ def plotForArticle_GraphicalTool(gitCommitID, currentDT,
     cvData["x"] = pd.to_numeric(cvData["x"], downcast="float")
     sns.lineplot(data=cvData, x='x', y='y1', hue='dataType', style='dataType',
                  dashes = [(1,1)], markers = ['D'],
-                 palette = colorRight, linewidth = 0.5,
+                 palette = colorRight, linewidth = 0.5,markersize = 6,
                  ax = ax4r)
     # Plot sensitive region
     for kk in range(arraySimResponse.shape[1]):
@@ -853,6 +856,8 @@ def plotForArticle_DesignVariables(gitCommitID, currentDT,
     import os
     import matplotlib.pyplot as plt
     import matplotlib.patches as patches
+    from matplotlib.transforms import Bbox
+
     plt.style.use('doubleColumn2Row.mplstyle') # Custom matplotlib style file   
 
     # Curved arrow properties    
@@ -918,6 +923,19 @@ def plotForArticle_DesignVariables(gitCommitID, currentDT,
                     color = '#0077b6')
             ax.text(1240, 0.101, "Varying Kinetics", fontsize=10, 
                     color = '#0077b6')
+            ax.text(1700, 0.0025, "0.0001", fontsize=8, 
+                        color = colorsForPlot[0])
+            ax.text(1700, 0.023, "0.0005", fontsize=8, 
+                        color = colorsForPlot[1], rotation=10)
+            ax.text(1700, 0.037, "0.001", fontsize=8, 
+                        color = colorsForPlot[2], rotation=8)
+            ax.text(200, 0.027, "0.005", fontsize=8, 
+                        color = colorsForPlot[3], rotation=45)
+            ax.text(60, 0.042, "0.01", fontsize=8, 
+                        color = colorsForPlot[4], rotation=45)
+            ax.text(1700, 0.056, "10000", fontsize=8, 
+                        color = colorsForPlot[5], rotation=0)
+                
         if ii == 1:
             curvArr = patches.FancyArrowPatch((800, 0.02), (300, 0.06),
                                  connectionstyle="arc3,rad=0.35", **kw)
@@ -926,6 +944,18 @@ def plotForArticle_DesignVariables(gitCommitID, currentDT,
                     color = '#0077b6')
             ax.text(1140, 0.101, "Varying Flow Rate", fontsize=10, 
                     color = '#0077b6')
+            ax.text(1700, 0.005, "0.001", fontsize=8, 
+                    color = colorsForPlot[0])
+            ax.text(1700, 0.017, "0.005", fontsize=8, 
+                        color = colorsForPlot[1], rotation=10)
+            ax.text(1700, 0.033, "0.01", fontsize=8, 
+                        color = colorsForPlot[2], rotation=12)
+            ax.text(330, 0.023, "0.05", fontsize=8, 
+                        color = colorsForPlot[3], rotation=45)
+            ax.text(230, 0.032, "0.1", fontsize=8, 
+                        color = colorsForPlot[4], rotation=60)
+            ax.text(1800, 0.056, "1", fontsize=8, 
+                        color = colorsForPlot[5], rotation=0)
         if ii == 2:
             curvArr = patches.FancyArrowPatch((800, 0.01), (300, 0.06),
                                  connectionstyle="arc3,rad=0.35", **kw)
@@ -934,6 +964,14 @@ def plotForArticle_DesignVariables(gitCommitID, currentDT,
                     color = '#0077b6')
             ax.text(1020, 0.101, "Varying Total Volume", fontsize=10, 
                     color = '#0077b6')
+            ax.text(1820, 0.008, "0.1", fontsize=8, 
+                        color = colorsForPlot[2], rotation=0)
+            ax.text(1820, 0.018, "0.3", fontsize=8, 
+                        color = colorsForPlot[3], rotation=0)
+            ax.text(1820, 0.034, "0.6", fontsize=8, 
+                        color = colorsForPlot[4], rotation=0)
+            ax.text(1820, 0.056, "1.0", fontsize=8, 
+                        color = colorsForPlot[5], rotation=0)
         if ii == 3:
             curvArr = patches.FancyArrowPatch((30, 0.08), (800, 0.015),
                                  connectionstyle="arc3,rad=-0.35", **kw)
@@ -942,6 +980,18 @@ def plotForArticle_DesignVariables(gitCommitID, currentDT,
                     color = '#0077b6')
             ax.text(960, 0.101, "Varying Dead Voidage", fontsize=10, 
                     color = '#0077b6')
+            ax.text(1800, 0.090, "0.10", fontsize=8, 
+                    color = colorsForPlot[0])
+            ax.text(1800, 0.074, "0.25", fontsize=8, 
+                        color = colorsForPlot[1])
+            ax.text(1800, 0.056, "0.50", fontsize=8, 
+                        color = colorsForPlot[2])
+            ax.text(1820, 0.029, "0.75", fontsize=8, 
+                        color = colorsForPlot[3])
+            ax.text(1820, 0.013, "0.90", fontsize=8, 
+                        color = colorsForPlot[4])
+            ax.text(1820, 0.003, "0.99", fontsize=8, 
+                        color = colorsForPlot[5])
         
     #  Save the figure
     if saveFlag:
