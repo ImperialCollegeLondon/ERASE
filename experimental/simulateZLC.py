@@ -9,9 +9,14 @@
 # Authors:  Ashwin Kumar Rajagopalan (AK)
 #
 # Purpose:
-# Simulates the ZLC setup
+# Simulates the ZLC setup. This is inspired from Ruthven's work and from the 
+# sensor model. Note that there is no analytical solution and it uses a full 
+# model with mass transfer defined using linear driving force.
 #
 # Last modified:
+# - 2021-04-27, AK: Fix inputs and add isotherm model as input
+# - 2021-04-26, AK: Revamp the code for real sorbent simulation
+# - 2021-03-25, AK: Remove the constant F model
 # - 2021-03-01, AK: Initial creation
 #
 # Input arguments:
@@ -21,11 +26,15 @@
 #
 ############################################################################
 
-def simulateFullModel(**kwargs):
+def simulateZLC(**kwargs):
     import numpy as np
     from scipy.integrate import solve_ivp
-    from simulateSensorArray import simulateSensorArray
+    from computeEquilibriumLoading import computeEquilibriumLoading
     import auxiliaryFunctions
+    import os
+    
+    # Move to top level folder (to avoid path issues)
+    os.chdir("..")
     
     # Plot flag
     plotFlag = False
@@ -35,25 +44,12 @@ def simulateFullModel(**kwargs):
     
     # Get the current date and time for saving purposes    
     currentDT = auxiliaryFunctions.getCurrentDateTime()
-       
-    # Model flag (constant pressure or constant flow rate)
-    # Default is constant pressure
-    if 'modelConstF' in kwargs:
-        modelConstF = kwargs["modelConstF"]
-    else:
-        modelConstF = False
-    
-    # Sensor ID
-    if 'sensorID' in kwargs:
-        sensorID = np.array([kwargs["sensorID"]])
-    else:
-        sensorID = np.array([6])
 
     # Kinetic rate constants [/s]
     if 'rateConstant' in kwargs:
         rateConstant = np.array(kwargs["rateConstant"])
     else:
-        rateConstant = np.array([.01,.01,.01])
+        rateConstant = np.array([0.1])
 
     # Feed flow rate [m3/s]
     if 'flowIn' in kwargs:
@@ -65,48 +61,63 @@ def simulateFullModel(**kwargs):
     if 'feedMoleFrac' in kwargs:
         feedMoleFrac = np.array(kwargs["feedMoleFrac"])
     else:
-        feedMoleFrac = np.array([1.,0.,0.])
+        feedMoleFrac = np.array([0.])
 
     # Initial Gas Mole Fraction [-]
     if 'initMoleFrac' in kwargs:
         initMoleFrac = np.array(kwargs["initMoleFrac"])
     else:
         # Equilibrium process
-        initMoleFrac = np.array([0.,0.,1.])
+        initMoleFrac = np.array([1.])
 
     # Time span for integration [tuple with t0 and tf]
     if 'timeInt' in kwargs:
         timeInt = kwargs["timeInt"]
     else:
-        timeInt = (0.0,2000)
+        timeInt = (0.0,300)
+        
+    # Flag to check if experimental data used
+    if 'expFlag' in kwargs:
+        expFlag = kwargs["expFlag"]
+    else:
+        expFlag = False
+
+    # If experimental data used, then initialize ode evaluation time to 
+    # experimental time, else use default
+    if expFlag is False:
+        t_eval = np.arange(timeInt[0],timeInt[-1],0.1)
+    else:
+        # Use experimental time (from timeInt) for ode evaluations to avoid
+        # interpolating any data. t_eval is also used for interpolating
+        # flow rate in the ode equations
+        t_eval = timeInt
+        timeInt = (0.0,max(timeInt))
                     
     # Volume of sorbent material [m3]
     if 'volSorbent' in kwargs:
         volSorbent = kwargs["volSorbent"]
     else:
-        volSorbent = 5e-7
+        volSorbent = 1.5e-8
         
     # Volume of gas chamber (dead volume) [m3]
     if 'volGas' in kwargs:
         volGas = kwargs["volGas"]
     else:
-        volGas = 5e-7
+        volGas = 2.5e-8
         
-    # Total volume of the system [m3]
-    if 'volTotal' in kwargs:
-        volTotal = kwargs["volTotal"]
-        if 'voidFrac' in kwargs:
-            voidFrac = kwargs["voidFrac"]
-        else:
-            raise Exception("You should provide void fraction if you provide total volume!")
-        volGas = voidFrac * volTotal # Volume of gas chamber (dead volume) [m3]
-        volSorbent = (1-voidFrac) * volTotal # Volume of solid sorbent [m3]
-
-    if (len(feedMoleFrac) != len(initMoleFrac) 
-        or len(feedMoleFrac) != len(rateConstant)):
-        raise Exception("The dimensions of the mole fraction or rate constant and the number of gases in the adsorbent is not consistent!")
+    # Isotherm model parameters  (SSL or DSL)
+    if 'isothermModel' in kwargs:
+        isothermModel = kwargs["isothermModel"]
     else:
-        numberOfGases = len(feedMoleFrac)
+        # Default isotherm model is DSL and uses CO2 isotherm on AC8
+        # Reference: 10.1007/s10450-020-00268-7
+        isothermModel = [0.44, 3.17e-6, 28.63e3, 6.10, 3.21e-6, 20.37e3]
+
+    # Adsorbent density [kg/m3]
+    if 'adsorbentDensity' in kwargs:
+        adsorbentDensity = kwargs["adsorbentDensity"]
+    else:
+        adsorbentDensity = 760 # Activated carbon density [kg/m3]
 
     # Total pressure of the gas [Pa]
     if 'pressureTotal' in kwargs:
@@ -122,158 +133,94 @@ def simulateFullModel(**kwargs):
         temperature = np.array([298.15]);
         
     # Compute the initial sensor loading [mol/m3] @ initMoleFrac
-    sensorLoadingPerGasVol, adsorbentDensity, molecularWeight  = simulateSensorArray(sensorID, pressureTotal,
-                                                                                     temperature, np.array([initMoleFrac]),
-                                                                                     fullModel = True)
+    equilibriumLoading  = computeEquilibriumLoading(pressureTotal=pressureTotal,
+                                                    temperature=temperature,
+                                                    moleFrac=initMoleFrac,
+                                                    isothermModel=isothermModel)*adsorbentDensity # [mol/m3]
     
     # Prepare tuple of input parameters for the ode solver
-    inputParameters = (sensorID, adsorbentDensity, rateConstant, numberOfGases, flowIn, 
-                       feedMoleFrac, initMoleFrac, pressureTotal, temperature, volSorbent, volGas)
+    inputParameters = (adsorbentDensity, isothermModel, rateConstant, flowIn, feedMoleFrac, 
+                       initMoleFrac, pressureTotal, temperature, volSorbent, volGas)
             
     # Solve the system of ordinary differential equations
     # Stiff solver used for the problem: BDF or Radau
-    # The output is print out every 5 s
-    # Solves the model assuming constant flow rate at the inlet and outlet
-    if modelConstF:
-        # Prepare initial conditions vector
-        initialConditions = np.zeros([2*numberOfGases])
-        initialConditions[0:numberOfGases-1] = initMoleFrac[0:numberOfGases-1] # Gas mole fraction
-        initialConditions[numberOfGases-1:2*numberOfGases-1] = sensorLoadingPerGasVol # Initial Loading
-        initialConditions[2*numberOfGases-1] = pressureTotal # Outlet pressure the same as inlet pressure
-        outputSol = solve_ivp(solveSorptionEquationConstF, timeInt, initialConditions, 
-                              method='Radau', t_eval = np.arange(timeInt[0],timeInt[1],5),
-                              rtol = 1e-6, args = inputParameters)
-
-        # Flow out vector in output
-        flowOutVec =  flowIn * np.ones(len(outputSol.t)) # Constant flow rate
-
-        # Parse out the output matrix and add flow rate
-        resultMat = np.row_stack((outputSol.y,flowOutVec))
-
+    # The output is print out every 0.1 s
     # Solves the model assuming constant/negligible pressure across the sensor
-    else:
-        # Prepare initial conditions vector
-        initialConditions = np.zeros([2*numberOfGases-1])
-        initialConditions[0:numberOfGases-1] = initMoleFrac[0:numberOfGases-1] # Gas mole fraction
-        initialConditions[numberOfGases-1:2*numberOfGases-1] = sensorLoadingPerGasVol # Initial Loading
-        outputSol = solve_ivp(solveSorptionEquationConstP, timeInt, initialConditions, 
-                              method='Radau', t_eval = np.arange(timeInt[0],timeInt[1],5),
-                              rtol = 1e-6, args = inputParameters)
-        
-        # Presure vector in output
-        pressureVec =  pressureTotal * np.ones(len(outputSol.t)) # Constant pressure
+    # Prepare initial conditions vector
+    initialConditions = np.zeros([2])
+    initialConditions[0] = initMoleFrac[0] # Gas mole fraction
+    initialConditions[1] = equilibriumLoading # Initial Loading
 
-        # Compute the outlet flow rate
-        dqdt = np.gradient(outputSol.y[numberOfGases-1:2*numberOfGases-1,:],
-                           outputSol.t, axis=1) # Compute gradient of loading
-        sum_dqdt = np.sum(dqdt, axis=0) # Time resolved sum of gradient
-        flowOut = flowIn - ((volSorbent*(8.314*temperature)/pressureTotal)*(sum_dqdt))
-        
-        # Parse out the output matrix and add flow rate
-        resultMat = np.row_stack((outputSol.y,pressureVec,flowOut))
+    outputSol = solve_ivp(solveSorptionEquation, timeInt, initialConditions, 
+                          method='Radau', t_eval = t_eval,
+                          rtol = 1e-8, args = inputParameters)
+    
+    # Presure vector in output
+    pressureVec =  pressureTotal * np.ones(len(outputSol.t)) # Constant pressure
+
+    # Compute the outlet flow rate
+    sum_dqdt = np.gradient(outputSol.y[1,:],
+                       outputSol.t) # Compute gradient of loading
+    flowOut = flowIn - ((volSorbent*(8.314*temperature)/pressureTotal)*(sum_dqdt))
+    
+    # Parse out the output matrix and add flow rate
+    resultMat = np.row_stack((outputSol.y,pressureVec,flowOut))
 
     # Parse out the time
     timeSim = outputSol.t
     
-    # Compute the time resolved sensor response
-    sensorFingerPrint = np.zeros([len(timeSim)])
-    for ii in range(len(timeSim)):
-        loadingTemp = resultMat[numberOfGases-1:2*numberOfGases-1,ii]
-        sensorFingerPrint[ii] = np.dot(loadingTemp,molecularWeight)/adsorbentDensity
-        
     # Call the plotting function
     if plotFlag:
-        plotFullModelResult(timeSim, resultMat, sensorFingerPrint, inputParameters,
-                            gitCommitID, currentDT, modelConstF)
+        plotFullModelResult(timeSim, resultMat, inputParameters,
+                            gitCommitID, currentDT)
+    
+    # Move to local folder (to avoid path issues)
+    os.chdir("experimental")
     
     # Return time and the output matrix
-    return timeSim, resultMat, sensorFingerPrint, inputParameters
+    return timeSim, resultMat, inputParameters
 
-# func: solveSorptionEquationConstF - Constant flow rate model
-# Solves the system of ODEs to evaluate the gas composition, loadings, and pressure
-def solveSorptionEquationConstF(t, f, *inputParameters):  
-    import numpy as np
-    from simulateSensorArray import simulateSensorArray
-
-    # Gas constant
-    Rg = 8.314; # [J/mol K]
-    
-    # Unpack the tuple of input parameters used to solve equations
-    sensorID, _ , rateConstant, numberOfGases, flowIn, feedMoleFrac, _ , pressureTotal, temperature, volSorbent, volGas = inputParameters
-
-    # Initialize the derivatives to zero
-    df = np.zeros([2*numberOfGases])
-    
-    # Compute the equilbirium loading at the current gas composition
-    currentGasComposition = np.concatenate((f[0:numberOfGases-1],
-                                            np.array([1.-np.sum(f[0:numberOfGases-1])])))
-    sensorLoadingPerGasVol, _ , _ = simulateSensorArray(sensorID, f[2*numberOfGases-1],
-                                                        temperature, np.array([currentGasComposition]),
-                                                        fullModel = True)
-    
-    # Linear driving force model (derivative of solid phase loadings)
-    df[numberOfGases-1:2*numberOfGases-1] = np.multiply(rateConstant,(sensorLoadingPerGasVol-f[numberOfGases-1:2*numberOfGases-1]))
-
-    # Total mass balance
-    # Assumes constant flow rate, so pressure evalauted
-    term1 = 1/volGas
-    term2 = ((flowIn*pressureTotal) - (flowIn*f[2*numberOfGases-1])
-             - ((volSorbent*(Rg*temperature))*(np.sum(df[numberOfGases-1:2*numberOfGases-1]))))
-    df[2*numberOfGases-1] = term1*term2
-    
-    # Component mass balance
-    term1 = 1/volGas
-    for ii in range(numberOfGases-1):
-        term2 = (flowIn*(pressureTotal*feedMoleFrac[ii] - f[2*numberOfGases-1]*f[ii])
-                 - (volSorbent*(Rg*temperature))*df[ii+numberOfGases-1])
-        df[ii] = (term1*term2 - f[ii]*df[2*numberOfGases-1])/f[2*numberOfGases-1]
-    
-    # Return the derivatives for the solver
-    return df
-
-# func: solveSorptionEquationConstP - Constant pressure model
+# func: solveSorptionEquation - Constant pressure model
 # Solves the system of ODEs to evaluate the gas composition and loadings
-def solveSorptionEquationConstP(t, f, *inputParameters):  
+def solveSorptionEquation(t, f, *inputParameters):  
     import numpy as np
-    from simulateSensorArray import simulateSensorArray
-
+    from computeEquilibriumLoading import computeEquilibriumLoading
+    
     # Gas constant
     Rg = 8.314; # [J/mol K]
-    
+
     # Unpack the tuple of input parameters used to solve equations
-    sensorID, _ , rateConstant, numberOfGases, flowIn, feedMoleFrac, _ , pressureTotal, temperature, volSorbent, volGas = inputParameters
+    adsorbentDensity, isothermModel, rateConstant, flowIn, feedMoleFrac, _ , pressureTotal, temperature, volSorbent, volGas = inputParameters
 
     # Initialize the derivatives to zero
-    df = np.zeros([2*numberOfGases-1])
+    df = np.zeros([2])
     
-    # Compute the equilbirium loading at the current gas composition
-    currentGasComposition = np.concatenate((f[0:numberOfGases-1],
-                                            np.array([1.-np.sum(f[0:numberOfGases-1])])))
-    sensorLoadingPerGasVol, _ , _ = simulateSensorArray(sensorID, pressureTotal,
-                                                        temperature, np.array([currentGasComposition]),
-                                                        fullModel = True)
-    
+    # Compute the initial sensor loading [mol/m3] @ initMoleFrac
+    equilibriumLoading  = computeEquilibriumLoading(pressureTotal=pressureTotal,
+                                                    temperature=temperature,
+                                                    moleFrac=f[0],
+                                                    isothermModel=isothermModel)*adsorbentDensity # [mol/m3]
+
     # Linear driving force model (derivative of solid phase loadings)
-    df[numberOfGases-1:2*numberOfGases-1] = np.multiply(rateConstant,(sensorLoadingPerGasVol-f[numberOfGases-1:2*numberOfGases-1]))
+    df[1] = rateConstant*(equilibriumLoading-f[1])
 
     # Total mass balance
     # Assumes constant pressure, so flow rate evalauted
-    flowOut = flowIn - ((volSorbent*(Rg*temperature)/pressureTotal)*(np.sum(df[numberOfGases-1:2*numberOfGases-1])))
+    flowOut = flowIn - (volSorbent*(Rg*temperature)/pressureTotal)*df[1]
     
     # Component mass balance
     term1 = 1/volGas
-    for ii in range(numberOfGases-1):
-        term2 = ((flowIn*feedMoleFrac[ii] - flowOut*f[ii])
-                 - (volSorbent*(Rg*temperature)/pressureTotal)*df[ii+numberOfGases-1])
-        df[ii] = term1*term2
+    term2 = ((flowIn*feedMoleFrac - flowOut*f[0])
+             - (volSorbent*(Rg*temperature)/pressureTotal)*df[1])
+    df[0] = term1*term2
     
     # Return the derivatives for the solver
     return df
 
 # func: plotFullModelResult
 # Plots the model output for the conditions simulated locally
-def plotFullModelResult(timeSim, resultMat, sensorFingerPrint, inputParameters,
-                        gitCommitID, currentDT, modelConstF):
+def plotFullModelResult(timeSim, resultMat, inputParameters,
+                        gitCommitID, currentDT):
     import numpy as np
     import os
     import matplotlib.pyplot as plt
@@ -283,107 +230,51 @@ def plotFullModelResult(timeSim, resultMat, sensorFingerPrint, inputParameters,
     saveFileExtension = ".png"
     
     # Unpack the tuple of input parameters used to solve equations
-    sensorID, _ , _ , _ , flowIn, _ , _ , _ , temperature, _ , _ = inputParameters
+    adsorbentDensity , _ , _ , flowIn, _ , _ , _ , temperature, _ , _ = inputParameters
 
     os.chdir("plotFunctions")
-    if resultMat.shape[0] == 7:
-        # Plot the solid phase compositions
-        plt.style.use('doubleColumn.mplstyle') # Custom matplotlib style file
-        fig = plt.figure        
-        ax = plt.subplot(1,3,1)
-        ax.plot(timeSim, resultMat[2,:],
-                 linewidth=1.5,color='r')
-        ax.set(xlabel='$t$ [s]', 
-               ylabel='$q_1$ [mol m$^{\mathregular{-3}}$]',
-               xlim = [timeSim[0], timeSim[-1]], ylim = [0, 1.1*np.max(resultMat[2,:])])
-        
-        ax = plt.subplot(1,3,2)
-        ax.plot(timeSim, resultMat[3,:],
-                 linewidth=1.5,color='b')
-        ax.set(xlabel='$t$ [s]', 
-           ylabel='$q_2$ [mol m$^{\mathregular{-3}}$]',
-           xlim = [timeSim[0], timeSim[-1]], ylim = [0, 1.1*np.max(resultMat[3,:])])
-        
-        ax = plt.subplot(1,3,3)
-        ax.plot(timeSim, resultMat[4,:],
-                 linewidth=1.5,color='g')
-        ax.set(xlabel='$t$ [s]', 
-           ylabel='$q_3$ [mol m$^{\mathregular{-3}}$]',
-           xlim = [timeSim[0], timeSim[-1]], ylim = [0, 1.1*np.max(resultMat[4,:])])
-        
-        #  Save the figure
-        if saveFlag:
-            # FileName: solidLoadingFM_<sensorID>_<currentDateTime>_<gitCommitID>
-            saveFileName = "solidLoadingFM_" + str(sensorID) + "_" + currentDT + "_" + gitCommitID + saveFileExtension
-            savePath = os.path.join('..','simulationFigures',saveFileName.replace('[','').replace(']',''))
-            # Check if inputResources directory exists or not. If not, create the folder
-            if not os.path.exists(os.path.join('..','simulationFigures')):
-                os.mkdir(os.path.join('..','simulationFigures'))
-            plt.savefig (savePath)
-            
-        plt.show()
-            
-        # Plot the pressure drop, the flow rate, and the mole fraction
-        plt.style.use('doubleColumn.mplstyle') # Custom matplotlib style file
-        fig = plt.figure
-        ax = plt.subplot(1,3,1)
-        ax.plot(timeSim, resultMat[5,:],
-                 linewidth=1.5,color='r')
-        ax.set_xlabel('$t$ [s]') 
-        ax.set_ylabel('$P$ [Pa]', color='r')
-        ax.tick_params(axis='y', labelcolor='r')
-        ax.set(xlim = [timeSim[0], timeSim[-1]], 
-               ylim = [0, 1.1*np.max(resultMat[5,:])])
+    # Plot the solid phase compositions
+    plt.style.use('doubleColumn.mplstyle') # Custom matplotlib style file
+    fig = plt.figure        
+    ax = plt.subplot(1,3,1)
+    ax.plot(timeSim, resultMat[1,:]/adsorbentDensity,
+             linewidth=1.5,color='r')
+    ax.set(xlabel='$t$ [s]', 
+           ylabel='$q_1$ [mol kg$^{\mathregular{-1}}$]',
+           xlim = [timeSim[0], timeSim[-1]], ylim = [0, 1.1*np.max(resultMat[1,:]/adsorbentDensity)])
+    
+    ax = plt.subplot(1,3,2)
+    ax.semilogy(timeSim, resultMat[0,:],linewidth=1.5,color='r')
+    ax.set(xlabel='$t$ [s]', 
+       ylabel='$y$ [-]',
+       xlim = [timeSim[0], timeSim[-1]], ylim = [1e-4, 1.])
+    
+    ax = plt.subplot(1,3,3)
+    ax.plot(timeSim, resultMat[2,:],
+             linewidth=1.5,color='r')
+    ax.set_xlabel('$t$ [s]') 
+    ax.set_ylabel('$P$ [Pa]', color='r')
+    ax.tick_params(axis='y', labelcolor='r')
+    ax.set(xlim = [timeSim[0], timeSim[-1]], 
+           ylim = [0, 1.1*np.max(resultMat[2,:])])
 
-        ax2 = plt.twinx()
-        ax2.plot(timeSim, resultMat[6,:],
-                 linewidth=1.5,color='b')
-        ax2.set_ylabel('$F$ [m$^{\mathregular{3}}$ s$^{\mathregular{-1}}$]', color='b')
-        ax2.tick_params(axis='y', labelcolor='b')
-        ax2.set(xlim = [timeSim[0], timeSim[-1]], 
-               ylim = [0, 1.1*np.max(resultMat[6,:])])
-        
-        ax = plt.subplot(1,3,2)
-        ax.plot(timeSim, resultMat[5,:]*resultMat[6,:]/(temperature*8.314),
-                 linewidth=1.5,color='k')
-        ax.plot(timeSim, resultMat[5,:]*resultMat[6,:]*resultMat[0,:]/(temperature*8.314),
-                 linewidth=1.5,color='r')
-        ax.plot(timeSim, resultMat[5,:]*resultMat[6,:]*resultMat[1,:]/(temperature*8.314),
-                 linewidth=1.5,color='b')
-        ax.plot(timeSim, resultMat[5,:]*resultMat[6,:]*(1-resultMat[0,:]-resultMat[1,:])/(temperature*8.314),
-                 linewidth=1.5,color='g')
-        ax.set(xlabel='$t$ [s]', 
-           ylabel='$Q$ [mol s$^{\mathregular{-1}}$]',
-           xlim = [timeSim[0], timeSim[-1]], ylim = [0, 1.1*np.max(resultMat[5,:])*np.max(resultMat[6,:])
-                                                     /temperature/8.314])
-           
-        ax = plt.subplot(1,3,3)
-        ax.plot(timeSim, resultMat[0,:],linewidth=1.5,color='r')
-        ax.plot(timeSim, resultMat[1,:],linewidth=1.5,color='b')        
-        ax.plot(timeSim, 1-resultMat[0,:]-resultMat[1,:],linewidth=1.5,color='g')
-        ax.set(xlabel='$t$ [s]', 
-           ylabel='$y$ [-]',
-           xlim = [timeSim[0], timeSim[-1]], ylim = [0, 1.])
-        plt.show()
-        
-        # Plot the sensor finger print
-        plt.style.use('singleColumn.mplstyle') # Custom matplotlib style file
-        fig = plt.figure
-        ax = plt.subplot(1,1,1)
-        ax.plot(timeSim, sensorFingerPrint,
-                 linewidth=1.5,color='k')
-        ax.set(xlabel='$t$ [s]', 
-           ylabel='$m_i$ [g kg$^{\mathregular{-1}}$]',
-           xlim = [timeSim[0], timeSim[-1]], ylim = [0, 1.1*np.max(sensorFingerPrint)])
-        #  Save the figure
-        if saveFlag:
-            # FileName: SensorFingerPrintFM_<sensorID>_<currentDateTime>_<gitCommitID>
-            saveFileName = "SensorFingerPrintFM_" + str(sensorID) + "_" + currentDT + "_" + gitCommitID + saveFileExtension
-            savePath = os.path.join('..','simulationFigures',saveFileName.replace('[','').replace(']',''))
-            # Check if inputResources directory exists or not. If not, create the folder
-            if not os.path.exists(os.path.join('..','simulationFigures')):
-                os.mkdir(os.path.join('..','simulationFigures'))
-            plt.savefig (savePath)
-        plt.show()
+    ax2 = plt.twinx()
+    ax2.plot(timeSim, resultMat[3,:],
+             linewidth=1.5,color='b')
+    ax2.set_ylabel('$F$ [m$^{\mathregular{3}}$ s$^{\mathregular{-1}}$]', color='b')
+    ax2.tick_params(axis='y', labelcolor='b')
+    ax2.set(xlim = [timeSim[0], timeSim[-1]], 
+           ylim = [0, 1.1*np.max(resultMat[3,:])])
+    
+    #  Save the figure
+    if saveFlag:
+        # FileName: ZLCResponse_<currentDateTime>_<gitCommitID>
+        saveFileName = "ZLCResponse_" + "_" + currentDT + "_" + gitCommitID + saveFileExtension
+        savePath = os.path.join('..','simulationFigures',saveFileName.replace('[','').replace(']',''))
+        # Check if inputResources directory exists or not. If not, create the folder
+        if not os.path.exists(os.path.join('..','simulationFigures')):
+            os.mkdir(os.path.join('..','simulationFigures'))
+        plt.savefig (savePath)
+    plt.show()
 
     os.chdir("..")
