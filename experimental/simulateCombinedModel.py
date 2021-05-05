@@ -80,7 +80,7 @@ def simulateCombinedModel(**kwargs):
     if 'deadVolumeFile' in kwargs:
         deadVolumeFile = kwargs["deadVolumeFile"]
     else:
-        deadVolumeFile = 'deadVolumeCharacteristics_20210502_2023_10a7d64.npz'  
+        deadVolumeFile = 'deadVolumeCharacteristics_20210504_1818_76a69ff.npz'  
         
     # Flag to check if experimental data used
     if 'expFlag' in kwargs:

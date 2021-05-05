@@ -17,6 +17,7 @@
 # Reference: 10.1007/s10450-012-9417-z
 #
 # Last modified:
+# - 2021-05-04, AK: Bug fix for error computation
 # - 2021-05-04, AK: Modify error computation for dead volume
 # - 2021-04-27, AK: Cosmetic changes to structure
 # - 2021-04-21, AK: Change model to fix split velocity
@@ -148,8 +149,6 @@ def deadVolObjectiveFunction(x):
         
     # Initialize error for objective function
     computedError = 0 # Total error
-    computedErrorHigh = 0 # High composition error
-    computedErrorLow = 0 # Low composition error
     numPoints = 0
     expVolume = 0
     # Loop over all available files    
@@ -198,7 +197,7 @@ def deadVolObjectiveFunction(x):
         # Compute error for higher concentrations (accounting for downsampling)
         moleFracHighExp = moleFracExp[0:lastIndThreshold]
         moleFracHighSim = moleFracSim[0:lastIndThreshold]
-        computedErrorHigh += np.log(np.sum(np.power(moleFracHighExp[::int(np.round(downsampleConc[0]))] 
+        computedErrorHigh = np.log(np.sum(np.power(moleFracHighExp[::int(np.round(downsampleConc[0]))] 
                                                     - moleFracHighSim[::int(np.round(downsampleConc[0]))],2)))
         
         # Find scaling factor for lower concentrations
@@ -208,10 +207,10 @@ def deadVolObjectiveFunction(x):
         moleFracLowSim = moleFracSim[lastIndThreshold:-1]*scalingFactor
 
         # Compute error for low concentrations (accounting for downsampling)
-        computedErrorLow += np.log(np.sum(np.power(moleFracLowExp[::int(np.round(downsampleConc[1]))] 
+        computedErrorLow = np.log(np.sum(np.power(moleFracLowExp[::int(np.round(downsampleConc[1]))] 
                                                     - moleFracLowSim[::int(np.round(downsampleConc[1]))],2)))
         
-        # Find the overall computed error
+        # Find the sum of computed error
         computedError += computedErrorHigh + computedErrorLow
         
         # Compute the number of points per experiment (accouting for down-
@@ -224,7 +223,7 @@ def deadVolObjectiveFunction(x):
     if sum(x[0:3])>1.5*expVolume:
         penaltyObj = 10000
     # Compute the sum of the error for the difference between exp. and sim. and
-    # add a penalty if needed
+    # add a penalty if needed (using MLE)
     return (numPoints/2)*(computedError) + penaltyObj
 
 # func: filesToProcess

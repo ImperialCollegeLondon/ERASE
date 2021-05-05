@@ -12,6 +12,7 @@
 # Plots for the experimental outcome (along with model)
 #
 # Last modified:
+# - 2021-05-04, AK: Bug fix for error computation
 # - 2021-05-04, AK: Implement plots for ZLC and change DV error computaiton
 # - 2021-04-20, AK: Implement time-resolved experimental flow rate for DV
 # - 2021-04-16, AK: Initial creation
@@ -51,7 +52,7 @@ flagDeadVolume = True
 simulateModel = True
 
 # Flag to plot dead volume results
-plotFt = True
+plotFt = False
 
 # Directory of raw data
 mainDir = '/Users/ash23win/Google Drive/ERASE/experimental/runData/'
@@ -69,7 +70,7 @@ if flagDeadVolume:
                 'ZLC_DeadVolume_Exp15C_Output_10a7d64.npz']
     # File with parameter estimates
     simulationDir = '/Users/ash23win/Google Drive/ERASE/simulationResults/'
-    fileParameter = 'deadVolumeCharacteristics_20210503_0956_cb5686f.npz'
+    fileParameter = 'deadVolumeCharacteristics_20210504_1818_76a69ff.npz'
     modelOutputTemp = load(simulationDir+fileParameter, allow_pickle=True)["modelOutput"]
     x = modelOutputTemp[()]["variable"]
     
@@ -86,8 +87,7 @@ if flagDeadVolume:
     # Print the objective function and volume from model parameters
     print("Objective Function",round(modelOutputTemp[()]["function"],0))
     print("Model Volume",round(sum(x[0:2]),2))
-    computedErrorHigh = 0
-    computedErrorLow = 0
+    computedError = 0
     numPoints = 0
     # Create the instance for the plots
     fig = plt.figure
@@ -144,7 +144,7 @@ if flagDeadVolume:
             # Compute error for higher concentrations
             moleFracHighExp = moleFracExp[0:lastIndThreshold]
             moleFracHighSim = moleFracSim[0:lastIndThreshold]
-            computedErrorHigh += np.log(np.sum(np.power(moleFracHighExp[::int(np.round(downsampleConc[0]))] 
+            computedErrorHigh = np.log(np.sum(np.power(moleFracHighExp[::int(np.round(downsampleConc[0]))] 
                                                         - moleFracHighSim[::int(np.round(downsampleConc[0]))],2)))
             
             # Find scaling factor for lower concentrations
@@ -154,8 +154,11 @@ if flagDeadVolume:
             moleFracLowSim = moleFracSim[lastIndThreshold:-1]*scalingFactor
 
             # Compute error for low concentrations (also scaling the compositions)
-            computedErrorLow += np.log(np.sum(np.power(moleFracLowExp[::int(np.round(downsampleConc[1]))] 
+            computedErrorLow = np.log(np.sum(np.power(moleFracLowExp[::int(np.round(downsampleConc[1]))] 
                                                         - moleFracLowSim[::int(np.round(downsampleConc[1]))],2)))
+            
+            # Find the sum of computed error
+            computedError += computedErrorHigh + computedErrorLow
             
             # Compute the number of points per experiment (accouting for down-
             # sampling in both experiments and high and low compositions
@@ -227,8 +230,9 @@ if flagDeadVolume:
                 if not os.path.exists(os.path.join('..','simulationFigures')):
                     os.mkdir(os.path.join('..','simulationFigures'))
                 plt.savefig (savePath)
-                
-    print(numPoints*(computedErrorHigh+computedErrorLow)/2) 
+       
+    # Print the MLE error
+    print(np.round(numPoints*(computedError)/2,0)) 
     
 else:
     from simulateCombinedModel import simulateCombinedModel
@@ -250,7 +254,7 @@ else:
     x = np.multiply(modelNonDim,[10, 1e-5, 50e3, 10, 1e-5, 50e3, 100])
     
     # Ronny AC Data
-    # x = [0.44, 3.17e-6, 28.63e3, 6.10, 3.21e-6, 20.37e3,100]
+    x = [0.44, 3.17e-6, 28.63e3, 6.10, 3.21e-6, 20.37e3,100]
 
     computedError = 0
     numPoints = 0
