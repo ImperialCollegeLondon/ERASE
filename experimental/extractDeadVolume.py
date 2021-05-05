@@ -17,7 +17,8 @@
 # Reference: 10.1007/s10450-012-9417-z
 #
 # Last modified:
-# - 2021-05-04, AK: Bug fix for error computation
+# - 2021-05-05, AK: Bug fix for MLE error computation
+# - 2021-05-05, AK: Bug fix for error computation
 # - 2021-05-04, AK: Modify error computation for dead volume
 # - 2021-04-27, AK: Cosmetic changes to structure
 # - 2021-04-21, AK: Change model to fix split velocity
@@ -133,6 +134,7 @@ def extractDeadVolume():
 def deadVolObjectiveFunction(x):
     import numpy as np
     from simulateDeadVolume import simulateDeadVolume
+    from computeMLEError import computeMLEError
     from numpy import load
     
     # Load the names of the file to be used for estimating dead volume characteristics
@@ -149,16 +151,13 @@ def deadVolObjectiveFunction(x):
         
     # Initialize error for objective function
     computedError = 0 # Total error
-    numPoints = 0
+    moleFracExpALL = np.array([])
+    moleFracSimALL = np.array([])
     expVolume = 0
     # Loop over all available files    
     for ii in range(len(filePath)):
         # Initialize outputs
-        moleFracSim = []  
-        moleFracHighExp = []
-        moleFracHighSim = []
-        moleFracLowExp = []
-        moleFracLowExp = []
+        moleFracSim = []
         # Load experimental time, molefraction and flowrate (accounting for downsampling)
         timeElapsedExpTemp = load(filePath[ii])["timeElapsed"].flatten()
         moleFracExpTemp = load(filePath[ii])["moleFrac"].flatten()
@@ -182,40 +181,11 @@ def deadVolObjectiveFunction(x):
                                                 timeInt = timeInt,
                                                 flowRate = flowRateExp,
                                                 expFlag = True)
-                
-        # Objective function error
-        # Find error for mole fraction below a given threshold
-        thresholdFactor = 1e-2 
-        lastIndThreshold = int(np.argwhere(np.array(moleFracExp)>thresholdFactor)[-1])
-        # Do downsampling if the number of points in higher and lower
-        # compositions does not match
-        numPointsConc = np.zeros([2])
-        numPointsConc[0] = len(moleFracExp[0:lastIndThreshold]) # High composition
-        numPointsConc[1] = len(moleFracExp[lastIndThreshold:-1]) # Low composition            
-        downsampleConc = numPointsConc/np.min(numPointsConc) # Downsampled intervals
-        
-        # Compute error for higher concentrations (accounting for downsampling)
-        moleFracHighExp = moleFracExp[0:lastIndThreshold]
-        moleFracHighSim = moleFracSim[0:lastIndThreshold]
-        computedErrorHigh = np.log(np.sum(np.power(moleFracHighExp[::int(np.round(downsampleConc[0]))] 
-                                                    - moleFracHighSim[::int(np.round(downsampleConc[0]))],2)))
-        
-        # Find scaling factor for lower concentrations
-        scalingFactor = int(1/thresholdFactor) # Assumes max composition is one
-        # Compute error for lower concentrations
-        moleFracLowExp = moleFracExp[lastIndThreshold:-1]*scalingFactor
-        moleFracLowSim = moleFracSim[lastIndThreshold:-1]*scalingFactor
-
-        # Compute error for low concentrations (accounting for downsampling)
-        computedErrorLow = np.log(np.sum(np.power(moleFracLowExp[::int(np.round(downsampleConc[1]))] 
-                                                    - moleFracLowSim[::int(np.round(downsampleConc[1]))],2)))
-        
-        # Find the sum of computed error
-        computedError += computedErrorHigh + computedErrorLow
-        
-        # Compute the number of points per experiment (accouting for down-
-        # sampling in both experiments and high and low compositions
-        numPoints += len(moleFracHighExp) + len(moleFracLowExp)
+                            
+        # Stack mole fraction from experiments and simulation for error 
+        # computation
+        moleFracExpALL = np.hstack((moleFracExpALL, moleFracExp))
+        moleFracSimALL = np.hstack((moleFracSimALL, moleFracSim))
 
     # Penalize if the total volume of the system is greater than experiemntal 
     # volume
@@ -224,7 +194,8 @@ def deadVolObjectiveFunction(x):
         penaltyObj = 10000
     # Compute the sum of the error for the difference between exp. and sim. and
     # add a penalty if needed (using MLE)
-    return (numPoints/2)*(computedError) + penaltyObj
+    computedError = computeMLEError(moleFracExpALL,moleFracSimALL)
+    return computedError + penaltyObj
 
 # func: filesToProcess
 # Loads .mat experimental file and processes it for python

@@ -16,6 +16,8 @@
 # Reference: 10.1016/j.ces.2014.12.062
 #
 # Last modified:
+# - 2021-05-05, AK: Bug fix for MLE error computation
+# - 2021-05-05, AK: Modify error computation for dead volume
 # - 2021-04-28, AK: Add reference values for isotherm parameters
 # - 2021-04-27, AK: Initial creation
 #
@@ -61,11 +63,7 @@ def extractZLCParameters():
     mainDir = 'runData'
     # File name of the experiments
     fileName = ['ZLC_ActivatedCarbon_Exp17A_Output.mat',
-                'ZLC_ActivatedCarbon_Exp17B_Output.mat',
-                'ZLC_ActivatedCarbon_Exp17C_Output.mat',
-                'ZLC_ActivatedCarbon_Exp17D_Output.mat',
-                'ZLC_ActivatedCarbon_Exp17E_Output.mat',
-                'ZLC_ActivatedCarbon_Exp17F_Output.mat']
+                'ZLC_ActivatedCarbon_Exp17B_Output.mat']
     
     # NOTE: Dead volume characteristics filename is hardcoded in 
     # simulateCombinedModel. This is because of the python GA function unable
@@ -145,6 +143,7 @@ def ZLCObjectiveFunction(x):
     from numpy import load
     from extractDeadVolume import filesToProcess # File processing script
     from simulateCombinedModel import simulateCombinedModel
+    from computeMLEError import computeMLEError
     
     # Reference for the isotherm parameters
     # For SSL isotherm
@@ -172,7 +171,8 @@ def ZLCObjectiveFunction(x):
     
     # Initialize error for objective function
     computedError = 0
-    numPoints = 0
+    moleFracExpALL = np.array([])
+    moleFracSimALL = np.array([])    
 
     # Loop over all available files    
     for ii in range(len(filePath)):
@@ -197,10 +197,11 @@ def ZLCObjectiveFunction(x):
                                                     flowIn = np.mean(flowRateExp[-1:-10:-1]*1e-6), # Flow rate [m3/s] for ZLC considered to be the mean of last 10 points (equilibrium)
                                                     expFlag = True)
 
-        # Compute the sum of the error for the difference between exp. and sim.
-        numPoints += len(moleFracExp)
-        computedError += np.log(np.sum(np.power(moleFracExp - moleFracSim,2)))
+        # Stack mole fraction from experiments and simulation for error 
+        # computation
+        moleFracExpALL = np.hstack((moleFracExpALL, moleFracExp))
+        moleFracSimALL = np.hstack((moleFracSimALL, moleFracSim))
 
-    # Compute the sum of the error for the difference between exp. and sim. and
-    # add a penalty if needed
-    return (numPoints/2)*computedError
+    # Compute the sum of the error for the difference between exp. and sim.
+    computedError = computeMLEError(moleFracExpALL,moleFracSimALL)
+    return computedError

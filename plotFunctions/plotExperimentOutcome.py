@@ -12,6 +12,7 @@
 # Plots for the experimental outcome (along with model)
 #
 # Last modified:
+# - 2021-05-05, AK: Bug fix for MLE error computation
 # - 2021-05-04, AK: Bug fix for error computation
 # - 2021-05-04, AK: Implement plots for ZLC and change DV error computaiton
 # - 2021-04-20, AK: Implement time-resolved experimental flow rate for DV
@@ -27,6 +28,7 @@
 
 import numpy as np
 from simulateDeadVolume import simulateDeadVolume
+from computeMLEError import computeMLEError
 from numpy import load
 import os
 import matplotlib.pyplot as plt
@@ -70,7 +72,7 @@ if flagDeadVolume:
                 'ZLC_DeadVolume_Exp15C_Output_10a7d64.npz']
     # File with parameter estimates
     simulationDir = '/Users/ash23win/Google Drive/ERASE/simulationResults/'
-    fileParameter = 'deadVolumeCharacteristics_20210504_1818_76a69ff.npz'
+    fileParameter = 'deadVolumeCharacteristics_20210505_0936_68b8ac7.npz'
     modelOutputTemp = load(simulationDir+fileParameter, allow_pickle=True)["modelOutput"]
     x = modelOutputTemp[()]["variable"]
     
@@ -89,6 +91,9 @@ if flagDeadVolume:
     print("Model Volume",round(sum(x[0:2]),2))
     computedError = 0
     numPoints = 0
+    moleFracExpALL = np.array([])
+    moleFracSimALL = np.array([])
+    
     # Create the instance for the plots
     fig = plt.figure
     ax1 = plt.subplot(1,3,1)        
@@ -129,40 +134,10 @@ if flagDeadVolume:
             print("Simulation",str(ii+1),round(np.trapz(moleFracSim,
                                                       np.multiply(flowRateExp,
                                                                   timeElapsedExp)),2))
-
-            # Objective function error
-            # Find error for mole fraction below a given threshold
-            thresholdFactor = 1e-2
-            lastIndThreshold = int(np.argwhere(np.array(moleFracExp)>thresholdFactor)[-1])
-            # Do downsampling if the number of points in higher and lower
-            # compositions does not match
-            numPointsConc = np.zeros([2])
-            numPointsConc[0] = len(moleFracExp[0:lastIndThreshold])
-            numPointsConc[1] = len(moleFracExp[lastIndThreshold:-1])            
-            downsampleConc = numPointsConc/np.min(numPointsConc)
             
-            # Compute error for higher concentrations
-            moleFracHighExp = moleFracExp[0:lastIndThreshold]
-            moleFracHighSim = moleFracSim[0:lastIndThreshold]
-            computedErrorHigh = np.log(np.sum(np.power(moleFracHighExp[::int(np.round(downsampleConc[0]))] 
-                                                        - moleFracHighSim[::int(np.round(downsampleConc[0]))],2)))
-            
-            # Find scaling factor for lower concentrations
-            scalingFactor = int(1/thresholdFactor) # Assumes max composition is one
-            # Compute error for lower concentrations
-            moleFracLowExp = moleFracExp[lastIndThreshold:-1]*scalingFactor
-            moleFracLowSim = moleFracSim[lastIndThreshold:-1]*scalingFactor
-
-            # Compute error for low concentrations (also scaling the compositions)
-            computedErrorLow = np.log(np.sum(np.power(moleFracLowExp[::int(np.round(downsampleConc[1]))] 
-                                                        - moleFracLowSim[::int(np.round(downsampleConc[1]))],2)))
-            
-            # Find the sum of computed error
-            computedError += computedErrorHigh + computedErrorLow
-            
-            # Compute the number of points per experiment (accouting for down-
-            # sampling in both experiments and high and low compositions
-            numPoints += len(moleFracHighExp) + len(moleFracLowExp)
+            # Stack mole fraction from experiments and simulation
+            moleFracExpALL = np.hstack((moleFracExpALL, moleFracExp))
+            moleFracSimALL = np.hstack((moleFracSimALL, moleFracSim))
 
         # Plot the expreimental and model output
         if not plotFt:
@@ -232,7 +207,8 @@ if flagDeadVolume:
                 plt.savefig (savePath)
        
     # Print the MLE error
-    print(np.round(numPoints*(computedError)/2,0)) 
+    computedError = computeMLEError(moleFracExpALL,moleFracSimALL)
+    print(round(computedError,1))
     
 else:
     from simulateCombinedModel import simulateCombinedModel
@@ -258,6 +234,9 @@ else:
 
     computedError = 0
     numPoints = 0
+    moleFracExpALL = np.array([])
+    moleFracSimALL = np.array([])
+    
     # Create the instance for the plots
     fig = plt.figure
     ax1 = plt.subplot(1,3,1)        
@@ -293,11 +272,11 @@ else:
             print("Simulation",str(ii+1),round(np.trapz(np.multiply(resultMat[3,:]*1e6,
                                                                   resultMat[0,:]),
                                                         timeElapsedExp),2))
-        
-            # Objective function error
-            computedError += np.log(np.sum(np.power(moleFracExp - moleFracSim,2)))
-            numPoints += len(moleFracExp)
 
+            # Stack mole fraction from experiments and simulation
+            moleFracExpALL = np.hstack((moleFracExpALL, moleFracExp))
+            moleFracSimALL = np.hstack((moleFracSimALL, moleFracSim))
+        
         # y - Linear scale
         ax1.semilogy(timeElapsedExp,moleFracExp,
                 marker = markerForPlot[ii],linewidth = 0,
@@ -346,4 +325,7 @@ else:
             plt.savefig (savePath)         
         
     plt.show()
-    print(numPoints*computedError/2)
+    
+    # Print the MLE error
+    computedError = computeMLEError(moleFracExpALL,moleFracSimALL)
+    print(round(computedError,1))
