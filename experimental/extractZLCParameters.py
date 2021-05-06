@@ -75,8 +75,8 @@ def extractZLCParameters():
     # Define the bounds and the type of the parameters to be optimized   
     # Single-site Langmuir
     if modelType == 'SSL':
-        optBounds = np.array(([np.finfo(float).eps,10], [np.finfo(float).eps,1],
-                              [np.finfo(float).eps,50e3], [np.finfo(float).eps,100]))
+        optBounds = np.array(([np.finfo(float).eps,1], [np.finfo(float).eps,1],
+                              [np.finfo(float).eps,1], [np.finfo(float).eps,1]))
         optType=np.array(['real','real','real','real'])
         problemDimension = len(optType)
     # Dual-site Langmuir
