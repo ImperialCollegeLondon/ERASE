@@ -56,27 +56,27 @@ def simulateDeadVolume(**kwargs):
     if 'deadVolume_1' in kwargs:
         deadVolume_1 = kwargs["deadVolume_1"]
     else:
-        deadVolume_1 = 3.67
+        deadVolume_1 = 4.25
     # Number of tanks of the first volume [-]
     if 'numTanks_1' in kwargs:
         numTanks_1 = kwargs["numTanks_1"]
     else:
-        numTanks_1 = 16
+        numTanks_1 = 30
     # Dead Volume of the second volume (mixing) [cc]
     if 'deadVolume_2M' in kwargs:
         deadVolume_2M = kwargs["deadVolume_2M"]
     else:
-        deadVolume_2M = 1.10 
+        deadVolume_2M = 1.59 
     # Dead Volume of the second volume (diffusive) [cc]
     if 'deadVolume_2D' in kwargs:
         deadVolume_2D = kwargs["deadVolume_2D"]
     else:
-        deadVolume_2D = 0.51 
+        deadVolume_2D = 5.93e-1
     # Flow rate in the diffusive volume [-]
     if 'flowRate_D' in kwargs:
         flowRate_D = kwargs["flowRate_D"]
     else:
-        flowRate_D = 0.009
+        flowRate_D = 1.35e-2
     # Initial Mole Fraction [-]
     if 'initMoleFrac' in kwargs:
         initMoleFrac = np.array(kwargs["initMoleFrac"])

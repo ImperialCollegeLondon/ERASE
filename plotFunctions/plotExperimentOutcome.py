@@ -54,7 +54,7 @@ flagDeadVolume = True
 simulateModel = True
 
 # Flag to plot dead volume results
-plotFt = False
+plotFt = True
 
 # Directory of raw data
 mainDir = '/Users/ash23win/Google Drive/ERASE/experimental/runData/'
@@ -72,7 +72,7 @@ if flagDeadVolume:
                 'ZLC_DeadVolume_Exp15C_Output_10a7d64.npz']
     # File with parameter estimates
     simulationDir = '/Users/ash23win/Google Drive/ERASE/simulationResults/'
-    fileParameter = 'deadVolumeCharacteristics_20210505_0936_68b8ac7.npz'
+    fileParameter = 'deadVolumeCharacteristics_20210505_1849_31987ca.npz'
     modelOutputTemp = load(simulationDir+fileParameter, allow_pickle=True)["modelOutput"]
     x = modelOutputTemp[()]["variable"]
     
@@ -93,7 +93,7 @@ if flagDeadVolume:
     numPoints = 0
     moleFracExpALL = np.array([])
     moleFracSimALL = np.array([])
-    
+
     # Create the instance for the plots
     fig = plt.figure
     ax1 = plt.subplot(1,3,1)        
@@ -208,7 +208,7 @@ if flagDeadVolume:
        
     # Print the MLE error
     computedError = computeMLEError(moleFracExpALL,moleFracSimALL)
-    print(round(computedError,1))
+    print(round(computedError,0))
     
 else:
     from simulateCombinedModel import simulateCombinedModel
@@ -222,13 +222,24 @@ else:
     # File with parameter estimates
     simulationDir = '/Users/ash23win/Google Drive/ERASE/simulationResults/'
     fileParameter = 'zlcParameters_20210428_1011_10a7d64.npz' # 17A-F
-    fileParameter = 'zlcParameters_20210503_1156_cb5686f.npz' # 17A-B
+    fileParameter = 'zlcParameters_20210505_1735_31987ca.npz' # 17A-B
     modelOutputTemp = load(simulationDir+fileParameter, allow_pickle=True)["modelOutput"]
     print("Objective Function",round(modelOutputTemp[()]["function"],0))
     modelNonDim = modelOutputTemp[()]["variable"] 
+        
+    numPointsExp = np.zeros(len(fileName))
+    for ii in range(len(fileName)): 
+        fileToLoad = mainDir + fileName[ii]
+        # Load experimental molefraction
+        timeElapsedExp = load(fileToLoad)["timeElapsed"].flatten()
+        numPointsExp[ii] = len(timeElapsedExp)
+    
+    # Downsample intervals
+    downsampleInt = numPointsExp/np.min(numPointsExp)
+    
     # Multiply the paremeters by the reference values
     x = np.multiply(modelNonDim,[10, 1e-5, 50e3, 10, 1e-5, 50e3, 100])
-    
+
     # Ronny AC Data
     x = [0.44, 3.17e-6, 28.63e3, 6.10, 3.21e-6, 20.37e3,100]
 
@@ -250,9 +261,12 @@ else:
         # Initialize outputs
         moleFracSim = []  
         # Load experimental time, molefraction and flowrate (accounting for downsampling)
-        timeElapsedExp = load(fileToLoad)["timeElapsed"].flatten()
-        moleFracExp = load(fileToLoad)["moleFrac"].flatten()
-        flowRateExp = load(fileToLoad)["flowRate"].flatten()
+        timeElapsedExpTemp = load(fileToLoad)["timeElapsed"].flatten()
+        moleFracExpTemp = load(fileToLoad)["moleFrac"].flatten()
+        flowRateTemp = load(fileToLoad)["flowRate"].flatten()
+        timeElapsedExp = timeElapsedExpTemp[::int(np.round(downsampleInt[ii]))]
+        moleFracExp = moleFracExpTemp[::int(np.round(downsampleInt[ii]))]
+        flowRateExp = flowRateTemp[::int(np.round(downsampleInt[ii]))]
                 
         # Integration and ode evaluation time (check simulateZLC/simulateDeadVolume)
         timeInt = timeElapsedExp
@@ -270,7 +284,7 @@ else:
                                                         rateConstant=x[-1])
             # Print simulation volume    
             print("Simulation",str(ii+1),round(np.trapz(np.multiply(resultMat[3,:]*1e6,
-                                                                  resultMat[0,:]),
+                                                                  moleFracSim),
                                                         timeElapsedExp),2))
 
             # Stack mole fraction from experiments and simulation
@@ -328,4 +342,4 @@ else:
     
     # Print the MLE error
     computedError = computeMLEError(moleFracExpALL,moleFracSimALL)
-    print(round(computedError,1))
+    print(round(computedError,0))
