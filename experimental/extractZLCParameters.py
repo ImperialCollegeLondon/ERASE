@@ -147,7 +147,7 @@ def ZLCObjectiveFunction(x):
     
     # Reference for the isotherm parameters
     # For SSL isotherm
-    if len(x) == 5:
+    if len(x) == 4:
         isoRef = [10, 1e-5, 50e3, 100]
     # For DSL isotherm
     elif len(x) == 7:
