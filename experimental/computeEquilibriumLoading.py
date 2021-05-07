@@ -88,7 +88,7 @@ def simulateSSL(*inputParameters):
     localConc = pressureTotal*moleFrac/(Rg*temperature)
     
     # Compute the adsorption affinity 
-    isoAffinity = isothermModel[1]*np.exp(-isothermModel[2]/(Rg*temperature))
+    isoAffinity = isothermModel[1]*np.exp(isothermModel[2]/(Rg*temperature))
     
     # Compute the numerator and denominator of a pure single site Langmuir
     isoNumerator = isothermModel[0]*isoAffinity*localConc
