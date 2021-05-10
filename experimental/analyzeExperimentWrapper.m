@@ -44,9 +44,13 @@ msCalibrationFiles = {'ZLCCalibrateMS_20210505_5ccm',...
 
 %%%% Experimet to be analyzed %%%%     
 % List the experiments that have to be analyzed
-msExpFile = 'ZLC_DeadVolume_Exp15'; % Raw MS data file name
+msExpFile = 'ZLC_DeadVolume_Exp16'; % Raw MS data file name
 % Flow rate files for experiments 
-experimentFiles = {'ZLC_DeadVolume_Exp15A'};
+experimentFiles = {'ZLC_DeadVolume_Exp16A',...
+                   'ZLC_DeadVolume_Exp16B',...
+                   'ZLC_DeadVolume_Exp16C',...
+                   'ZLC_DeadVolume_Exp16D',...
+                   'ZLC_DeadVolume_Exp16E'};
 
 % Initialize the name of the msRawFile to be used for all calibrations
 startInd = 1;
@@ -89,5 +93,25 @@ if ~isempty(experimentFiles)
         % The output is usually in runData folder
         % Syntax: analyzeExperiment(experimentStruct,calibrationMode,calibrationFlowMeter)
         analyzeExperiment(experimentStruct,false,false); % Analyze experiment
+    end
+end
+
+% Loop through all the experimental files and plot the output mole fraction
+if ~isempty(experimentFiles)
+    colorForPlot = {'5C73B9','7262C3','8852CD','9D41D7','B330E1'};
+    for ii = 1:length(experimentFiles)
+        load([experimentFiles{ii},'_Output'],'experimentOutput');
+        subplot(1,2,1)
+        semilogy(experimentOutput.timeExp,experimentOutput.moleFrac,'color',['#',colorForPlot{ii}]);
+        hold on
+        box on;grid on;
+        xlim([0,500]); ylim([0,1]);
+        xlabel('t [s]'); ylabel('y [-]');
+        subplot(1,2,2)
+        semilogy(experimentOutput.timeExp.*experimentOutput.totalFlowRate,experimentOutput.moleFrac,'color',['#',colorForPlot{ii}]);
+        hold on
+        xlim([0,100]); ylim([0,1]);      
+        xlabel('Ft [cc]'); ylabel('y [-]');        
+        box on;grid on;
     end
 end
