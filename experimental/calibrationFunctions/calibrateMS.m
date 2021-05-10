@@ -23,7 +23,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function calibrateMS(varargin)
     % Sampling time for the device
-    expInfo.samplingTime = 2;
+    expInfo.samplingTime = 1;
     % Define gas for MFM
     expInfo.gasName_MFM = 'He';
     % Define gas for MFC1
@@ -60,10 +60,10 @@ function calibrateMS(varargin)
         if ii == find(MFC1_SP == 0,1,'last')
             % Maximum time of the experiment
             % Change the max time to 10 min
-            expInfo.maxTime = 600;
+            expInfo.maxTime = 300;
         else
             % Else use 5 min
-            expInfo.maxTime = 600;
+            expInfo.maxTime = 300;
         end
         % Run the setup for different calibrations
         runZLC(expInfo)

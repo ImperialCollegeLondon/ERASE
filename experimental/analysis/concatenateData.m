@@ -207,12 +207,12 @@ function [reconciledData, expInfo] = concatenateData(fileToLoad)
             % Parse out the fitting parameters
             paramFit = calibrationMS.ratioHeCO2;
             % Use a fourier series model to obtain the mole fraction
-            moleFracTemp(:,ii) = paramFit(reconciledData.MS(:,2)./...
+            reconciledData.moleFracIndCalib(:,ii) = paramFit(reconciledData.MS(:,2)./...
                 (reconciledData.MS(:,2)+reconciledData.MS(:,3))); % He [-]
         end
         % Take the mean of all the compositions obtained from the different
         % calibrations
-        reconciledData.moleFrac(:,1) = mean(moleFracTemp,2);  % He [-]
+        reconciledData.moleFrac(:,1) = mean(reconciledData.moleFracIndCalib,2);  % He [-]
         reconciledData.moleFrac(:,2) = 1 - reconciledData.moleFrac(:,1); % CO2 [-]
     end
 end

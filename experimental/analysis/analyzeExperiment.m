@@ -82,22 +82,23 @@ function analyzeExperiment(experimentStruct,flagCalibration,flagFlowMeter)
         experimentOutput.timeExp = outputStruct.flow(1:moleFracThresholdInd,1); % Time elapsed [s]
         experimentOutput.moleFrac = outputStruct.moleFrac(1:moleFracThresholdInd,2); % Mole fraction CO2 [-]
         experimentOutput.totalFlowRate = totalFlowRate(1:moleFracThresholdInd)./60; % Total flow rate of the gas [ccs]
-
+        % Save outputStruct to semiProcessedStruct
+        semiProcessedStruct = outputStruct; % Check concatenateData for more (this is reconciledData there)
         % Save the experimental output into a .mat file
         % Check if runData data folder exists
-        if exist(['experimentalData',filesep,...
+        if exist(['..',filesep,'experimentalData',filesep,...
                 'runData'],'dir') == 7
             % Save the calibration data for further use
-            save(['experimentalData',filesep,...
+            save(['..',filesep,'experimentalData',filesep,...
                 'runData',filesep,experimentStruct.flow,'_Output'],'experimentOutput',...
-                'experimentStruct','gitCommitID');
+                'experimentStruct','semiProcessedStruct','gitCommitID');
         else
             % Create the calibration data folder if it does not exist
-            mkdir(['experimentalData',filesep,'runData'])
+            mkdir(['..',filesep,'experimentalData',filesep,'runData'])
             % Save the calibration data for further use
-            save(['experimentalData',filesep,...
+            save(['..',filesep,'experimentalData',filesep,...
                 'runData',filesep,experimentStruct.flow,'_Output'],'experimentOutput',...
-                'experimentStruct','gitCommitID');
+                'experimentStruct','semiProcessedStruct','gitCommitID');
         end
     end
 end

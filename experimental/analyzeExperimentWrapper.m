@@ -62,18 +62,18 @@ for ii = 1:length(numExpForEachRawFile)
 end
 
 % % Loop through all the MS calibration files
-% for ii = 1:length(msCalibrationFiles)
-%     experimentStruct.calibrationFlow = flowMeterCalibration; % Calibration file for meters (.mat)
-%     experimentStruct.flow = msCalibrationFiles{ii}; % Experimental flow file (.mat)
-%     experimentStruct.MS = [msFileDir,filesep,msRawFileALL{ii},'.asc']; % Experimental MS file (.asc)
-%     experimentStruct.interpMS = true; % Flag for interpolating MS data (true) or flow data (false)
-%     experimentStruct.numMean = 10; % Number of points for averaging
-%     % Call the analyzeExperiment function to calibrate the MS at the conditions
-%     % experiment was performed for calibration
-%     % The output calibration model is usually in calibration folder
-%     % Syntax: analyzeExperiment(experimentStruct,calibrationMode,calibrationFlowMeter)
-%     analyzeExperiment(experimentStruct,true,false); % Calibrate MS 
-% end
+for ii = 1:length(msCalibrationFiles)
+    calibrationStruct.calibrationFlow = flowMeterCalibration; % Calibration file for meters (.mat)
+    calibrationStruct.flow = msCalibrationFiles{ii}; % Experimental flow file (.mat)
+    calibrationStruct.MS = [msFileDir,filesep,msRawFileALL{ii},'.asc']; % Experimental MS file (.asc)
+    calibrationStruct.interpMS = true; % Flag for interpolating MS data (true) or flow data (false)
+    calibrationStruct.numMean = 10; % Number of points for averaging
+    % Call the analyzeExperiment function to calibrate the MS at the conditions
+    % experiment was performed for calibration
+    % The output calibration model is usually in calibration folder
+    % Syntax: analyzeExperiment(experimentStruct,calibrationMode,calibrationFlowMeter)
+    analyzeExperiment(calibrationStruct,true,false); % Calibrate MS 
+end
 
 % Loop through all the experimental files
 if ~isempty(experimentFiles)
@@ -82,6 +82,7 @@ if ~isempty(experimentFiles)
         experimentStruct.flow = experimentFiles{ii}; % Experimental flow file (.mat)
         experimentStruct.MS = [msFileDir,filesep,msExpFile,'.asc']; % Experimental MS file (.asc). Assumes name of file to be the date of the first flow rate
         experimentStruct.calibrationMS = msCalibrationFiles; % Experimental calibration file list
+        experimentStruct.interpMS = calibrationStruct.interpMS; % Flag for interpolating MS data, same as calibration
         experimentStruct.moleFracThreshold = 1e-3; % Threshold for cutting off data below a given mole fraction
         % Call the analyzeExperiment function to analyze the experimental data
         % using the calibration files given by msCalibrationFiles 
