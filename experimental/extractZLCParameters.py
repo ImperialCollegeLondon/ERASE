@@ -51,7 +51,7 @@ def extractZLCParameters():
     modelType = 'SSL'
     
     # Number of times optimization repeated
-    numOptRepeat = 10
+    numOptRepeat = 5
     
     # Get the commit ID of the current repository
     gitCommitID = auxiliaryFunctions.getCommitID()

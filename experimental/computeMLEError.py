@@ -30,7 +30,7 @@ def computeMLEError(moleFracExp,moleFracSim):
     
     # Objective function error
     # Find error for mole fraction below a given threshold
-    thresholdFactor = 1e-2 
+    thresholdFactor = 5e-2 
     lastIndThreshold = int(np.argwhere(np.array(moleFracExp)>thresholdFactor)[-1])
     # Do downsampling if the number of points in higher and lower
     # compositions does not match
