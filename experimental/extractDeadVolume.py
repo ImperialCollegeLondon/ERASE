@@ -69,9 +69,8 @@ def extractDeadVolume():
     # Directory of raw data
     mainDir = 'runData'
     # File name of the experiments
-    fileName = ['ZLC_DeadVolume_Exp15A_Output.mat',
-                'ZLC_DeadVolume_Exp15B_Output.mat',
-                'ZLC_DeadVolume_Exp15C_Output.mat']
+    fileName = ['ZLC_DeadVolume_Exp16A_Output.mat',
+                'ZLC_DeadVolume_Exp16B_Output.mat']
     
     # Generate .npz file for python processing of the .mat file 
     filesToProcess(True,mainDir,fileName)

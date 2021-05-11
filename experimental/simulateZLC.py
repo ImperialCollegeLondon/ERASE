@@ -97,13 +97,13 @@ def simulateZLC(**kwargs):
     if 'volSorbent' in kwargs:
         volSorbent = kwargs["volSorbent"]
     else:
-        volSorbent = 1.5e-8
+        volSorbent = 1.70e-8
         
     # Volume of gas chamber (dead volume) [m3]
     if 'volGas' in kwargs:
         volGas = kwargs["volGas"]
     else:
-        volGas = 2.5e-8
+        volGas = 2.65e-8
         
     # Isotherm model parameters  (SSL or DSL)
     if 'isothermModel' in kwargs:

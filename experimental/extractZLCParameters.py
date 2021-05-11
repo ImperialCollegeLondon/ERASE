@@ -48,7 +48,7 @@ def extractZLCParameters():
     num_cores = multiprocessing.cpu_count()
     
     # Isotherm model type
-    modelType = 'DSL'
+    modelType = 'SSL'
     
     # Number of times optimization repeated
     numOptRepeat = 10
@@ -62,8 +62,9 @@ def extractZLCParameters():
     # Directory of raw data
     mainDir = 'runData'
     # File name of the experiments
-    fileName = ['ZLC_ActivatedCarbon_Exp17A_Output.mat',
-                'ZLC_ActivatedCarbon_Exp17B_Output.mat']
+    fileName = ['ZLC_ActivatedCarbon_Exp20A_Output.mat',
+                'ZLC_ActivatedCarbon_Exp20B_Output.mat',
+                'ZLC_ActivatedCarbon_Exp20C_Output.mat']
     
     # NOTE: Dead volume characteristics filename is hardcoded in 
     # simulateCombinedModel. This is because of the python GA function unable
