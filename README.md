@@ -16,10 +16,10 @@
 				   Copyright (C) 2021 Ashwin Kumar Rajagopalan
 				     Imperial College London, United Kingdom
 
-				    Multifunctional Nanomaterials Laboratory
+  				       Multifunctional Nanomaterials Group
  						Dr. Camille Petit
  						 Project: ERASE 
-				    Readme last updated: 11th May 2021, AK
+				     Readme last updated: 11th May 2021, AK
 
 ## INTRODUCTION
 The repository contains the work performed on designing sensor electronics for gas sensing applications. The work was primarily performed by Dr. Ashwin Kumar Rajagopalan, SNSF Early Postdoc.Mobility Fellow working in the group of Dr. Camille Petit, Imperial College London. The work here is funded by the Swiss National Science Foundation (Project Number: P2EZP2_191875).
