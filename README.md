@@ -40,7 +40,7 @@ The following dependencies are required for the proper execution of this program
 
 1. Clone the full software package from the GitHub server into the preferred installation directory (e.g. Desktop, My Documents). The command is as follows:
 ```sh
-git clone https://github.com/ash23win/ERASE.git
+git clone https://github.com/ImperialCollegeLondon/ERASE.git
 
 ```
 
@@ -56,5 +56,6 @@ Ashwin Kumar Rajagopalan, Camille Petit, Material Screening for Gas Sensing usin
 
 ### Project contributors
 * Dr. Camille Petit (camille.petit@imperial.ac.uk)
+* Dr. Ronny Pini (r.pini@imperial.ac.uk)
 * Dr. Ashwin Kumar Rajagopalan
 * Mr. Hassan Azzan
