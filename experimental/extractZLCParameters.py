@@ -16,6 +16,7 @@
 # Reference: 10.1016/j.ces.2014.12.062
 #
 # Last modified:
+# - 2021-05-13, AK: Change structure to input mass of adsorbent
 # - 2021-05-05, AK: Bug fix for MLE error computation
 # - 2021-05-05, AK: Modify error computation for dead volume
 # - 2021-04-28, AK: Add reference values for isotherm parameters
@@ -62,9 +63,11 @@ def extractZLCParameters():
     # Directory of raw data
     mainDir = 'runData'
     # File name of the experiments
-    fileName = ['ZLC_ActivatedCarbon_Exp20A_Output.mat',
-                'ZLC_ActivatedCarbon_Exp20B_Output.mat',
-                'ZLC_ActivatedCarbon_Exp20C_Output.mat']
+    fileName = ['ZLC_ActivatedCarbon_Exp24A_Output.mat',
+                'ZLC_ActivatedCarbon_Exp24B_Output.mat',
+                'ZLC_ActivatedCarbon_Exp24C_Output.mat',
+                'ZLC_ActivatedCarbon_Exp24D_Output.mat',
+                'ZLC_ActivatedCarbon_Exp24E_Output.mat']
     
     # NOTE: Dead volume characteristics filename is hardcoded in 
     # simulateCombinedModel. This is because of the python GA function unable
@@ -145,7 +148,22 @@ def ZLCObjectiveFunction(x):
     from extractDeadVolume import filesToProcess # File processing script
     from simulateCombinedModel import simulateCombinedModel
     from computeMLEError import computeMLEError
-    
+
+    # Dead volume model
+    deadVolumeFile = 'deadVolumeCharacteristics_20210511_1015_ebb447e.npz'  
+
+    # Adsorbent density [kg/m3]
+    # This has to be the skeletal density
+    adsorbentDensity = 1950 # Activated carbon skeletal density [kg/m3]
+    # Particle porosity
+    particleEpsilon = 0.61
+    # Particle mass [g]
+    massSorbent = 0.0846
+    # Volume of sorbent material [m3]
+    volSorbent = (massSorbent/1000)/adsorbentDensity
+    # Volume of gas chamber (dead volume) [m3]
+    volGas = volSorbent/(1-particleEpsilon)*particleEpsilon
+
     # Reference for the isotherm parameters
     # For SSL isotherm
     if len(x) == 4:
@@ -196,7 +214,10 @@ def ZLCObjectiveFunction(x):
                                                     timeInt = timeInt,
                                                     initMoleFrac = [moleFracExp[0]], # Initial mole fraction assumed to be the first experimental point
                                                     flowIn = np.mean(flowRateExp[-1:-10:-1]*1e-6), # Flow rate [m3/s] for ZLC considered to be the mean of last 10 points (equilibrium)
-                                                    expFlag = True)
+                                                    expFlag = True,
+                                                    deadVolumeFile = deadVolumeFile,
+                                                    volSorbent = volSorbent,
+                                                    volGas = volGas)
 
         # Stack mole fraction from experiments and simulation for error 
         # computation

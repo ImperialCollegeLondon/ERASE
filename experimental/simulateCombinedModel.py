@@ -14,6 +14,7 @@
 # volume simulator
 #
 # Last modified:
+# - 2021-05-13, AK: Add volumes and density as inputs
 # - 2021-04-27, AK: Convert to a function for parameter estimation
 # - 2021-04-22, AK: Initial creation
 #
@@ -75,12 +76,27 @@ def simulateCombinedModel(**kwargs):
         timeInt = kwargs["timeInt"]
     else:
         timeInt = (0.0,300)   
-        
+    # Volume of sorbent material [m3]
+    if 'volSorbent' in kwargs:
+        volSorbent = kwargs["volSorbent"]
+    else:
+        volSorbent = 4.35e-8
+    # Volume of gas chamber (dead volume) [m3]
+    if 'volGas' in kwargs:
+        volGas = kwargs["volGas"]
+    else:
+        volGas = 6.81e-8
+    # Adsorbent density [kg/m3]
+    # This has to be the skeletal density
+    if 'adsorbentDensity' in kwargs:
+        adsorbentDensity = kwargs["adsorbentDensity"]
+    else:
+        adsorbentDensity = 1950 # Activated carbon skeletal density [kg/m3]
     # File name with dead volume characteristics parameters
     if 'deadVolumeFile' in kwargs:
         deadVolumeFile = kwargs["deadVolumeFile"]
     else:
-        deadVolumeFile = 'deadVolumeCharacteristics_20210505_1849_31987ca.npz'  
+        deadVolumeFile = 'deadVolumeCharacteristics_20210511_1015_ebb447e.npz'  
         
     # Flag to check if experimental data used
     if 'expFlag' in kwargs:
@@ -94,7 +110,10 @@ def simulateCombinedModel(**kwargs):
                                         flowIn = flowIn,
                                         initMoleFrac = initMoleFrac,
                                         timeInt = timeInt,
-                                        expFlag=expFlag)
+                                        expFlag=expFlag,
+                                        volSorbent = volSorbent,
+                                        volGas = volGas,
+                                        adsorbentDensity = adsorbentDensity)
     
     # Parse out the mole fraction out from ZLC
     moleFracZLC = resultMat[0,:]

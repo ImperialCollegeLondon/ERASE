@@ -14,6 +14,7 @@
 # model with mass transfer defined using linear driving force.
 #
 # Last modified:
+# - 2021-05-13, AK: IMPORTANT: Change density from particle to skeletal
 # - 2021-04-27, AK: Fix inputs and add isotherm model as input
 # - 2021-04-26, AK: Revamp the code for real sorbent simulation
 # - 2021-03-25, AK: Remove the constant F model
@@ -97,13 +98,13 @@ def simulateZLC(**kwargs):
     if 'volSorbent' in kwargs:
         volSorbent = kwargs["volSorbent"]
     else:
-        volSorbent = 1.70e-8
+        volSorbent = 4.35e-8
         
     # Volume of gas chamber (dead volume) [m3]
     if 'volGas' in kwargs:
         volGas = kwargs["volGas"]
     else:
-        volGas = 2.65e-8
+        volGas = 6.81e-8
         
     # Isotherm model parameters  (SSL or DSL)
     if 'isothermModel' in kwargs:
@@ -114,10 +115,11 @@ def simulateZLC(**kwargs):
         isothermModel = [0.44, 3.17e-6, 28.63e3, 6.10, 3.21e-6, 20.37e3]
 
     # Adsorbent density [kg/m3]
+    # This has to be the skeletal density
     if 'adsorbentDensity' in kwargs:
         adsorbentDensity = kwargs["adsorbentDensity"]
     else:
-        adsorbentDensity = 760 # Activated carbon density [kg/m3]
+        adsorbentDensity = 1950 # Activated carbon skeletal density [kg/m3]
 
     # Total pressure of the gas [Pa]
     if 'pressureTotal' in kwargs:
