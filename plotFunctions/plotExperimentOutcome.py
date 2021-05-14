@@ -12,6 +12,7 @@
 # Plots for the experimental outcome (along with model)
 #
 # Last modified:
+# - 2021-05-14, AK: Improve plotting capabilities
 # - 2021-05-05, AK: Bug fix for MLE error computation
 # - 2021-05-04, AK: Bug fix for error computation
 # - 2021-05-04, AK: Implement plots for ZLC and change DV error computaiton
@@ -29,6 +30,7 @@
 import numpy as np
 from simulateDeadVolume import simulateDeadVolume
 from computeMLEError import computeMLEError
+from computeEquilibriumLoading import computeEquilibriumLoading
 from numpy import load
 import os
 import matplotlib.pyplot as plt
@@ -48,13 +50,36 @@ saveFlag = False
 saveFileExtension = ".png"
 
 # Flag to plot dead volume results
-flagDeadVolume = True
+flagDeadVolume = False
 
 # Flag to plot simulations
 simulateModel = True
 
 # Flag to plot dead volume results
-plotFt = True
+plotFt = False
+
+# Adsorbent density [kg/m3]
+# This has to be the skeletal density
+adsorbentDensity = 1950 # Activated carbon skeletal density [kg/m3]
+
+# Particle porosity
+particleEpsilon = 0.61
+
+# Particle mass [g]
+massSorbent = 0.0846
+
+# Volume of sorbent material [m3]
+volSorbent = (massSorbent/1000)/adsorbentDensity
+
+# Volume of gas chamber (dead volume) [m3]
+volGas = volSorbent/(1-particleEpsilon)*particleEpsilon
+    
+# Total pressure of the gas [Pa]
+pressureTotal = np.array([1.e5]);
+    
+# Temperature of the gas [K]
+temperature = np.array([298.15]);
+    
 
 # Directory of raw data
 mainDir = '/Users/ash23win/Google Drive/ERASE/experimental/runData/'
@@ -67,15 +92,15 @@ markerForPlot = ["o","v","o","v","o","v"]
 
 if flagDeadVolume:
     # File name of the experiments
-    fileName = ['ZLC_DeadVolume_Exp15A_Output_10a7d64.npz',
-                'ZLC_DeadVolume_Exp15B_Output_10a7d64.npz',
-                'ZLC_DeadVolume_Exp15C_Output_10a7d64.npz']
+    fileName = ['ZLC_DeadVolume_Exp16B_Output_ba091f5.npz',
+                'ZLC_DeadVolume_Exp16C_Output_ba091f5.npz',
+                'ZLC_DeadVolume_Exp16D_Output_ba091f5.npz']
     # File with parameter estimates
     simulationDir = '/Users/ash23win/Google Drive/ERASE/simulationResults/'
-    fileParameter = 'deadVolumeCharacteristics_20210505_1849_31987ca.npz'
+    fileParameter = 'deadVolumeCharacteristics_20210511_1203_ebb447e.npz'
     modelOutputTemp = load(simulationDir+fileParameter, allow_pickle=True)["modelOutput"]
     x = modelOutputTemp[()]["variable"]
-    
+
     numPointsExp = np.zeros(len(fileName))
     for ii in range(len(fileName)): 
         fileToLoad = mainDir + fileName[ii]
@@ -150,7 +175,7 @@ if flagDeadVolume:
                               color=colorsForPlot[ii]) # Simulation response    
             ax1.set(xlabel='$t$ [s]', 
                     ylabel='$y_1$ [-]',
-                    xlim = [0,200], ylim = [0, 1])         
+                    xlim = [0,100], ylim = [0, 1])         
             ax1.legend()
     
             # Log scale
@@ -161,7 +186,7 @@ if flagDeadVolume:
                 ax2.semilogy(timeElapsedExp,moleFracSim,
                               color=colorsForPlot[ii]) # Simulation response
             ax2.set(xlabel='$t$ [s]', 
-                    xlim = [0,400], ylim = [1e-3, 1])         
+                    xlim = [0,150], ylim = [5e-3, 1])         
             
             #  Save the figure
             if saveFlag:
@@ -216,17 +241,22 @@ else:
     # Directory of raw data
     mainDir = '/Users/ash23win/Google Drive/ERASE/experimental/runData/'
     # File name of the experiments
-    fileName = ['ZLC_ActivatedCarbon_Exp17A_Output_8e60357.npz',
-                'ZLC_ActivatedCarbon_Exp17B_Output_8e60357.npz']
+    fileName = [
+                'ZLC_ActivatedCarbon_Exp25A_Output_ba091f5.npz',
+                'ZLC_ActivatedCarbon_Exp25B_Output_ba091f5.npz',
+                'ZLC_ActivatedCarbon_Exp25C_Output_ba091f5.npz',
+                'ZLC_ActivatedCarbon_Exp25D_Output_ba091f5.npz',
+                'ZLC_ActivatedCarbon_Exp25E_Output_ba091f5.npz',]
     
     # File with parameter estimates
     simulationDir = '/Users/ash23win/Google Drive/ERASE/simulationResults/'
-    fileParameter = 'zlcParameters_20210428_1011_10a7d64.npz' # 17A-F
-    fileParameter = 'zlcParameters_20210505_1735_31987ca.npz' # 17A-B
+    # Dead volume model
+    deadVolumeFile = 'deadVolumeCharacteristics_20210511_1015_ebb447e.npz'  
+    # ZLC parameter model
+    fileParameter = 'zlcParameters_20210513_2239_ba091f5.npz'
     modelOutputTemp = load(simulationDir+fileParameter, allow_pickle=True)["modelOutput"]
     print("Objective Function",round(modelOutputTemp[()]["function"],0))
     modelNonDim = modelOutputTemp[()]["variable"] 
-        
     numPointsExp = np.zeros(len(fileName))
     for ii in range(len(fileName)): 
         fileToLoad = mainDir + fileName[ii]
@@ -236,18 +266,20 @@ else:
     
     # Downsample intervals
     downsampleInt = numPointsExp/np.min(numPointsExp)
-    
-    # Multiply the paremeters by the reference values
-    x = np.multiply(modelNonDim,[10, 1e-5, 50e3, 10, 1e-5, 50e3, 100])
+
+    # Multiply the paremeters by the reference values (for SSL)
+    x = np.multiply(modelNonDim,[10, 1e-5, 50e3,100])
 
     # Ronny AC Data
-    x = [0.44, 3.17e-6, 28.63e3, 6.10, 3.21e-6, 20.37e3,100]
+    x_RP = [0.44, 3.17e-6, 28.63e3, 6.10, 3.21e-6, 20.37e3,100]
 
+    # Initialize loadings
     computedError = 0
     numPoints = 0
     moleFracExpALL = np.array([])
     moleFracSimALL = np.array([])
-    
+    massBalanceALL = np.zeros((len(fileName),2))
+
     # Create the instance for the plots
     fig = plt.figure
     ax1 = plt.subplot(1,3,1)        
@@ -281,7 +313,10 @@ else:
                                                         flowIn = np.mean(flowRateExp[-1:-10:-1]*1e-6), # Flow rate for ZLC considered to be the mean of last 10 points (equilibrium)
                                                         expFlag = True,
                                                         isothermModel=x[0:-1],
-                                                        rateConstant=x[-1])
+                                                        rateConstant=x[-1],
+                                                        deadVolumeFile = deadVolumeFile,
+                                                        volSorbent = volSorbent,
+                                                        volGas = volGas)
             # Print simulation volume    
             print("Simulation",str(ii+1),round(np.trapz(np.multiply(resultMat[3,:]*1e6,
                                                                   moleFracSim),
@@ -291,34 +326,42 @@ else:
             moleFracExpALL = np.hstack((moleFracExpALL, moleFracExp))
             moleFracSimALL = np.hstack((moleFracSimALL, moleFracSim))
         
+            # Compute the mass balance at the end end of the ZLC
+            massBalanceALL[ii,0] = moleFracExp[0]
+            massBalanceALL[ii,1] = ((round(np.trapz(np.multiply(resultMat[3,:]*1e6,
+                                                              resultMat[0,:]),
+                                                  timeElapsedExp),2)*1e-6
+                                    - volGas*moleFracExp[0])*
+                                    (pressureTotal/(8.314*temperature))/(massSorbent/1000))
+        
         # y - Linear scale
         ax1.semilogy(timeElapsedExp,moleFracExp,
                 marker = markerForPlot[ii],linewidth = 0,
-                color=colorsForPlot[ii],alpha=0.05) # Experimental response
+                color=colorsForPlot[ii],alpha=0.25) # Experimental response
         if simulateModel:
             ax1.plot(timeElapsedExp,moleFracSim,
                      color=colorsForPlot[ii],label=str(round(np.mean(flowRateExp),2))+" ccs") # Simulation response    
         ax1.set(xlabel='$t$ [s]', 
                 ylabel='$y_1$ [-]',
-                xlim = [0,300], ylim = [1e-3, 1])    
+                xlim = [0,300], ylim = [5e-3, 1])    
         ax1.locator_params(axis="x", nbins=4)
         ax1.legend()
     
         # Ft - Log scale        
         ax2.semilogy(np.multiply(flowRateExp,timeElapsedExp),moleFracExp,
                       marker = markerForPlot[ii],linewidth = 0,
-                      color=colorsForPlot[ii],alpha=0.05) # Experimental response
+                      color=colorsForPlot[ii],alpha=0.25) # Experimental response
         if simulateModel:
             ax2.semilogy(np.multiply(flowRateExp,timeElapsedExp),moleFracSim,
                           color=colorsForPlot[ii],label=str(round(np.mean(flowRateExp),2))+" ccs") # Simulation response
         ax2.set(xlabel='$Ft$ [cc]', 
-                xlim = [0,100], ylim = [1e-3, 1])         
+                xlim = [0,100], ylim = [5e-3, 1])         
         ax2.locator_params(axis="x", nbins=4)
         
         # Flow rates
         ax3.plot(timeElapsedExp,flowRateExp,
                 marker = markerForPlot[ii],linewidth = 0,
-                color=colorsForPlot[ii],alpha=0.05,label=str(round(np.mean(flowRateExp),2))+" ccs") # Experimental response
+                color=colorsForPlot[ii],alpha=0.25,label=str(round(np.mean(flowRateExp),2))+" ccs") # Experimental response
         if simulateModel:
             ax3.plot(timeElapsedExp,resultMat[3,:]*1e6,
                      color=colorsForPlot[ii]) # Simulation response    
@@ -343,3 +386,42 @@ else:
     # Print the MLE error
     computedError = computeMLEError(moleFracExpALL,moleFracSimALL)
     print(round(computedError,0))
+    
+    # Create the grid for mole fractions
+    y = np.linspace(0,1.,100)
+    # Initialize isotherms 
+    isoLoading_RP = np.zeros([len(y)])
+    isoLoading_ZLC = np.zeros([len(y)])
+
+    # Loop over all the mole fractions
+    for ii in range(len(y)):
+        isoLoading_RP[ii] = computeEquilibriumLoading(isothermModel=x_RP[0:-1],
+                                                      moleFrac = y[ii])
+        isoLoading_ZLC[ii] = computeEquilibriumLoading(isothermModel=x[0:-1],
+                                                        moleFrac = y[ii])
+
+    # Plot the isotherms   
+    os.chdir(os.path.join('..','plotFunctions'))
+    plt.style.use('singleColumn.mplstyle') # Custom matplotlib style file
+    fig = plt.figure
+    ax1 = plt.subplot(1,1,1)        
+    ax1.plot(y,isoLoading_RP,color='#2a9d8f',label="Autosorb") # Ronny's isotherm
+    ax1.plot(y,isoLoading_ZLC,color='#e76f51',label="ZLC") # ALL
+    ax1.scatter(massBalanceALL[:,0],massBalanceALL[:,1],c='dimgrey')
+    ax1.set(xlabel='$P$ [bar]', 
+            ylabel='$q^*$ [mol kg$^\mathregular{-1}$]',
+            xlim = [0,1], ylim = [0, 3]) 
+    ax1.locator_params(axis="x", nbins=4)
+    ax1.locator_params(axis="y", nbins=4)        
+    ax1.legend()
+    #  Save the figure
+    if saveFlag:
+        # FileName: isothermComparison_<currentDateTime>_<GitCommitID_Current>_<modelFile>
+        saveFileName = "isothermComparison_" + currentDT + "_" + gitCommitID + "_" + fileParameter[-25:-12] + saveFileExtension
+        savePath = os.path.join('..','simulationFigures',saveFileName)
+        # Check if inputResources directory exists or not. If not, create the folder
+        if not os.path.exists(os.path.join('..','simulationFigures')):
+            os.mkdir(os.path.join('..','simulationFigures'))
+        plt.savefig (savePath)         
+    
+    plt.show()
