@@ -242,11 +242,11 @@ else:
     mainDir = '/Users/ash23win/Google Drive/ERASE/experimental/runData/'
     # File name of the experiments
     fileName = [
-                'ZLC_ActivatedCarbon_Exp25A_Output_ba091f5.npz',
-                'ZLC_ActivatedCarbon_Exp25B_Output_ba091f5.npz',
-                'ZLC_ActivatedCarbon_Exp25C_Output_ba091f5.npz',
-                'ZLC_ActivatedCarbon_Exp25D_Output_ba091f5.npz',
-                'ZLC_ActivatedCarbon_Exp25E_Output_ba091f5.npz',]
+                'ZLC_ActivatedCarbon_Exp24A_Output_ba091f5.npz',
+                'ZLC_ActivatedCarbon_Exp24B_Output_ba091f5.npz',
+                'ZLC_ActivatedCarbon_Exp24C_Output_ba091f5.npz',
+                'ZLC_ActivatedCarbon_Exp24D_Output_ba091f5.npz',
+                'ZLC_ActivatedCarbon_Exp24E_Output_ba091f5.npz',]
     
     # File with parameter estimates
     simulationDir = '/Users/ash23win/Google Drive/ERASE/simulationResults/'
@@ -328,11 +328,8 @@ else:
         
             # Compute the mass balance at the end end of the ZLC
             massBalanceALL[ii,0] = moleFracExp[0]
-            massBalanceALL[ii,1] = ((round(np.trapz(np.multiply(resultMat[3,:]*1e6,
-                                                              resultMat[0,:]),
-                                                  timeElapsedExp),2)*1e-6
-                                    - volGas*moleFracExp[0])*
-                                    (pressureTotal/(8.314*temperature))/(massSorbent/1000))
+            massBalanceALL[ii,1] = ((np.trapz(np.multiply(resultMat[3,:],resultMat[0,:]),timeElapsedExp)
+                                    - volGas*moleFracExp[0])*(pressureTotal/(8.314*temperature))/(massSorbent/1000))
         
         # y - Linear scale
         ax1.semilogy(timeElapsedExp,moleFracExp,
