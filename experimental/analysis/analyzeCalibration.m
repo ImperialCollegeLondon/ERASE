@@ -221,5 +221,6 @@ if ~isempty(parametersMS)
     box on; grid on;
     xlabel('Helium Signal/(CO2 Signal+Helium Signal) [-]')
     ylabel('Helium mole frac [-]')
+    set(gca,'FontSize',8)
 end
 end
