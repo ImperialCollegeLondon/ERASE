@@ -16,6 +16,7 @@
 % experiment
 %
 % Last modified:
+% - 2021-05-17, AK: Change MS interpolation flag
 % - 2021-05-10, AK: Cosmetic changes to plots
 % - 2021-05-10, AK: Initial creation
 %
@@ -41,14 +42,14 @@ msCalibrationFiles = {'ZLCCalibrateMS_20210506_15ccm',...
 
 %%%% Experimet to be analyzed %%%%     
 % List the experiments that have to be analyzed
-msExpFile = 'ZLC_ActivatedCarbon_Exp25'; % Raw MS data file name
+msExpFile = 'ZLC_ActivatedCarbon_Exp26_28'; % Raw MS data file name
 % Flow rate files for experiments 
-experimentFiles = {'ZLC_ActivatedCarbon_Exp25A',...
-                   'ZLC_ActivatedCarbon_Exp25B',...
-                   'ZLC_ActivatedCarbon_Exp25C',...
-                   'ZLC_ActivatedCarbon_Exp25D',...
-                   'ZLC_ActivatedCarbon_Exp25E',...
-                   'ZLC_ActivatedCarbon_Exp25F'};
+experimentFiles = {'ZLC_ActivatedCarbon_Exp26A',...
+                   'ZLC_ActivatedCarbon_Exp26B',...
+                   'ZLC_ActivatedCarbon_Exp26C',...
+                   'ZLC_ActivatedCarbon_Exp26D',...
+                   'ZLC_ActivatedCarbon_Exp26E',...
+                   'ZLC_ActivatedCarbon_Exp26F'};
 
 % Initialize the name of the msRawFile to be used for all calibrations
 startInd = 1;
@@ -84,7 +85,7 @@ if ~isempty(experimentFiles)
         experimentStruct.flow = experimentFiles{ii}; % Experimental flow file (.mat)
         experimentStruct.MS = [msFileDir,filesep,msExpFile,'.asc']; % Experimental MS file (.asc). Assumes name of file to be the date of the first flow rate
         experimentStruct.calibrationMS = msCalibrationFiles; % Experimental calibration file list
-        experimentStruct.interpMS = calibrationStruct.interpMS; % Flag for interpolating MS data, same as calibration
+        experimentStruct.interpMS = false; % Flag for interpolating flow data, to have a higher resolution for actual experiments
         experimentStruct.moleFracThreshold = 5e-3; % Threshold for cutting off data below a given mole fraction
         % Call the analyzeExperiment function to analyze the experimental data
         % using the calibration files given by msCalibrationFiles 

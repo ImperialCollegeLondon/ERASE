@@ -12,6 +12,7 @@
 % Runs multiple ZLC experiments in series
 %
 % Last modified:
+% - 2021-05-17, AK: Add check for CO2 set point
 % - 2021-05-14, AK: Add flow rate sweep functionality
 % - 2021-04-20, AK: Add multiple equilibration time
 % - 2021-04-15, AK: Initial creation
@@ -67,6 +68,13 @@ function runMultipleZLC
     % Loop through all setpoints to calibrate the meters
     for jj=1:size(MFC1_SP,1) 
         for ii=1:size(MFC1_SP,2)
+            % The MFC can support only 200 sccm (180 ccm is borderline)
+            % Keep an eye out
+            % If MFC2SP > 180 ccm break and move to the next operating
+            % condition
+            if MFC2_SP(jj,ii) >= 180
+                break;
+            end
             % Experiment name
             expInfo.expName = [expSeries{jj},char(64+ii)];
             expInfo.equilibrationTime = equilibrationTime(jj,ii);
