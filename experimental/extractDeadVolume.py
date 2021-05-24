@@ -17,6 +17,7 @@
 # Reference: 10.1007/s10450-012-9417-z
 #
 # Last modified:
+# - 2021-05-24, AK: Improve information passing (for output)
 # - 2021-05-05, AK: Bug fix for MLE error computation
 # - 2021-05-05, AK: Bug fix for error computation
 # - 2021-05-04, AK: Modify error computation for dead volume
@@ -48,32 +49,46 @@ def extractDeadVolume():
     import multiprocessing # For parallel processing
     import socket
     
-    # Find out the total number of cores available for parallel processing
-    num_cores = multiprocessing.cpu_count()
-    
-    # Number of times optimization repeated
-    numOptRepeat = 5
-    
-    # Get the commit ID of the current repository
-    gitCommitID = auxiliaryFunctions.getCommitID()
-    
-    # Get the current date and time for saving purposes    
-    currentDT = auxiliaryFunctions.getCurrentDateTime()
-    
     # Change path directory
     # Assumes either running from ERASE or from experimental. Either ways
     # this has to be run from experimental
     if not os.getcwd().split(os.path.sep)[-1] == 'experimental':
         os.chdir("experimental")
+
+    # Get the commit ID of the current repository
+    gitCommitID = auxiliaryFunctions.getCommitID()
     
-    # Directory of raw data
+    # Get the current date and time for saving purposes    
+    currentDT = auxiliaryFunctions.getCurrentDateTime()    
+
+    # Find out the total number of cores available for parallel processing
+    num_cores = multiprocessing.cpu_count()
+    
+    #####################################
+    ###### USER DEFINED PROPERTIES ###### 
+    
+    # Number of times optimization repeated
+    numOptRepeat = 10
+
+    # Directory of raw data    
     mainDir = 'runData'
     # File name of the experiments
-    fileName = ['ZLC_DeadVolume_Exp16A_Output.mat',
-                'ZLC_DeadVolume_Exp16B_Output.mat']
+    fileName = ['ZLC_DeadVolume_Exp16B_Output.mat',
+                'ZLC_DeadVolume_Exp16C_Output.mat',
+                'ZLC_DeadVolume_Exp16D_Output.mat']
+
+    # Threshold factor (If -negative infinity not used, if not need a float)
+    # This is used to split the compositions into two distint regions
+    thresholdFactor = -np.inf
+
+    #####################################
+    #####################################
+
+    # Save the threshold factor to a dummy file (to pass through GA - IDIOTIC)
+    savez ('tempFittingParametersDV.npz',thresholdFactor=thresholdFactor)
     
     # Generate .npz file for python processing of the .mat file 
-    filesToProcess(True,mainDir,fileName)
+    filesToProcess(True,mainDir,fileName,'DV')
 
     # Define the bounds and the type of the parameters to be optimized                       
     optBounds = np.array(([np.finfo(float).eps,10], [np.finfo(float).eps,10],
@@ -121,8 +136,17 @@ def extractDeadVolume():
     savez (savePath, modelOutput = model.output_dict, # Model output
            optBounds = optBounds, # Optimizer bounds
            algoParameters = algorithm_param, # Algorithm parameters
+           numOptRepeat = numOptRepeat, # Number of times optimization repeated
            fileName = fileName, # Names of file used for fitting
+           mleThreshold = thresholdFactor, # Threshold for MLE composition split [-]
            hostName = socket.gethostname()) # Hostname of the computer) 
+
+    # Remove all the .npy files genereated from the .mat
+    # Load the names of the file to be used for estimating dead volume characteristics
+    filePath = filesToProcess(False,[],[],'DV')
+    # Loop over all available files    
+    for ii in range(len(filePath)):
+        os.remove(filePath[ii])
         
     # Return the optimized values
     return model.output_dict
@@ -136,8 +160,11 @@ def deadVolObjectiveFunction(x):
     from computeMLEError import computeMLEError
     from numpy import load
     
+    # Load the threshold factor from the dummy file
+    thresholdFactor = load ('tempFittingParametersDV.npz')["thresholdFactor"]
+    
     # Load the names of the file to be used for estimating dead volume characteristics
-    filePath = filesToProcess(False,[],[])
+    filePath = filesToProcess(False,[],[],'DV')
     
     numPointsExp = np.zeros(len(filePath))
     for ii in range(len(filePath)): 
@@ -193,12 +220,12 @@ def deadVolObjectiveFunction(x):
         penaltyObj = 10000
     # Compute the sum of the error for the difference between exp. and sim. and
     # add a penalty if needed (using MLE)
-    computedError = computeMLEError(moleFracExpALL,moleFracSimALL)
+    computedError = computeMLEError(moleFracExpALL,moleFracSimALL,thresholdFactor=thresholdFactor)
     return computedError + penaltyObj
 
 # func: filesToProcess
 # Loads .mat experimental file and processes it for python
-def filesToProcess(initFlag,mainDir,fileName):
+def filesToProcess(initFlag,mainDir,fileName,expType):
     from processExpMatFile import processExpMatFile
     from numpy import savez
     from numpy import load
@@ -208,9 +235,11 @@ def filesToProcess(initFlag,mainDir,fileName):
         for ii in range(len(fileName)):
             savePath.append(processExpMatFile(mainDir, fileName[ii]))
         # Save the .npz file names in a dummy file
-        savez ('tempCreation.npz', savePath = savePath)
+        dummyFileName = 'tempCreation' + '_' + expType + '.npz'
+        savez (dummyFileName, savePath = savePath)
     # Returns the path of the .npz file to be used 
     else:
     # Load the dummy file with file names for processing
-        savePath = load ('tempCreation.npz')["savePath"]
+        dummyFileName = 'tempCreation' + '_' + expType + '.npz'
+        savePath = load (dummyFileName)["savePath"]
         return savePath

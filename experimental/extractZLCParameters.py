@@ -16,6 +16,7 @@
 # Reference: 10.1016/j.ces.2014.12.062
 #
 # Last modified:
+# - 2021-05-24, AK: Improve information passing (for output)
 # - 2021-05-13, AK: Change structure to input mass of adsorbent
 # - 2021-05-05, AK: Bug fix for MLE error computation
 # - 2021-05-05, AK: Modify error computation for dead volume
@@ -44,37 +45,56 @@ def extractZLCParameters():
     # this has to be run from experimental
     if not os.getcwd().split(os.path.sep)[-1] == 'experimental':
         os.chdir("experimental")
-    
-    # Find out the total number of cores available for parallel processing
-    num_cores = multiprocessing.cpu_count()
-    
-    # Isotherm model type
-    modelType = 'SSL'
-    
-    # Number of times optimization repeated
-    numOptRepeat = 5
-    
+
     # Get the commit ID of the current repository
     gitCommitID = auxiliaryFunctions.getCommitID()
     
     # Get the current date and time for saving purposes    
     currentDT = auxiliaryFunctions.getCurrentDateTime()
     
+    # Find out the total number of cores available for parallel processing
+    num_cores = multiprocessing.cpu_count()
+
+    #####################################
+    ###### USER DEFINED PROPERTIES ######     
+    
+    # Isotherm model type
+    modelType = 'SSL'
+    
+    # Number of times optimization repeated
+    numOptRepeat = 10
+    
     # Directory of raw data
     mainDir = 'runData'
     # File name of the experiments
-    fileName = ['ZLC_ActivatedCarbon_Exp24A_Output.mat',
-                'ZLC_ActivatedCarbon_Exp24B_Output.mat',
-                'ZLC_ActivatedCarbon_Exp24C_Output.mat',
-                'ZLC_ActivatedCarbon_Exp24D_Output.mat',
-                'ZLC_ActivatedCarbon_Exp24E_Output.mat']
+    fileName = ['ZLC_ActivatedCarbon_Exp34A_Output.mat',
+                'ZLC_ActivatedCarbon_Exp34B_Output.mat',
+                'ZLC_ActivatedCarbon_Exp34C_Output.mat',
+                'ZLC_ActivatedCarbon_Exp34D_Output.mat',
+                'ZLC_ActivatedCarbon_Exp34E_Output.mat',
+                'ZLC_ActivatedCarbon_Exp34F_Output.mat']
     
-    # NOTE: Dead volume characteristics filename is hardcoded in 
-    # simulateCombinedModel. This is because of the python GA function unable
-    # to pass arguments
+    # Dead volume model
+    deadVolumeFile = 'deadVolumeCharacteristics_20210521_1609_434a71d.npz'  
+
+    # Adsorbent properties
+    # Adsorbent density [kg/m3]
+    # This has to be the skeletal density
+    adsorbentDensity = 1950 # Activated carbon skeletal density [kg/m3]
+    # Particle porosity
+    particleEpsilon = 0.61
+    # Particle mass [g]
+    massSorbent = 0.0625
+    
+    # Threshold factor (If -ngative infinity not used, if not need a float)
+    # This is used to split the compositions into two distint regions
+    thresholdFactor = -np.inf
+    
+    #####################################
+    #####################################
     
     # Generate .npz file for python processing of the .mat file 
-    filesToProcess(True,mainDir,fileName)
+    filesToProcess(True,mainDir,fileName,'ZLC')
 
     # Define the bounds and the type of the parameters to be optimized   
     # Single-site Langmuir
@@ -83,6 +103,7 @@ def extractZLCParameters():
                               [np.finfo(float).eps,1], [np.finfo(float).eps,1]))
         optType=np.array(['real','real','real','real'])
         problemDimension = len(optType)
+        isoRef = [10, 1e-5, 50e3, 100] # Reference for the isotherm parameters
     # Dual-site Langmuir
     elif modelType == 'DSL':
         optBounds = np.array(([np.finfo(float).eps,1], [np.finfo(float).eps,1],
@@ -91,6 +112,10 @@ def extractZLCParameters():
                               [np.finfo(float).eps,1]))
         optType=np.array(['real','real','real','real','real','real','real'])
         problemDimension = len(optType)
+        isoRef = [10, 1e-5, 50e3, 10, 1e-5, 50e3, 100] # Reference for the isotherm parameters
+
+    # Initialize the parameters used for ZLC fitting process
+    fittingParameters(True,deadVolumeFile,adsorbentDensity,particleEpsilon,massSorbent,isoRef,thresholdFactor)
 
     # Algorithm parameters for GA
     algorithm_param = {'max_num_iteration':5,
@@ -101,8 +126,8 @@ def extractZLCParameters():
                        'elit_ratio': 0.01,
                        'max_iteration_without_improv':None}
     
-    # Minimize an objective function to compute the dead volume and the number of 
-    # tanks for the dead volume using GA
+    # Minimize an objective function to compute the equilibrium and kinetic 
+    # parameters from ZLC experiments
     model = ga(function = ZLCObjectiveFunction, dimension=problemDimension, 
                                variable_type_mixed = optType,
                                variable_boundaries = optBounds,
@@ -133,9 +158,23 @@ def extractZLCParameters():
     savez (savePath, modelOutput = model.output_dict, # Model output
            optBounds = optBounds, # Optimizer bounds
            algoParameters = algorithm_param, # Algorithm parameters
+           numOptRepeat = numOptRepeat, # Number of times optimization repeated
            fileName = fileName, # Names of file used for fitting
-           hostName = socket.gethostname()) # Hostname of the computer) 
-        
+           deadVolumeFile = deadVolumeFile, # Dead volume file used for parameter estimation
+           adsorbentDensity = adsorbentDensity, # Adsorbent density [kg/m3]
+           particleEpsilon = particleEpsilon, # Particle voidage [-]
+           massSorbent = massSorbent, # Mass of sorbent [g]
+           parameterReference = isoRef, # Parameter references [-]
+           mleThreshold = thresholdFactor, # Threshold for MLE composition split [-]
+           hostName = socket.gethostname()) # Hostname of the computer
+    
+    # Remove all the .npy files genereated from the .mat
+    # Load the names of the file to be used for estimating ZLC parameters
+    filePath = filesToProcess(False,[],[],'ZLC')
+    # Loop over all available files    
+    for ii in range(len(filePath)):
+        os.remove(filePath[ii])
+    
     # Return the optimized values
     return model.output_dict
     
@@ -149,34 +188,19 @@ def ZLCObjectiveFunction(x):
     from simulateCombinedModel import simulateCombinedModel
     from computeMLEError import computeMLEError
 
-    # Dead volume model
-    deadVolumeFile = 'deadVolumeCharacteristics_20210511_1015_ebb447e.npz'  
+    # Get the zlc parameters needed for the solver
+    deadVolumeFile, adsorbentDensity, particleEpsilon, massSorbent, isoRef, thresholdFactor = fittingParameters(False,[],[],[],[],[],[])
 
-    # Adsorbent density [kg/m3]
-    # This has to be the skeletal density
-    adsorbentDensity = 1950 # Activated carbon skeletal density [kg/m3]
-    # Particle porosity
-    particleEpsilon = 0.61
-    # Particle mass [g]
-    massSorbent = 0.0846
     # Volume of sorbent material [m3]
     volSorbent = (massSorbent/1000)/adsorbentDensity
-    # Volume of gas chamber (dead volume) [m3]
+    # Volume of gas in pores [m3]
     volGas = volSorbent/(1-particleEpsilon)*particleEpsilon
-
-    # Reference for the isotherm parameters
-    # For SSL isotherm
-    if len(x) == 4:
-        isoRef = [10, 1e-5, 50e3, 100]
-    # For DSL isotherm
-    elif len(x) == 7:
-        isoRef = [10, 1e-5, 50e3, 10, 1e-5, 50e3, 100]
 
     # Prepare isotherm model (the first n-1 parameters are for the isotherm model)
     isothermModel = np.multiply(x[0:-1],isoRef[0:-1])
 
-    # Load the names of the file to be used for estimating dead volume characteristics
-    filePath = filesToProcess(False,[],[])
+    # Load the names of the file to be used for estimating zlc parameters
+    filePath = filesToProcess(False,[],[],'ZLC')
     
     # Parse out number of data points for each experiment (for downsampling)
     numPointsExp = np.zeros(len(filePath))
@@ -208,14 +232,14 @@ def ZLCObjectiveFunction(x):
         # Integration and ode evaluation time (check simulateZLC/simulateDeadVolume)
         timeInt = timeElapsedExp
 
-        # Compute the dead volume response using the optimizer parameters
+        # Compute the composite response using the optimizer parameters
         _ , moleFracSim , _ = simulateCombinedModel(isothermModel = isothermModel,
                                                     rateConstant = x[-1]*isoRef[-1], # Last element is rate constant
                                                     timeInt = timeInt,
                                                     initMoleFrac = [moleFracExp[0]], # Initial mole fraction assumed to be the first experimental point
                                                     flowIn = np.mean(flowRateExp[-1:-10:-1]*1e-6), # Flow rate [m3/s] for ZLC considered to be the mean of last 10 points (equilibrium)
                                                     expFlag = True,
-                                                    deadVolumeFile = deadVolumeFile,
+                                                    deadVolumeFile = str(deadVolumeFile),
                                                     volSorbent = volSorbent,
                                                     volGas = volGas)
 
@@ -225,5 +249,35 @@ def ZLCObjectiveFunction(x):
         moleFracSimALL = np.hstack((moleFracSimALL, moleFracSim))
 
     # Compute the sum of the error for the difference between exp. and sim.
-    computedError = computeMLEError(moleFracExpALL,moleFracSimALL)
+    computedError = computeMLEError(moleFracExpALL,moleFracSimALL,thresholdFactor=thresholdFactor)
     return computedError
+
+# func: fittingParameters
+# Parses dead volume calibration file, adsorbent density, voidage, mass to 
+# be used for parameter estimation, parameter references and threshold for MLE
+# This is done because the ga cannot handle additional user inputs
+def fittingParameters(initFlag,deadVolumeFile,adsorbentDensity,particleEpsilon,massSorbent,isoRef, thresholdFactor):
+    from numpy import savez
+    from numpy import load
+    # Process the data for python (if needed)
+    if initFlag:
+        # Save the necessary inputs to a temp file
+        dummyFileName = 'tempFittingParametersZLC.npz'
+        savez (dummyFileName, deadVolumeFile = deadVolumeFile,
+               adsorbentDensity=adsorbentDensity,
+               particleEpsilon=particleEpsilon,
+               massSorbent=massSorbent,
+               isoRef=isoRef,
+               thresholdFactor=thresholdFactor)
+    # Returns the path of the .npz file to be used 
+    else:
+    # Load the dummy file with deadVolumeFile, adsorbent density, particle voidage,
+    # and mass of sorbent
+        dummyFileName = 'tempFittingParametersZLC.npz'
+        deadVolumeFile = load (dummyFileName)["deadVolumeFile"]
+        adsorbentDensity = load (dummyFileName)["adsorbentDensity"]
+        particleEpsilon = load (dummyFileName)["particleEpsilon"]
+        massSorbent = load (dummyFileName)["massSorbent"]
+        isoRef = load (dummyFileName)["isoRef"]
+        thresholdFactor = load (dummyFileName)["thresholdFactor"]
+        return deadVolumeFile, adsorbentDensity, particleEpsilon, massSorbent, isoRef, thresholdFactor

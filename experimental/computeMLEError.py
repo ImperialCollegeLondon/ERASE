@@ -12,6 +12,7 @@
 # Computes the MLE error for ZLC experiments.
 #
 # Last modified:
+# - 2021-05-24, AK: Add -inf input to avoid splitting compositions
 # - 2021-05-13, AK: Add different modes for MLE error computations
 # - 2021-05-05, AK: Initial creation
 #
@@ -30,6 +31,10 @@ def computeMLEError(moleFracExp,moleFracSim,**kwargs):
     if 'thresholdFactor' in kwargs:
         thresholdFlag = True
         thresholdFactor = np.array(kwargs["thresholdFactor"])
+        # If negative infinity provided as a threshold, do not split and uses 
+        # all data with equal weights
+        if np.isneginf(thresholdFactor):
+            thresholdFlag = False            
     # Default is flag, uses all data with equal weights
     else:
         thresholdFlag = False
@@ -42,7 +47,6 @@ def computeMLEError(moleFracExp,moleFracSim,**kwargs):
     else:
         # Objective function error
         # Find error for mole fraction below a given threshold
-        thresholdFactor = 5e-2
         lastIndThreshold = int(np.argwhere(np.array(moleFracExp)>thresholdFactor)[-1])
         # Do downsampling if the number of points in higher and lower
         # compositions does not match
