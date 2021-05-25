@@ -16,6 +16,7 @@
 # Reference: 10.1016/j.ces.2014.12.062
 #
 # Last modified:
+# - 2021-05-25, AK: Add kinetic mode for estimation
 # - 2021-05-24, AK: Improve information passing (for output)
 # - 2021-05-13, AK: Change structure to input mass of adsorbent
 # - 2021-05-05, AK: Bug fix for MLE error computation
@@ -37,6 +38,7 @@ def extractZLCParameters():
     import auxiliaryFunctions
     import os
     from numpy import savez
+    from numpy import load
     import multiprocessing # For parallel processing
     import socket
     
@@ -77,6 +79,9 @@ def extractZLCParameters():
     # Dead volume model
     deadVolumeFile = 'deadVolumeCharacteristics_20210521_1609_434a71d.npz'  
 
+    # Isotherm model (if fitting only kinetic constant)
+    isothermFile = 'zlcParameters_20210525_1610_a079f4a.npz'
+
     # Adsorbent properties
     # Adsorbent density [kg/m3]
     # This has to be the skeletal density
@@ -104,6 +109,9 @@ def extractZLCParameters():
         optType=np.array(['real','real','real','real'])
         problemDimension = len(optType)
         isoRef = [10, 1e-5, 50e3, 100] # Reference for the isotherm parameters
+        isothermFile = [] # Isotherm file is empty as it is fit
+        paramIso = [] # Isotherm parameters is empty as it is fit
+
     # Dual-site Langmuir
     elif modelType == 'DSL':
         optBounds = np.array(([np.finfo(float).eps,1], [np.finfo(float).eps,1],
@@ -113,9 +121,26 @@ def extractZLCParameters():
         optType=np.array(['real','real','real','real','real','real','real'])
         problemDimension = len(optType)
         isoRef = [10, 1e-5, 50e3, 10, 1e-5, 50e3, 100] # Reference for the isotherm parameters
+        isothermFile = [] # Isotherm file is empty as it is fit
+        paramIso = [] # Isotherm parameters is empty as it is fit
+
+    # Kinetic constant only
+    elif modelType == 'Kinetic':
+        optBounds = np.array([[np.finfo(float).eps,1]])
+        optType=np.array(['real'])
+        problemDimension = len(optType)
+        isoRef = [100] # Reference for the parameter (has to be a list)
+        # File with parameter estimates for isotherm (ZLC)
+        isothermDir = '..' + os.path.sep + 'simulationResults/'
+        modelOutputTemp = load(isothermDir+isothermFile, allow_pickle=True)["modelOutput"]
+        modelNonDim = modelOutputTemp[()]["variable"]
+        parameterRefTemp = load(isothermDir+isothermFile, allow_pickle=True)["parameterReference"]
+        # Get the isotherm parameters
+        paramIso = np.multiply(modelNonDim,parameterRefTemp)
 
     # Initialize the parameters used for ZLC fitting process
-    fittingParameters(True,deadVolumeFile,adsorbentDensity,particleEpsilon,massSorbent,isoRef,thresholdFactor)
+    fittingParameters(True,deadVolumeFile,adsorbentDensity,particleEpsilon,
+                      massSorbent,isoRef,thresholdFactor,paramIso)
 
     # Algorithm parameters for GA
     algorithm_param = {'max_num_iteration':5,
@@ -161,6 +186,7 @@ def extractZLCParameters():
            numOptRepeat = numOptRepeat, # Number of times optimization repeated
            fileName = fileName, # Names of file used for fitting
            deadVolumeFile = deadVolumeFile, # Dead volume file used for parameter estimation
+           isothermFile = isothermFile, # Isotherm parameters file, if only kinetics estimated
            adsorbentDensity = adsorbentDensity, # Adsorbent density [kg/m3]
            particleEpsilon = particleEpsilon, # Particle voidage [-]
            massSorbent = massSorbent, # Mass of sorbent [g]
@@ -189,7 +215,7 @@ def ZLCObjectiveFunction(x):
     from computeMLEError import computeMLEError
 
     # Get the zlc parameters needed for the solver
-    deadVolumeFile, adsorbentDensity, particleEpsilon, massSorbent, isoRef, thresholdFactor = fittingParameters(False,[],[],[],[],[],[])
+    deadVolumeFile, adsorbentDensity, particleEpsilon, massSorbent, isoRef, thresholdFactor, paramIso = fittingParameters(False,[],[],[],[],[],[],[])
 
     # Volume of sorbent material [m3]
     volSorbent = (massSorbent/1000)/adsorbentDensity
@@ -197,7 +223,10 @@ def ZLCObjectiveFunction(x):
     volGas = volSorbent/(1-particleEpsilon)*particleEpsilon
 
     # Prepare isotherm model (the first n-1 parameters are for the isotherm model)
-    isothermModel = np.multiply(x[0:-1],isoRef[0:-1])
+    if len(paramIso) != 0:
+        isothermModel = paramIso[0:-1] # Use this if isotherm parameter provided (for kinetics only)
+    else:        
+        isothermModel = np.multiply(x[0:-1],isoRef[0:-1]) # Use this if both equilibrium and kinetics is fit
 
     # Load the names of the file to be used for estimating zlc parameters
     filePath = filesToProcess(False,[],[],'ZLC')
@@ -256,7 +285,7 @@ def ZLCObjectiveFunction(x):
 # Parses dead volume calibration file, adsorbent density, voidage, mass to 
 # be used for parameter estimation, parameter references and threshold for MLE
 # This is done because the ga cannot handle additional user inputs
-def fittingParameters(initFlag,deadVolumeFile,adsorbentDensity,particleEpsilon,massSorbent,isoRef, thresholdFactor):
+def fittingParameters(initFlag,deadVolumeFile,adsorbentDensity,particleEpsilon,massSorbent,isoRef, thresholdFactor,paramIso):
     from numpy import savez
     from numpy import load
     # Process the data for python (if needed)
@@ -268,7 +297,8 @@ def fittingParameters(initFlag,deadVolumeFile,adsorbentDensity,particleEpsilon,m
                particleEpsilon=particleEpsilon,
                massSorbent=massSorbent,
                isoRef=isoRef,
-               thresholdFactor=thresholdFactor)
+               thresholdFactor=thresholdFactor,
+               paramIso = paramIso)
     # Returns the path of the .npz file to be used 
     else:
     # Load the dummy file with deadVolumeFile, adsorbent density, particle voidage,
@@ -280,4 +310,5 @@ def fittingParameters(initFlag,deadVolumeFile,adsorbentDensity,particleEpsilon,m
         massSorbent = load (dummyFileName)["massSorbent"]
         isoRef = load (dummyFileName)["isoRef"]
         thresholdFactor = load (dummyFileName)["thresholdFactor"]
-        return deadVolumeFile, adsorbentDensity, particleEpsilon, massSorbent, isoRef, thresholdFactor
+        paramIso = load (dummyFileName)["paramIso"]
+        return deadVolumeFile, adsorbentDensity, particleEpsilon, massSorbent, isoRef, thresholdFactor, paramIso
