@@ -17,6 +17,7 @@
 # Reference: 10.1007/s10450-012-9417-z
 #
 # Last modified:
+# - 2021-05-28, AK: Add the existing DV model with MS DV model and structure change
 # - 2021-05-28, AK: Add model for MS
 # - 2021-05-24, AK: Improve information passing (for output)
 # - 2021-05-05, AK: Bug fix for MLE error computation
@@ -86,6 +87,14 @@ def extractDeadVolume():
     # Flow rate through the MS capillary (determined by performing experiments)
     # Pfeiffer Vaccum (in Ronny Pini's lab has 0.4 ccm)
     msFlowRate = 0.4/60 # [ccs]
+    
+    # MS dead volume model
+    msDeadVolumeFile = [] # DO NOT CHANGE (initialization)
+    flagMSDeadVolume = False # It should be the opposite of flagMSfit (if used)
+    # If MS dead volume used separately, use the file defined here with ms 
+    # parameters
+    if flagMSDeadVolume:
+        msDeadVolumeFile = 'deadVolumeCharacteristics_20210528_1110_7c0209e.npz'
 
     # Threshold factor (If -negative infinity not used, if not need a float)
     # This is used to split the compositions into two distint regions
@@ -94,9 +103,11 @@ def extractDeadVolume():
     #####################################
     #####################################
 
-    # Save the threshold factor to a dummy file (to pass through GA - IDIOTIC)
+    # Save the parameters to be used for fitting to a dummy file (to pass 
+    # through GA - IDIOTIC)
     savez ('tempFittingParametersDV.npz',thresholdFactor=thresholdFactor,
-           flagMSFit = flagMSFit, msFlowRate = msFlowRate)
+           flagMSFit = flagMSFit, msFlowRate = msFlowRate,
+           flagMSDeadVolume = flagMSDeadVolume, msDeadVolumeFile = msDeadVolumeFile)
     
     # Generate .npz file for python processing of the .mat file 
     filesToProcess(True,mainDir,fileName,'DV')
@@ -159,6 +170,8 @@ def extractDeadVolume():
            fileName = fileName, # Names of file used for fitting
            flagMSFit = flagMSFit, # Flag to check if MS data is fit
            msFlowRate = msFlowRate, # Flow rate through MS capillary [ccs]
+           flagMSDeadVolume = flagMSDeadVolume, # Flag for checking if ms dead volume used
+           msDeadVolumeFile = msDeadVolumeFile, # MS dead volume parameter file
            mleThreshold = thresholdFactor, # Threshold for MLE composition split [-]
            hostName = socket.gethostname()) # Hostname of the computer
 
@@ -177,8 +190,8 @@ def extractDeadVolume():
 # optimizer)
 def deadVolObjectiveFunction(x):
     import numpy as np
-    from simulateDeadVolume import simulateDeadVolume
     from computeMLEError import computeMLEError
+    from deadVolumeWrapper import deadVolumeWrapper
     from numpy import load
     
     # Load the threshold factor, MS fit flag and MS flow rate from the dummy 
@@ -186,6 +199,8 @@ def deadVolObjectiveFunction(x):
     thresholdFactor = load ('tempFittingParametersDV.npz')["thresholdFactor"]
     flagMSFit = load ('tempFittingParametersDV.npz')["flagMSFit"] # Used only if MS data is fit
     msFlowRate = load ('tempFittingParametersDV.npz')["msFlowRate"] # Used only if MS data is fit
+    flagMSDeadVolume = load ('tempFittingParametersDV.npz')["flagMSDeadVolume"] # Used only if MS dead volume model is separate
+    msDeadVolumeFile = load ('tempFittingParametersDV.npz')["msDeadVolumeFile"] # Load the ms dead volume parameter file 
     
     # Load the names of the file to be used for estimating dead volume characteristics
     filePath = filesToProcess(False,[],[],'DV')
@@ -229,22 +244,15 @@ def deadVolObjectiveFunction(x):
 
         # Compute the experimental volume (using trapz)
         expVolume = max([expVolume, np.trapz(moleFracExp,np.multiply(flowRateDV, timeElapsedExp))])
+
+        # Call the deadVolume Wrapper function to obtain the outlet mole fraction
+        moleFracSim = deadVolumeWrapper(timeInt, flowRateDV, x, flagMSDeadVolume, msDeadVolumeFile)
         
-        # Compute the dead volume response using the optimizer parameters
-        _ , _ , moleFracSim = simulateDeadVolume(deadVolume_1 = x[0],
-                                                deadVolume_2M = x[1],
-                                                deadVolume_2D = x[2],                                      
-                                                numTanks_1 = int(x[3]),
-                                                flowRate_D = x[4],
-                                                timeInt = timeInt,
-                                                flowRate = flowRateDV,
-                                                expFlag = True)
-                            
         # Stack mole fraction from experiments and simulation for error 
         # computation
         moleFracExpALL = np.hstack((moleFracExpALL, moleFracExp))
         moleFracSimALL = np.hstack((moleFracSimALL, moleFracSim))
-
+        
     # Penalize if the total volume of the system is greater than experiemntal 
     # volume
     penaltyObj = 0
