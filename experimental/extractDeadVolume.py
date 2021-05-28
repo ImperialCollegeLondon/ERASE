@@ -17,6 +17,7 @@
 # Reference: 10.1007/s10450-012-9417-z
 #
 # Last modified:
+# - 2021-05-28, AK: Add model for MS
 # - 2021-05-24, AK: Improve information passing (for output)
 # - 2021-05-05, AK: Bug fix for MLE error computation
 # - 2021-05-05, AK: Bug fix for error computation
@@ -73,9 +74,18 @@ def extractDeadVolume():
     # Directory of raw data    
     mainDir = 'runData'
     # File name of the experiments
-    fileName = ['ZLC_DeadVolume_Exp16B_Output.mat',
-                'ZLC_DeadVolume_Exp16C_Output.mat',
-                'ZLC_DeadVolume_Exp16D_Output.mat']
+    fileName = ['ZLC_DeadVolume_Exp19A_Output.mat',
+                'ZLC_DeadVolume_Exp19B_Output.mat',
+                'ZLC_DeadVolume_Exp19C_Output.mat',
+                'ZLC_DeadVolume_Exp19D_Output.mat',
+                'ZLC_DeadVolume_Exp19E_Output.mat']
+
+    # Fit MS data alone (implemented on 28.05.21)
+    # Flag to fit MS data
+    flagMSFit = True
+    # Flow rate through the MS capillary (determined by performing experiments)
+    # Pfeiffer Vaccum (in Ronny Pini's lab has 0.4 ccm)
+    msFlowRate = 0.4/60 # [ccs]
 
     # Threshold factor (If -negative infinity not used, if not need a float)
     # This is used to split the compositions into two distint regions
@@ -85,15 +95,24 @@ def extractDeadVolume():
     #####################################
 
     # Save the threshold factor to a dummy file (to pass through GA - IDIOTIC)
-    savez ('tempFittingParametersDV.npz',thresholdFactor=thresholdFactor)
+    savez ('tempFittingParametersDV.npz',thresholdFactor=thresholdFactor,
+           flagMSFit = flagMSFit, msFlowRate = msFlowRate)
     
     # Generate .npz file for python processing of the .mat file 
     filesToProcess(True,mainDir,fileName,'DV')
 
-    # Define the bounds and the type of the parameters to be optimized                       
-    optBounds = np.array(([np.finfo(float).eps,10], [np.finfo(float).eps,10],
-                          [np.finfo(float).eps,10], [1,30], [np.finfo(float).eps,0.05]))
-                         
+    # Define the bounds and the type of the parameters to be optimized   
+    # MS does not have diffusive pockets, so setting the bounds for the diffusive
+    # volumes to be very very small
+    if flagMSFit:
+        optBounds = np.array(([np.finfo(float).eps,10], [np.finfo(float).eps,2*np.finfo(float).eps],
+                              [np.finfo(float).eps,2*np.finfo(float).eps], [1,30], 
+                              [np.finfo(float).eps,2*np.finfo(float).eps]))
+    # When the actual dead volume is used, diffusive volume allowed to change 
+    else:                   
+        optBounds = np.array(([np.finfo(float).eps,10], [np.finfo(float).eps,10],
+                              [np.finfo(float).eps,10], [1,30], [np.finfo(float).eps,0.05]))
+                             
     optType=np.array(['real','real','real','int','real'])
     # Algorithm parameters for GA
     algorithm_param = {'max_num_iteration':5,
@@ -138,8 +157,10 @@ def extractDeadVolume():
            algoParameters = algorithm_param, # Algorithm parameters
            numOptRepeat = numOptRepeat, # Number of times optimization repeated
            fileName = fileName, # Names of file used for fitting
+           flagMSFit = flagMSFit, # Flag to check if MS data is fit
+           msFlowRate = msFlowRate, # Flow rate through MS capillary [ccs]
            mleThreshold = thresholdFactor, # Threshold for MLE composition split [-]
-           hostName = socket.gethostname()) # Hostname of the computer) 
+           hostName = socket.gethostname()) # Hostname of the computer
 
     # Remove all the .npy files genereated from the .mat
     # Load the names of the file to be used for estimating dead volume characteristics
@@ -160,8 +181,11 @@ def deadVolObjectiveFunction(x):
     from computeMLEError import computeMLEError
     from numpy import load
     
-    # Load the threshold factor from the dummy file
+    # Load the threshold factor, MS fit flag and MS flow rate from the dummy 
+    # file
     thresholdFactor = load ('tempFittingParametersDV.npz')["thresholdFactor"]
+    flagMSFit = load ('tempFittingParametersDV.npz')["flagMSFit"] # Used only if MS data is fit
+    msFlowRate = load ('tempFittingParametersDV.npz')["msFlowRate"] # Used only if MS data is fit
     
     # Load the names of the file to be used for estimating dead volume characteristics
     filePath = filesToProcess(False,[],[],'DV')
@@ -191,12 +215,20 @@ def deadVolObjectiveFunction(x):
         timeElapsedExp = timeElapsedExpTemp[::int(np.round(downsampleInt[ii]))]
         moleFracExp = moleFracExpTemp[::int(np.round(downsampleInt[ii]))]
         flowRateExp = flowRateTemp[::int(np.round(downsampleInt[ii]))]
-                
+        
+        # Change the flow rate if fit only MS data
+        if flagMSFit:
+            flowRateDV = msFlowRate
+        else:
+             # Flow rate for dead volume considered the mean of last 10 points 
+             # (to avoid delay issues)
+            flowRateDV = np.mean(flowRateExp[-1:-10:-1])
+        
         # Integration and ode evaluation time (check simulateDeadVolume)
         timeInt = timeElapsedExp
 
         # Compute the experimental volume (using trapz)
-        expVolume = max([expVolume, np.trapz(moleFracExp,np.multiply(flowRateExp, timeElapsedExp))])
+        expVolume = max([expVolume, np.trapz(moleFracExp,np.multiply(flowRateDV, timeElapsedExp))])
         
         # Compute the dead volume response using the optimizer parameters
         _ , _ , moleFracSim = simulateDeadVolume(deadVolume_1 = x[0],
@@ -205,7 +237,7 @@ def deadVolObjectiveFunction(x):
                                                 numTanks_1 = int(x[3]),
                                                 flowRate_D = x[4],
                                                 timeInt = timeInt,
-                                                flowRate = flowRateExp,
+                                                flowRate = flowRateDV,
                                                 expFlag = True)
                             
         # Stack mole fraction from experiments and simulation for error 
