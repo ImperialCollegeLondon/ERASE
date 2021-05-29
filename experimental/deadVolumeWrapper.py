@@ -13,6 +13,7 @@
 # one lumped dead volume or can simulate a cascade of dead volume and MS
 #
 # Last modified:
+# - 2021-05-29, AK: Add optional arguments for combind model
 # - 2021-05-28, AK: Initial creation
 #
 # Input arguments:
@@ -23,10 +24,23 @@
 #
 ############################################################################
 
-def deadVolumeWrapper(timeInt, flowRateDV, DV_p, flagMSDeadVolume, msDeadVolumeFile):
+def deadVolumeWrapper(timeInt, flowRateDV, DV_p, flagMSDeadVolume, 
+                      msDeadVolumeFile, **kwargs):
     import os
     from numpy import load
     from simulateDeadVolume import simulateDeadVolume
+    
+    # Initial Gas Mole Fraction [-]
+    if 'initMoleFrac' in kwargs:
+        initMoleFrac = kwargs["initMoleFrac"]
+    else:
+        initMoleFrac = [1.]
+    
+    # Feed Gas Mole Fraction [-]
+    if 'feedMoleFrac' in kwargs:
+        feedMoleFrac = kwargs["feedMoleFrac"]
+    else:
+        feedMoleFrac = [0.]
     
     # Simulates the tubings and fittings
     # Compute the dead volume response using the dead volume parameters input
@@ -35,6 +49,8 @@ def deadVolumeWrapper(timeInt, flowRateDV, DV_p, flagMSDeadVolume, msDeadVolumeF
                                             deadVolume_2D = DV_p[2],                                      
                                             numTanks_1 = int(DV_p[3]),
                                             flowRate_D = DV_p[4],
+                                            initMoleFrac = initMoleFrac,
+                                            feedMoleFrac = feedMoleFrac,
                                             timeInt = timeInt,
                                             flowRate = flowRateDV,
                                             expFlag = True)

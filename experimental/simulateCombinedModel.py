@@ -14,6 +14,7 @@
 # volume simulator
 #
 # Last modified:
+# - 2021-05-29, AK: Add a separate MS dead volume
 # - 2021-05-13, AK: Add volumes and density as inputs
 # - 2021-04-27, AK: Convert to a function for parameter estimation
 # - 2021-04-22, AK: Initial creation
@@ -26,9 +27,8 @@
 ############################################################################
 
 def simulateCombinedModel(**kwargs):
-    import numpy as np
     from simulateZLC import simulateZLC
-    from simulateDeadVolume import simulateDeadVolume
+    from deadVolumeWrapper import deadVolumeWrapper
     from numpy import load
     import os
 
@@ -126,17 +126,23 @@ def simulateCombinedModel(**kwargs):
     modelOutputTemp = load(deadVolumeDir+deadVolumeFile, allow_pickle=True)["modelOutput"]
     # Parse out dead volume parameters
     x = modelOutputTemp[()]["variable"]
-    # Call the simulateDeadVolume function to simulate the dead volume of the setup
-    _ , _ , moleFracOut = simulateDeadVolume(timeInt = timeZLC,
-                                            initMoleFrac = moleFracZLC[0],
-                                            feedMoleFrac = moleFracZLC,
-                                            flowRate = flowRateZLC,
-                                            expFlag = True, # Note this is true as flow rate from ZLC used
-                                            deadVolume_1 = x[0],
-                                            deadVolume_2M = x[1],
-                                            deadVolume_2D = x[2],
-                                            numTanks_1 = int(x[3]),
-                                            flowRate_D = x[4])
+
+    # Get the MS dead volume file, if available
+    # Additionally, load the flag that will be used in deadVolumeWrapper
+    # This is back compatible with older versions without MS model
+    dvFileLoadTemp = load(deadVolumeDir+deadVolumeFile)
+    # With MS Model
+    if 'flagMSDeadVolume' in dvFileLoadTemp.files:
+        flagMSDeadVolume = dvFileLoadTemp["flagMSDeadVolume"]
+        msDeadVolumeFile = dvFileLoadTemp["msDeadVolumeFile"]
+    # Without MS Model
+    else:
+        flagMSDeadVolume = False
+        msDeadVolumeFile = []
+
+    # Call the deadVolume Wrapper function to obtain the outlet mole fraction
+    moleFracOut = deadVolumeWrapper(timeZLC, flowRateZLC, x, flagMSDeadVolume, msDeadVolumeFile,
+                                    initMoleFrac = moleFracZLC[0], feedMoleFrac = moleFracZLC)
     
     # Plot results if needed
     if plotFlag:
