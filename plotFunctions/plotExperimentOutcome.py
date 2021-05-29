@@ -12,6 +12,7 @@
 # Plots for the experimental outcome (along with model)
 #
 # Last modified:
+# - 2021-05-14, AK: Fixes and structure changes
 # - 2021-05-14, AK: Improve plotting capabilities
 # - 2021-05-05, AK: Bug fix for MLE error computation
 # - 2021-05-04, AK: Bug fix for error computation
@@ -28,9 +29,10 @@
 ############################################################################
 
 import numpy as np
-from simulateDeadVolume import simulateDeadVolume
 from computeMLEError import computeMLEError
 from computeEquilibriumLoading import computeEquilibriumLoading
+from deadVolumeWrapper import deadVolumeWrapper
+from extractDeadVolume import filesToProcess # File processing script
 from numpy import load
 import os
 import matplotlib.pyplot as plt
@@ -66,7 +68,7 @@ adsorbentDensity = 1950 # Activated carbon skeletal density [kg/m3]
 particleEpsilon = 0.61
 
 # Particle mass [g]
-massSorbent = 0.0846
+massSorbent = 0.0645
 
 # Volume of sorbent material [m3]
 volSorbent = (massSorbent/1000)/adsorbentDensity
@@ -92,18 +94,38 @@ markerForPlot = ["o","v","o","v","o","v"]
 
 if flagDeadVolume:
     # File name of the experiments
-    fileName = ['ZLC_DeadVolume_Exp16B_Output_ba091f5.npz',
-                'ZLC_DeadVolume_Exp16C_Output_ba091f5.npz',
-                'ZLC_DeadVolume_Exp16D_Output_ba091f5.npz']
+    rawFileName = ['ZLC_DeadVolume_Exp16B_Output.mat',
+                   'ZLC_DeadVolume_Exp16C_Output.mat',
+                   'ZLC_DeadVolume_Exp16D_Output.mat']
+    # Generate .npz file for python processing of the .mat file 
+    filesToProcess(True,mainDir,rawFileName,'DV')
+    # Get the processed file names
+    fileName = filesToProcess(False,[],[],'DV')
+
     # File with parameter estimates
     simulationDir = '/Users/ash23win/Google Drive/ERASE/simulationResults/'
-    fileParameter = 'deadVolumeCharacteristics_20210511_1203_ebb447e.npz'
+    fileParameter = 'deadVolumeCharacteristics_20210528_1319_318b280.npz'
     modelOutputTemp = load(simulationDir+fileParameter, allow_pickle=True)["modelOutput"]
     x = modelOutputTemp[()]["variable"]
-
+    
+    # Get the MS fit flag, flow rates and msDeadVolumeFile (if needed)
+    # Check needs to be done to see if MS file available or not
+    # Checked using flagMSDeadVolume in the saved file
+    dvFileLoadTemp = load(simulationDir+fileParameter)
+    if 'flagMSDeadVolume' in dvFileLoadTemp.files:
+        flagMSFit = dvFileLoadTemp["flagMSFit"]
+        msFlowRate = dvFileLoadTemp["msFlowRate"]
+        flagMSDeadVolume = dvFileLoadTemp["flagMSDeadVolume"]
+        msDeadVolumeFile = dvFileLoadTemp["msDeadVolumeFile"]
+    else:
+        flagMSFit = False
+        msFlowRate = -np.inf
+        flagMSDeadVolume = False
+        msDeadVolumeFile = []
+    
     numPointsExp = np.zeros(len(fileName))
     for ii in range(len(fileName)): 
-        fileToLoad = mainDir + fileName[ii]
+        fileToLoad = fileName[ii]
         # Load experimental molefraction
         timeElapsedExp = load(fileToLoad)["timeElapsed"].flatten()
         numPointsExp[ii] = len(timeElapsedExp)
@@ -121,15 +143,15 @@ if flagDeadVolume:
 
     # Create the instance for the plots
     fig = plt.figure
-    ax1 = plt.subplot(1,3,1)        
-    ax2 = plt.subplot(1,3,2)
+    ax1 = plt.subplot(1,2,1)        
+    ax2 = plt.subplot(1,2,2)
     # Initialize error for objective function
     # Loop over all available files    
     for ii in range(len(fileName)):
         # Initialize outputs
         moleFracSim = []
         # Path of the file name
-        fileToLoad = mainDir + fileName[ii]   
+        fileToLoad = fileName[ii]   
         # Load experimental time, molefraction and flowrate (accounting for downsampling)
         timeElapsedExpTemp = load(fileToLoad)["timeElapsed"].flatten()
         moleFracExpTemp = load(fileToLoad)["moleFrac"].flatten()
@@ -137,6 +159,12 @@ if flagDeadVolume:
         timeElapsedExp = timeElapsedExpTemp[::int(np.round(downsampleInt[ii]))]
         moleFracExp = moleFracExpTemp[::int(np.round(downsampleInt[ii]))]
         flowRateExp = flowRateTemp[::int(np.round(downsampleInt[ii]))]
+        # Get the flow rates from the fit file
+        # When MS used
+        if flagMSFit:
+            flowRateDV = msFlowRate
+        else:
+            flowRateDV = np.mean(flowRateExp[-1:-10:-1])
         
         # Integration and ode evaluation time
         timeInt = timeElapsedExp
@@ -144,17 +172,10 @@ if flagDeadVolume:
         # Print experimental volume 
         print("Experiment",str(ii+1),round(np.trapz(moleFracExp,
                                                     np.multiply(flowRateExp,timeElapsedExp)),2))
-        if simulateModel:
-            # Compute the dead volume response using the optimizer parameters
-            _ , _ , moleFracSim = simulateDeadVolume(deadVolume_1 = x[0],
-                                                    deadVolume_2M = x[1],
-                                                    deadVolume_2D = x[2],
-                                                    numTanks_1 = int(x[3]),
-                                                    flowRate_D = x[4],
-                                                    timeInt = timeInt,
-                                                    flowRate = flowRateExp,
-                                                    expFlag = True)
-
+        if simulateModel:    
+            # Call the deadVolume Wrapper function to obtain the outlet mole fraction
+            moleFracSim = deadVolumeWrapper(timeInt, flowRateDV, x, flagMSDeadVolume, msDeadVolumeFile)
+        
             # Print simulation volume    
             print("Simulation",str(ii+1),round(np.trapz(moleFracSim,
                                                       np.multiply(flowRateExp,
@@ -175,7 +196,9 @@ if flagDeadVolume:
                               color=colorsForPlot[ii]) # Simulation response    
             ax1.set(xlabel='$t$ [s]', 
                     ylabel='$y_1$ [-]',
-                    xlim = [0,100], ylim = [0, 1])         
+                    xlim = [0,150], ylim = [0, 1])   
+            ax1.locator_params(axis="x", nbins=5)
+            ax1.locator_params(axis="y", nbins=5)
             ax1.legend()
     
             # Log scale
@@ -186,7 +209,9 @@ if flagDeadVolume:
                 ax2.semilogy(timeElapsedExp,moleFracSim,
                               color=colorsForPlot[ii]) # Simulation response
             ax2.set(xlabel='$t$ [s]', 
-                    xlim = [0,150], ylim = [5e-3, 1])         
+                    xlim = [0,150], ylim = [5e-3, 1])   
+            ax2.locator_params(axis="x", nbins=5)
+
             
             #  Save the figure
             if saveFlag:
@@ -199,26 +224,26 @@ if flagDeadVolume:
                 plt.savefig (savePath)
         else:
             # Linear scale
-            ax1.plot(np.multiply(flowRateExp,timeElapsedExp),moleFracExp,
+            ax1.plot(np.multiply(flowRateDV,timeElapsedExp),moleFracExp,
                           marker = markerForPlot[ii],linewidth = 0,
-                          color=colorsForPlot[ii],alpha=0.2,label=str(round(np.mean(flowRateExp),2))+" ccs") # Experimental response
+                          color=colorsForPlot[ii],alpha=0.2,label=str(round(np.mean(flowRateDV),2))+" ccs") # Experimental response
             if simulateModel:
-                ax1.plot(np.multiply(flowRateExp,timeElapsedExp),moleFracSim,
+                ax1.plot(np.multiply(flowRateDV,timeElapsedExp),moleFracSim,
                               color=colorsForPlot[ii]) # Simulation response    
             ax1.set(xlabel='$Ft$ [cc]', 
                     ylabel='$y_1$ [-]',
-                    xlim = [0,50], ylim = [0, 1])         
+                    xlim = [0,0.1], ylim = [0, 1])         
             ax1.legend()
     
             # Log scale
-            ax2.semilogy(np.multiply(flowRateExp,timeElapsedExp),moleFracExp,
+            ax2.semilogy(np.multiply(flowRateDV,timeElapsedExp),moleFracExp,
                           marker = markerForPlot[ii],linewidth = 0,
-                          color=colorsForPlot[ii],alpha=0.2,label=str(round(np.mean(flowRateExp),2))+" ccs") # Experimental response
+                          color=colorsForPlot[ii],alpha=0.2,label=str(round(np.mean(flowRateDV),2))+" ccs") # Experimental response
             if simulateModel:
-                ax2.semilogy(np.multiply(flowRateExp,timeElapsedExp),moleFracSim,
+                ax2.semilogy(np.multiply(flowRateDV,timeElapsedExp),moleFracSim,
                               color=colorsForPlot[ii]) # Simulation response
             ax2.set(xlabel='$Ft$ [cc]', 
-                    xlim = [0,100], ylim = [1e-3, 1])         
+                    xlim = [0,0.1], ylim = [1e-3, 1])         
             ax2.legend()
             
             #  Save the figure
@@ -235,38 +260,42 @@ if flagDeadVolume:
     computedError = computeMLEError(moleFracExpALL,moleFracSimALL)
     print(round(computedError,0))
     
+    # Remove all the .npy files genereated from the .mat
+    # Loop over all available files    
+    for ii in range(len(fileName)):
+        os.remove(fileName[ii])
+        
+    
 else:
     from simulateCombinedModel import simulateCombinedModel
     
     # Directory of raw data
     mainDir = '/Users/ash23win/Google Drive/ERASE/experimental/runData/'
     # File name of the experiments
-    fileName = [
-                'ZLC_ActivatedCarbon_Exp24A_Output_ba091f5.npz',
-                'ZLC_ActivatedCarbon_Exp24B_Output_ba091f5.npz',
-                'ZLC_ActivatedCarbon_Exp24C_Output_ba091f5.npz',
-                'ZLC_ActivatedCarbon_Exp24D_Output_ba091f5.npz',
-                'ZLC_ActivatedCarbon_Exp24E_Output_ba091f5.npz',]
-    
+    rawFileName = ['ZLC_ActivatedCarbon_Exp36A_Output.mat',
+                   'ZLC_ActivatedCarbon_Exp36D_Output.mat']
+    # Generate .npz file for python processing of the .mat file 
+    filesToProcess(True,mainDir,rawFileName,'ZLC')
+    # Get the processed file names
+    fileName = filesToProcess(False,[],[],'ZLC')
     # File with parameter estimates
     simulationDir = '/Users/ash23win/Google Drive/ERASE/simulationResults/'
     # Dead volume model
-    deadVolumeFile = 'deadVolumeCharacteristics_20210511_1015_ebb447e.npz'  
+    deadVolumeFile = 'deadVolumeCharacteristics_20210528_1319_318b280.npz'
     # ZLC parameter model
-    fileParameter = 'zlcParameters_20210513_2239_ba091f5.npz'
+    fileParameter = 'zlcParameters_20210525_2337_7c0209e.npz'
     modelOutputTemp = load(simulationDir+fileParameter, allow_pickle=True)["modelOutput"]
     print("Objective Function",round(modelOutputTemp[()]["function"],0))
     modelNonDim = modelOutputTemp[()]["variable"] 
     numPointsExp = np.zeros(len(fileName))
     for ii in range(len(fileName)): 
-        fileToLoad = mainDir + fileName[ii]
+        fileToLoad = fileName[ii]
         # Load experimental molefraction
         timeElapsedExp = load(fileToLoad)["timeElapsed"].flatten()
         numPointsExp[ii] = len(timeElapsedExp)
     
     # Downsample intervals
     downsampleInt = numPointsExp/np.min(numPointsExp)
-
     # Multiply the paremeters by the reference values (for SSL)
     x = np.multiply(modelNonDim,[10, 1e-5, 50e3,100])
 
@@ -288,7 +317,7 @@ else:
                 
     # Loop over all available files    
     for ii in range(len(fileName)):
-        fileToLoad = mainDir + fileName[ii]   
+        fileToLoad = fileName[ii]   
         
         # Initialize outputs
         moleFracSim = []  
@@ -334,31 +363,31 @@ else:
         # y - Linear scale
         ax1.semilogy(timeElapsedExp,moleFracExp,
                 marker = markerForPlot[ii],linewidth = 0,
-                color=colorsForPlot[ii],alpha=0.25) # Experimental response
+                color=colorsForPlot[ii],alpha=0.15) # Experimental response
         if simulateModel:
             ax1.plot(timeElapsedExp,moleFracSim,
                      color=colorsForPlot[ii],label=str(round(np.mean(flowRateExp),2))+" ccs") # Simulation response    
         ax1.set(xlabel='$t$ [s]', 
                 ylabel='$y_1$ [-]',
-                xlim = [0,300], ylim = [5e-3, 1])    
+                xlim = [0,150], ylim = [5e-3, 1])    
         ax1.locator_params(axis="x", nbins=4)
         ax1.legend()
     
         # Ft - Log scale        
         ax2.semilogy(np.multiply(flowRateExp,timeElapsedExp),moleFracExp,
                       marker = markerForPlot[ii],linewidth = 0,
-                      color=colorsForPlot[ii],alpha=0.25) # Experimental response
+                      color=colorsForPlot[ii],alpha=0.15) # Experimental response
         if simulateModel:
-            ax2.semilogy(np.multiply(flowRateExp,timeElapsedExp),moleFracSim,
-                          color=colorsForPlot[ii],label=str(round(np.mean(flowRateExp),2))+" ccs") # Simulation response
+            ax2.semilogy(np.multiply(resultMat[3,:]*1e6,timeElapsedExp),moleFracSim,
+                          color=colorsForPlot[ii],label=str(round(np.mean(resultMat[3,:]*1e6),2))+" ccs") # Simulation response
         ax2.set(xlabel='$Ft$ [cc]', 
-                xlim = [0,100], ylim = [5e-3, 1])         
+                xlim = [0,20], ylim = [5e-3, 1])         
         ax2.locator_params(axis="x", nbins=4)
         
         # Flow rates
         ax3.plot(timeElapsedExp,flowRateExp,
                 marker = markerForPlot[ii],linewidth = 0,
-                color=colorsForPlot[ii],alpha=0.25,label=str(round(np.mean(flowRateExp),2))+" ccs") # Experimental response
+                color=colorsForPlot[ii],alpha=0.05,label=str(round(np.mean(flowRateExp),2))+" ccs") # Experimental response
         if simulateModel:
             ax3.plot(timeElapsedExp,resultMat[3,:]*1e6,
                      color=colorsForPlot[ii]) # Simulation response    
@@ -407,7 +436,7 @@ else:
     ax1.scatter(massBalanceALL[:,0],massBalanceALL[:,1],c='dimgrey')
     ax1.set(xlabel='$P$ [bar]', 
             ylabel='$q^*$ [mol kg$^\mathregular{-1}$]',
-            xlim = [0,1], ylim = [0, 3]) 
+            xlim = [0,0.8], ylim = [0, 3]) 
     ax1.locator_params(axis="x", nbins=4)
     ax1.locator_params(axis="y", nbins=4)        
     ax1.legend()
@@ -422,3 +451,8 @@ else:
         plt.savefig (savePath)         
     
     plt.show()
+    
+    # Remove all the .npy files genereated from the .mat
+    # Loop over all available files    
+    for ii in range(len(fileName)):
+        os.remove(fileName[ii])
