@@ -16,6 +16,7 @@
 # Reference: 10.1016/j.ces.2014.12.062
 #
 # Last modified:
+# - 2021-06-01, AK: Add temperature as an input
 # - 2021-05-25, AK: Add kinetic mode for estimation
 # - 2021-05-24, AK: Improve information passing (for output)
 # - 2021-05-13, AK: Change structure to input mass of adsorbent
@@ -69,15 +70,18 @@ def extractZLCParameters():
     # Directory of raw data
     mainDir = 'runData'
     # File name of the experiments
-    fileName = ['ZLC_ActivatedCarbon_Exp34A_Output.mat',
-                'ZLC_ActivatedCarbon_Exp34B_Output.mat',
-                'ZLC_ActivatedCarbon_Exp34C_Output.mat',
-                'ZLC_ActivatedCarbon_Exp34D_Output.mat',
-                'ZLC_ActivatedCarbon_Exp34E_Output.mat',
-                'ZLC_ActivatedCarbon_Exp34F_Output.mat']
+    fileName = ['ZLC_ActivatedCarbon_Exp39A_Output.mat',
+                'ZLC_ActivatedCarbon_Exp39B_Output.mat',
+                'ZLC_ActivatedCarbon_Exp39C_Output.mat',
+                'ZLC_ActivatedCarbon_Exp39D_Output.mat',
+                'ZLC_ActivatedCarbon_Exp39E_Output.mat',
+                'ZLC_ActivatedCarbon_Exp39F_Output.mat']
+    
+    # Temperature (for each experiment)
+    temperature = [313.15, 313.15, 313.15, 313.15, 313.15, 313.15]
     
     # Dead volume model
-    deadVolumeFile = 'deadVolumeCharacteristics_20210521_1609_434a71d.npz'  
+    deadVolumeFile = 'deadVolumeCharacteristics_20210528_1319_318b280.npz'
 
     # Isotherm model (if fitting only kinetic constant)
     isothermFile = 'zlcParameters_20210525_1610_a079f4a.npz'
@@ -139,7 +143,7 @@ def extractZLCParameters():
         paramIso = np.multiply(modelNonDim,parameterRefTemp)
 
     # Initialize the parameters used for ZLC fitting process
-    fittingParameters(True,deadVolumeFile,adsorbentDensity,particleEpsilon,
+    fittingParameters(True,temperature,deadVolumeFile,adsorbentDensity,particleEpsilon,
                       massSorbent,isoRef,thresholdFactor,paramIso)
 
     # Algorithm parameters for GA
@@ -185,6 +189,7 @@ def extractZLCParameters():
            algoParameters = algorithm_param, # Algorithm parameters
            numOptRepeat = numOptRepeat, # Number of times optimization repeated
            fileName = fileName, # Names of file used for fitting
+           temperature = temperature, # Temperature [K]
            deadVolumeFile = deadVolumeFile, # Dead volume file used for parameter estimation
            isothermFile = isothermFile, # Isotherm parameters file, if only kinetics estimated
            adsorbentDensity = adsorbentDensity, # Adsorbent density [kg/m3]
@@ -215,7 +220,7 @@ def ZLCObjectiveFunction(x):
     from computeMLEError import computeMLEError
 
     # Get the zlc parameters needed for the solver
-    deadVolumeFile, adsorbentDensity, particleEpsilon, massSorbent, isoRef, thresholdFactor, paramIso = fittingParameters(False,[],[],[],[],[],[],[])
+    temperature, deadVolumeFile, adsorbentDensity, particleEpsilon, massSorbent, isoRef, thresholdFactor, paramIso = fittingParameters(False,[],[],[],[],[],[],[],[])
 
     # Volume of sorbent material [m3]
     volSorbent = (massSorbent/1000)/adsorbentDensity
@@ -264,6 +269,7 @@ def ZLCObjectiveFunction(x):
         # Compute the composite response using the optimizer parameters
         _ , moleFracSim , _ = simulateCombinedModel(isothermModel = isothermModel,
                                                     rateConstant = x[-1]*isoRef[-1], # Last element is rate constant
+                                                    temperature = temperature[ii], # Temperature [K]
                                                     timeInt = timeInt,
                                                     initMoleFrac = [moleFracExp[0]], # Initial mole fraction assumed to be the first experimental point
                                                     flowIn = np.mean(flowRateExp[-1:-10:-1]*1e-6), # Flow rate [m3/s] for ZLC considered to be the mean of last 10 points (equilibrium)
@@ -285,14 +291,15 @@ def ZLCObjectiveFunction(x):
 # Parses dead volume calibration file, adsorbent density, voidage, mass to 
 # be used for parameter estimation, parameter references and threshold for MLE
 # This is done because the ga cannot handle additional user inputs
-def fittingParameters(initFlag,deadVolumeFile,adsorbentDensity,particleEpsilon,massSorbent,isoRef, thresholdFactor,paramIso):
+def fittingParameters(initFlag,temperature,deadVolumeFile,adsorbentDensity,particleEpsilon,massSorbent,isoRef, thresholdFactor,paramIso):
     from numpy import savez
     from numpy import load
     # Process the data for python (if needed)
     if initFlag:
         # Save the necessary inputs to a temp file
         dummyFileName = 'tempFittingParametersZLC.npz'
-        savez (dummyFileName, deadVolumeFile = deadVolumeFile,
+        savez (dummyFileName, temperature = temperature,
+               deadVolumeFile = deadVolumeFile,
                adsorbentDensity=adsorbentDensity,
                particleEpsilon=particleEpsilon,
                massSorbent=massSorbent,
@@ -301,9 +308,10 @@ def fittingParameters(initFlag,deadVolumeFile,adsorbentDensity,particleEpsilon,m
                paramIso = paramIso)
     # Returns the path of the .npz file to be used 
     else:
-    # Load the dummy file with deadVolumeFile, adsorbent density, particle voidage,
+    # Load the dummy file with temperature, deadVolumeFile, adsorbent density, particle voidage,
     # and mass of sorbent
         dummyFileName = 'tempFittingParametersZLC.npz'
+        temperature = load (dummyFileName)["temperature"]
         deadVolumeFile = load (dummyFileName)["deadVolumeFile"]
         adsorbentDensity = load (dummyFileName)["adsorbentDensity"]
         particleEpsilon = load (dummyFileName)["particleEpsilon"]
@@ -311,4 +319,4 @@ def fittingParameters(initFlag,deadVolumeFile,adsorbentDensity,particleEpsilon,m
         isoRef = load (dummyFileName)["isoRef"]
         thresholdFactor = load (dummyFileName)["thresholdFactor"]
         paramIso = load (dummyFileName)["paramIso"]
-        return deadVolumeFile, adsorbentDensity, particleEpsilon, massSorbent, isoRef, thresholdFactor, paramIso
+        return temperature, deadVolumeFile, adsorbentDensity, particleEpsilon, massSorbent, isoRef, thresholdFactor, paramIso

@@ -14,6 +14,7 @@
 # volume simulator
 #
 # Last modified:
+# - 2021-06-01, AK: Add temperature as an input
 # - 2021-05-29, AK: Add a separate MS dead volume
 # - 2021-05-13, AK: Add volumes and density as inputs
 # - 2021-04-27, AK: Convert to a function for parameter estimation
@@ -31,6 +32,7 @@ def simulateCombinedModel(**kwargs):
     from deadVolumeWrapper import deadVolumeWrapper
     from numpy import load
     import os
+    import numpy as np
 
     # Move to top level folder (to avoid path issues)    
     os.chdir("..")
@@ -44,7 +46,7 @@ def simulateCombinedModel(**kwargs):
     
     # Plot flag
     plotFlag = False
-
+    
     # Isotherm model parameters  (SSL or DSL)
     if 'isothermModel' in kwargs:
         isothermModel = kwargs["isothermModel"]
@@ -58,6 +60,12 @@ def simulateCombinedModel(**kwargs):
         rateConstant = kwargs["rateConstant"]
     else:
         rateConstant = [0.3]
+        
+    # Temperature of the gas [K]
+    if 'temperature' in kwargs:
+        temperature = np.array(kwargs["temperature"]);
+    else:
+        temperature = np.array([298.15]);
 
     # Feed flow rate [m3/s]
     if 'flowIn' in kwargs:
@@ -70,34 +78,38 @@ def simulateCombinedModel(**kwargs):
         initMoleFrac = kwargs["initMoleFrac"]
     else:
         initMoleFrac = [1.]
-
+        
     # Time span for integration [tuple with t0 and tf]
     if 'timeInt' in kwargs:
         timeInt = kwargs["timeInt"]
     else:
-        timeInt = (0.0,300)   
+        timeInt = (0.0,300)  
+        
     # Volume of sorbent material [m3]
     if 'volSorbent' in kwargs:
         volSorbent = kwargs["volSorbent"]
     else:
         volSorbent = 4.35e-8
+        
     # Volume of gas chamber (dead volume) [m3]
     if 'volGas' in kwargs:
         volGas = kwargs["volGas"]
     else:
         volGas = 6.81e-8
+        
     # Adsorbent density [kg/m3]
     # This has to be the skeletal density
     if 'adsorbentDensity' in kwargs:
         adsorbentDensity = kwargs["adsorbentDensity"]
     else:
         adsorbentDensity = 1950 # Activated carbon skeletal density [kg/m3]
+        
     # File name with dead volume characteristics parameters
     if 'deadVolumeFile' in kwargs:
         deadVolumeFile = kwargs["deadVolumeFile"]
     else:
         deadVolumeFile = 'deadVolumeCharacteristics_20210511_1015_ebb447e.npz'  
-        
+    
     # Flag to check if experimental data used
     if 'expFlag' in kwargs:
         expFlag = kwargs["expFlag"]
@@ -107,6 +119,7 @@ def simulateCombinedModel(**kwargs):
     # Call the simulateZLC function to simulate the sorption in a given sorbent
     timeZLC, resultMat, _ = simulateZLC(isothermModel=isothermModel,
                                         rateConstant=rateConstant,
+                                        temperature = temperature,
                                         flowIn = flowIn,
                                         initMoleFrac = initMoleFrac,
                                         timeInt = timeInt,
