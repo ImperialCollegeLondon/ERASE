@@ -70,7 +70,13 @@ def extractZLCParameters():
     # Directory of raw data
     mainDir = 'runData'
     # File name of the experiments
-    fileName = ['ZLC_ActivatedCarbon_Exp39A_Output.mat',
+    fileName = ['ZLC_ActivatedCarbon_Exp34A_Output.mat',
+                'ZLC_ActivatedCarbon_Exp34B_Output.mat',
+                'ZLC_ActivatedCarbon_Exp34C_Output.mat',
+                'ZLC_ActivatedCarbon_Exp34D_Output.mat',
+                'ZLC_ActivatedCarbon_Exp34E_Output.mat',
+                'ZLC_ActivatedCarbon_Exp34F_Output.mat',
+                'ZLC_ActivatedCarbon_Exp39A_Output.mat',
                 'ZLC_ActivatedCarbon_Exp39B_Output.mat',
                 'ZLC_ActivatedCarbon_Exp39C_Output.mat',
                 'ZLC_ActivatedCarbon_Exp39D_Output.mat',
@@ -78,7 +84,8 @@ def extractZLCParameters():
                 'ZLC_ActivatedCarbon_Exp39F_Output.mat']
     
     # Temperature (for each experiment)
-    temperature = [313.15, 313.15, 313.15, 313.15, 313.15, 313.15]
+    temperature = [298.15, 298.15, 298.15, 298.15, 298.15, 298.15,
+                   313.15, 313.15, 313.15, 313.15, 313.15, 313.15]
     
     # Dead volume model
     deadVolumeFile = 'deadVolumeCharacteristics_20210528_1319_318b280.npz'

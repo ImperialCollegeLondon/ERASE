@@ -70,7 +70,7 @@ def extractDeadVolume():
     ###### USER DEFINED PROPERTIES ###### 
     
     # Number of times optimization repeated
-    numOptRepeat = 10
+    numOptRepeat = 5
 
     # Directory of raw data    
     mainDir = 'runData'
@@ -126,8 +126,8 @@ def extractDeadVolume():
                              
     optType=np.array(['real','real','real','int','real'])
     # Algorithm parameters for GA
-    algorithm_param = {'max_num_iteration':5,
-                       'population_size':1600,
+    algorithm_param = {'max_num_iteration':30,
+                       'population_size':200,
                        'mutation_probability':0.1,
                        'crossover_probability': 0.55,
                        'parents_portion': 0.15,
@@ -139,7 +139,8 @@ def extractDeadVolume():
     model = ga(function = deadVolObjectiveFunction, dimension=5, 
                                variable_type_mixed = optType,
                                variable_boundaries = optBounds,
-                               algorithm_parameters=algorithm_param)
+                               algorithm_parameters=algorithm_param,
+                               function_timeout = 300)
 
     # Call the GA optimizer using multiple cores
     model.run(set_function=ga.set_function_multiprocess(deadVolObjectiveFunction,
