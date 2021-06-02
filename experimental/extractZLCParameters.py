@@ -16,6 +16,7 @@
 # Reference: 10.1016/j.ces.2014.12.062
 #
 # Last modified:
+# - 2021-06-02, AK: Add normalization for error
 # - 2021-06-01, AK: Add temperature as an input
 # - 2021-05-25, AK: Add kinetic mode for estimation
 # - 2021-05-24, AK: Improve information passing (for output)
@@ -65,7 +66,7 @@ def extractZLCParameters():
     modelType = 'SSL'
     
     # Number of times optimization repeated
-    numOptRepeat = 10
+    numOptRepeat = 5
     
     # Directory of raw data
     mainDir = 'runData'
@@ -154,8 +155,8 @@ def extractZLCParameters():
                       massSorbent,isoRef,thresholdFactor,paramIso)
 
     # Algorithm parameters for GA
-    algorithm_param = {'max_num_iteration':5,
-                       'population_size':1600,
+    algorithm_param = {'max_num_iteration':30,
+                       'population_size':200,
                        'mutation_probability':0.1,
                        'crossover_probability': 0.55,
                        'parents_portion': 0.15,
@@ -167,7 +168,8 @@ def extractZLCParameters():
     model = ga(function = ZLCObjectiveFunction, dimension=problemDimension, 
                                variable_type_mixed = optType,
                                variable_boundaries = optBounds,
-                               algorithm_parameters=algorithm_param)
+                               algorithm_parameters=algorithm_param,
+                               function_timeout = 300) # Timeout set to 300 s (change if code crashes)
     
     # Call the GA optimizer using multiple cores
     model.run(set_function=ga.set_function_multiprocess(ZLCObjectiveFunction,
@@ -287,8 +289,12 @@ def ZLCObjectiveFunction(x):
 
         # Stack mole fraction from experiments and simulation for error 
         # computation
-        moleFracExpALL = np.hstack((moleFracExpALL, moleFracExp))
-        moleFracSimALL = np.hstack((moleFracSimALL, moleFracSim))
+        # Normalize the error by dividing it by maximum value to avoid
+        # irregular weightings for different experiment (at diff. scales)
+        # This might not be needed in DV model as all the experiments are 
+        # start at 1 and end at 5e-3
+        moleFracExpALL = np.hstack((moleFracExpALL, moleFracExp/np.max(moleFracExp))) 
+        moleFracSimALL = np.hstack((moleFracSimALL, moleFracSim/np.max(moleFracSim)))
 
     # Compute the sum of the error for the difference between exp. and sim.
     computedError = computeMLEError(moleFracExpALL,moleFracSimALL,thresholdFactor=thresholdFactor)
