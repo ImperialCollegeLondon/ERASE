@@ -17,6 +17,7 @@ __pycache__/
 #*.bib
 *.xlsx
 *.txt
+*.zip
 
 # Python related outputs
 *.npy

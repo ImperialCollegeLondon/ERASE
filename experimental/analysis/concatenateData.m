@@ -13,6 +13,7 @@
 % 
 %
 % Last modified:
+% - 2021-06-10, AK: Bug fix for MS datetime
 % - 2021-05-10, AK: Change the calibration analysis to take average of
 %                   multiple calibrations
 % - 2021-04-23, AK: Change the calibration model to Fourier series based 
@@ -66,10 +67,10 @@ function [reconciledData, expInfo] = concatenateData(fileToLoad)
     % Load the MS Data into a cell array
     rawMSData = textscan(fileId,repmat('%s',1,9),'HeaderLines',8,'Delimiter','\t');
     % Get the date time for CO2
-    dateTimeHe = datetime(cell2mat(rawMSData{1,4}),...
+    dateTimeHe = datetime(rawMSData{1,4},...
         'InputFormat','MM/dd/yyyy hh:mm:ss.SSS a');
     % Get the date time for He
-    dateTimeCO2 = datetime(cell2mat(rawMSData{1,1}),...
+    dateTimeCO2 = datetime(rawMSData{1,1},...
         'InputFormat','MM/dd/yyyy hh:mm:ss.SSS a');
     % Reconcile all the data
     % Initial time
