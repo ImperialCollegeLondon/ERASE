@@ -16,6 +16,7 @@
 # Reference: 10.1016/j.ces.2014.12.062
 #
 # Last modified:
+# - 2021-06-11, AK: Change normalization for error
 # - 2021-06-02, AK: Add normalization for error
 # - 2021-06-01, AK: Add temperature as an input
 # - 2021-05-25, AK: Add kinetic mode for estimation
@@ -71,25 +72,39 @@ def extractZLCParameters():
     # Directory of raw data
     mainDir = 'runData'
     # File name of the experiments
-    fileName = ['ZLC_ActivatedCarbon_Exp34A_Output.mat',
-                'ZLC_ActivatedCarbon_Exp34B_Output.mat',
-                'ZLC_ActivatedCarbon_Exp34C_Output.mat',
-                'ZLC_ActivatedCarbon_Exp34D_Output.mat',
-                'ZLC_ActivatedCarbon_Exp34E_Output.mat',
-                'ZLC_ActivatedCarbon_Exp34F_Output.mat',
-                'ZLC_ActivatedCarbon_Exp39A_Output.mat',
-                'ZLC_ActivatedCarbon_Exp39B_Output.mat',
-                'ZLC_ActivatedCarbon_Exp39C_Output.mat',
-                'ZLC_ActivatedCarbon_Exp39D_Output.mat',
-                'ZLC_ActivatedCarbon_Exp39E_Output.mat',
-                'ZLC_ActivatedCarbon_Exp39F_Output.mat']
+    fileName = ['ZLC_ActivatedCarbon_Exp43A_Output.mat',
+                'ZLC_ActivatedCarbon_Exp43B_Output.mat',
+                'ZLC_ActivatedCarbon_Exp43C_Output.mat',
+                'ZLC_ActivatedCarbon_Exp43D_Output.mat',
+                'ZLC_ActivatedCarbon_Exp43E_Output.mat',
+                'ZLC_ActivatedCarbon_Exp43F_Output.mat',
+                'ZLC_ActivatedCarbon_Exp44A_Output.mat',
+                'ZLC_ActivatedCarbon_Exp44B_Output.mat',
+                'ZLC_ActivatedCarbon_Exp44C_Output.mat',
+                'ZLC_ActivatedCarbon_Exp44D_Output.mat',
+                'ZLC_ActivatedCarbon_Exp44E_Output.mat',
+                'ZLC_ActivatedCarbon_Exp44F_Output.mat',
+                'ZLC_ActivatedCarbon_Exp48A_Output.mat',
+                'ZLC_ActivatedCarbon_Exp48B_Output.mat',
+                'ZLC_ActivatedCarbon_Exp48C_Output.mat',
+                'ZLC_ActivatedCarbon_Exp48D_Output.mat',
+                'ZLC_ActivatedCarbon_Exp48E_Output.mat',
+                'ZLC_ActivatedCarbon_Exp48F_Output.mat',
+                'ZLC_ActivatedCarbon_Exp49A_Output.mat',
+                'ZLC_ActivatedCarbon_Exp49B_Output.mat',
+                'ZLC_ActivatedCarbon_Exp49C_Output.mat',
+                'ZLC_ActivatedCarbon_Exp49D_Output.mat',
+                'ZLC_ActivatedCarbon_Exp49E_Output.mat',
+                'ZLC_ActivatedCarbon_Exp49F_Output.mat',]
     
     # Temperature (for each experiment)
-    temperature = [298.15, 298.15, 298.15, 298.15, 298.15, 298.15,
-                   313.15, 313.15, 313.15, 313.15, 313.15, 313.15]
+    temperature = [306.47, 306.47, 306.47, 306.47, 306.47, 306.47, 
+                   306.47, 306.47, 306.47, 306.47, 306.47, 306.47,
+                   317.18, 317.18, 317.18, 317.18, 317.18, 317.18,
+                   317.18, 317.18, 317.18, 317.18, 317.18, 317.18,]
     
     # Dead volume model
-    deadVolumeFile = 'deadVolumeCharacteristics_20210528_1319_318b280.npz'
+    deadVolumeFile = 'deadVolumeCharacteristics_20210603_1207_4df70b4.npz'
 
     # Isotherm model (if fitting only kinetic constant)
     isothermFile = 'zlcParameters_20210525_1610_a079f4a.npz'
@@ -289,12 +304,12 @@ def ZLCObjectiveFunction(x):
 
         # Stack mole fraction from experiments and simulation for error 
         # computation
-        # Normalize the error by dividing it by maximum value to avoid
+        # Normalize the mole fraction by dividing it by maximum value to avoid
         # irregular weightings for different experiment (at diff. scales)
-        # This might not be needed in DV model as all the experiments are 
+        # This might not be needed in DV model as all the experiments 
         # start at 1 and end at 5e-3
-        moleFracExpALL = np.hstack((moleFracExpALL, moleFracExp/np.max(moleFracExp))) 
-        moleFracSimALL = np.hstack((moleFracSimALL, moleFracSim/np.max(moleFracSim)))
+        moleFracExpALL = np.hstack((moleFracExpALL, (moleFracExp-np.min(moleFracExp))/np.max(moleFracExp))) 
+        moleFracSimALL = np.hstack((moleFracSimALL, (moleFracSim-np.min(moleFracSim))/np.max(moleFracSim)))
 
     # Compute the sum of the error for the difference between exp. and sim.
     computedError = computeMLEError(moleFracExpALL,moleFracSimALL,thresholdFactor=thresholdFactor)
