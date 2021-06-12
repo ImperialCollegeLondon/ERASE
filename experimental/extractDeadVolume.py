@@ -17,6 +17,7 @@
 # Reference: 10.1007/s10450-012-9417-z
 #
 # Last modified:
+# - 2021-06-12, AK: Fix for error computation (major)
 # - 2021-05-28, AK: Add the existing DV model with MS DV model and structure change
 # - 2021-05-28, AK: Add model for MS
 # - 2021-05-24, AK: Improve information passing (for output)
@@ -96,16 +97,21 @@ def extractDeadVolume():
     if flagMSDeadVolume:
         msDeadVolumeFile = 'deadVolumeCharacteristics_20210528_1110_7c0209e.npz'
 
+    # Downsample the data at different compositions (this is done on 
+    # normalized data)
+    downsampleData = True
+
     # Threshold factor (If -negative infinity not used, if not need a float)
     # This is used to split the compositions into two distint regions
-    thresholdFactor = -np.inf
+    thresholdFactor = 0.5
 
     #####################################
     #####################################
 
     # Save the parameters to be used for fitting to a dummy file (to pass 
     # through GA - IDIOTIC)
-    savez ('tempFittingParametersDV.npz',thresholdFactor=thresholdFactor,
+    savez ('tempFittingParametersDV.npz', 
+           downsampleData=downsampleData,thresholdFactor=thresholdFactor,
            flagMSFit = flagMSFit, msFlowRate = msFlowRate,
            flagMSDeadVolume = flagMSDeadVolume, msDeadVolumeFile = msDeadVolumeFile)
     
@@ -173,6 +179,7 @@ def extractDeadVolume():
            msFlowRate = msFlowRate, # Flow rate through MS capillary [ccs]
            flagMSDeadVolume = flagMSDeadVolume, # Flag for checking if ms dead volume used
            msDeadVolumeFile = msDeadVolumeFile, # MS dead volume parameter file
+           downsampleFlag = downsampleData, # Flag for downsampling data [-]
            mleThreshold = thresholdFactor, # Threshold for MLE composition split [-]
            hostName = socket.gethostname()) # Hostname of the computer
 
@@ -197,6 +204,7 @@ def deadVolObjectiveFunction(x):
     
     # Load the threshold factor, MS fit flag and MS flow rate from the dummy 
     # file
+    downsampleData = load ('tempFittingParametersDV.npz')["downsampleData"]
     thresholdFactor = load ('tempFittingParametersDV.npz')["thresholdFactor"]
     flagMSFit = load ('tempFittingParametersDV.npz')["flagMSFit"] # Used only if MS data is fit
     msFlowRate = load ('tempFittingParametersDV.npz')["msFlowRate"] # Used only if MS data is fit
@@ -251,8 +259,10 @@ def deadVolObjectiveFunction(x):
         
         # Stack mole fraction from experiments and simulation for error 
         # computation
-        moleFracExpALL = np.hstack((moleFracExpALL, moleFracExp))
-        moleFracSimALL = np.hstack((moleFracSimALL, moleFracSim))
+        # Normalize the mole fraction by dividing it by maximum value to avoid
+        # irregular weightings for different experiment (at diff. scales)
+        moleFracExpALL = np.hstack((moleFracExpALL, (moleFracExp-np.min(moleFracExp))/(np.max(moleFracExp-np.min(moleFracExp)))))
+        moleFracSimALL = np.hstack((moleFracSimALL, (moleFracSim-np.min(moleFracSim))/(np.max(moleFracSim-np.min(moleFracSim)))))
         
     # Penalize if the total volume of the system is greater than experiemntal 
     # volume
@@ -261,7 +271,9 @@ def deadVolObjectiveFunction(x):
         penaltyObj = 10000
     # Compute the sum of the error for the difference between exp. and sim. and
     # add a penalty if needed (using MLE)
-    computedError = computeMLEError(moleFracExpALL,moleFracSimALL,thresholdFactor=thresholdFactor)
+    computedError = computeMLEError(moleFracExpALL,moleFracSimALL,
+                                    downsampleData=downsampleData,
+                                    thresholdFactor=thresholdFactor)
     return computedError + penaltyObj
 
 # func: filesToProcess
