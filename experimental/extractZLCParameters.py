@@ -105,7 +105,7 @@ def extractZLCParameters():
                    317.18, 317.18, 317.18, 317.18, 317.18, 317.18,]
     
     # Dead volume model
-    deadVolumeFile = 'deadVolumeCharacteristics_20210603_1207_4df70b4.npz'
+    deadVolumeFile = 'deadVolumeCharacteristics_20210613_0847_8313a04.npz'
 
     # Isotherm model (if fitting only kinetic constant)
     isothermFile = 'zlcParameters_20210525_1610_a079f4a.npz'
@@ -178,7 +178,7 @@ def extractZLCParameters():
     # Algorithm parameters for GA
     algorithm_param = {'max_num_iteration':30,
                        'population_size':200,
-                       'mutation_probability':0.1,
+                       'mutation_probability':0.25,
                        'crossover_probability': 0.55,
                        'parents_portion': 0.15,
                        'elit_ratio': 0.01,
@@ -358,4 +358,4 @@ def fittingParameters(initFlag,temperature,deadVolumeFile,adsorbentDensity,
         downsampleData = load (dummyFileName)["downsampleData"]
         thresholdFactor = load (dummyFileName)["thresholdFactor"]
         paramIso = load (dummyFileName)["paramIso"]
-        return temperature, deadVolumeFile, adsorbentDensity, particleEpsilon, massSorbent, isoRef, thresholdFactor, paramIso
+        return temperature, deadVolumeFile, adsorbentDensity, particleEpsilon, massSorbent, isoRef, downsampleData, thresholdFactor, paramIso
