@@ -16,6 +16,7 @@
 # Reference: 10.1016/j.ces.2014.12.062
 #
 # Last modified:
+# - 2021-06-14, AK: More fixes for error computation
 # - 2021-06-12, AK: Fix for error computation (major)
 # - 2021-06-11, AK: Change normalization for error
 # - 2021-06-02, AK: Add normalization for error
@@ -311,11 +312,16 @@ def ZLCObjectiveFunction(x):
 
         # Stack mole fraction from experiments and simulation for error 
         # computation
-        # Normalize the mole fraction by dividing it by maximum value to avoid
-        # irregular weightings for different experiment (at diff. scales)
-        moleFracExpALL = np.hstack((moleFracExpALL, (moleFracExp-np.min(moleFracExp))/(np.max(moleFracExp-np.min(moleFracExp)))))
-        moleFracSimALL = np.hstack((moleFracSimALL, (moleFracSim-np.min(moleFracSim))/(np.max(moleFracSim-np.min(moleFracSim)))))
+        moleFracExpALL = np.hstack((moleFracExpALL, moleFracExp))
+        moleFracSimALL = np.hstack((moleFracSimALL, moleFracSim))
 
+    # Normalize the mole fraction by dividing it by maximum value to avoid
+    # irregular weightings for different experiment (at diff. scales)
+    minExpALL = np.min(moleFracExpALL) # Compute the minimum from experiment
+    normalizeFactor = np.max(moleFracExpALL - np.min(moleFracExpALL)) # Compute the max from normalized data
+    moleFracExpALL = (moleFracExpALL - minExpALL)/normalizeFactor # Perform the rescaling for exp. (0-1)
+    moleFracSimALL = (moleFracSimALL - minExpALL)/normalizeFactor # Perform the rescaling for sim. (0-1)
+    
     # Compute the sum of the error for the difference between exp. and sim.
     computedError = computeMLEError(moleFracExpALL,moleFracSimALL,
                                     downsampleData=downsampleData,
