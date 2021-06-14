@@ -312,15 +312,12 @@ def ZLCObjectiveFunction(x):
 
         # Stack mole fraction from experiments and simulation for error 
         # computation
-        moleFracExpALL = np.hstack((moleFracExpALL, moleFracExp))
-        moleFracSimALL = np.hstack((moleFracSimALL, moleFracSim))
-
-    # Normalize the mole fraction by dividing it by maximum value to avoid
-    # irregular weightings for different experiment (at diff. scales)
-    minExpALL = np.min(moleFracExpALL) # Compute the minimum from experiment
-    normalizeFactor = np.max(moleFracExpALL - np.min(moleFracExpALL)) # Compute the max from normalized data
-    moleFracExpALL = (moleFracExpALL - minExpALL)/normalizeFactor # Perform the rescaling for exp. (0-1)
-    moleFracSimALL = (moleFracSimALL - minExpALL)/normalizeFactor # Perform the rescaling for sim. (0-1)
+        # Normalize the mole fraction by dividing it by maximum value to avoid
+        # irregular weightings for different experiment (at diff. scales)
+        minExp = np.min(moleFracExp) # Compute the minimum from experiment
+        normalizeFactor = np.max(moleFracExp - np.min(moleFracExp)) # Compute the max from normalized data
+        moleFracExpALL = np.hstack((moleFracExpALL, (moleFracExp-minExp)/normalizeFactor))
+        moleFracSimALL = np.hstack((moleFracSimALL, (moleFracSim-minExp)/normalizeFactor))
     
     # Compute the sum of the error for the difference between exp. and sim.
     computedError = computeMLEError(moleFracExpALL,moleFracSimALL,
