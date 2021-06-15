@@ -142,7 +142,7 @@ def extractZLCParameters():
                               [np.finfo(float).eps,1], [np.finfo(float).eps,1]))
         optType=np.array(['real','real','real','real'])
         problemDimension = len(optType)
-        isoRef = [10, 1e-5, 50e3, 100] # Reference for the isotherm parameters
+        isoRef = [10, 1e-5, 40e3, 100] # Reference for the isotherm parameters
         isothermFile = [] # Isotherm file is empty as it is fit
         paramIso = [] # Isotherm parameters is empty as it is fit
 
@@ -154,7 +154,7 @@ def extractZLCParameters():
                               [np.finfo(float).eps,1]))
         optType=np.array(['real','real','real','real','real','real','real'])
         problemDimension = len(optType)
-        isoRef = [10, 1e-5, 50e3, 10, 1e-5, 50e3, 100] # Reference for the isotherm parameters
+        isoRef = [10, 1e-5, 40e3, 10, 1e-5, 40e3, 100] # Reference for the isotherm parameters
         isothermFile = [] # Isotherm file is empty as it is fit
         paramIso = [] # Isotherm parameters is empty as it is fit
 
@@ -177,8 +177,8 @@ def extractZLCParameters():
                       massSorbent,isoRef,downsampleData,thresholdFactor,paramIso)
 
     # Algorithm parameters for GA
-    algorithm_param = {'max_num_iteration':30,
-                       'population_size':200,
+    algorithm_param = {'max_num_iteration':15,
+                       'population_size':400,
                        'mutation_probability':0.25,
                        'crossover_probability': 0.55,
                        'parents_portion': 0.15,

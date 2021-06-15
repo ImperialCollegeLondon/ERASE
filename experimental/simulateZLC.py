@@ -14,6 +14,7 @@
 # model with mass transfer defined using linear driving force.
 #
 # Last modified:
+# - 2021-06-15, AK: Add correction factor to LDF
 # - 2021-05-13, AK: IMPORTANT: Change density from particle to skeletal
 # - 2021-04-27, AK: Fix inputs and add isotherm model as input
 # - 2021-04-26, AK: Revamp the code for real sorbent simulation
@@ -197,14 +198,30 @@ def solveSorptionEquation(t, f, *inputParameters):
     # Initialize the derivatives to zero
     df = np.zeros([2])
     
-    # Compute the initial sensor loading [mol/m3] @ initMoleFrac
+    # Compute the loading [mol/m3] @ f[0]
     equilibriumLoading  = computeEquilibriumLoading(pressureTotal=pressureTotal,
                                                     temperature=temperature,
                                                     moleFrac=f[0],
                                                     isothermModel=isothermModel)*adsorbentDensity # [mol/m3]
-
+    
+    # Partial pressure of the gas
+    partialPressure = f[0]*pressureTotal
+    # delta pressure to compute gradient
+    delP = 1e-3
+    # Mole fraction (up)
+    moleFractionUp = (partialPressure + delP)/pressureTotal
+    # Compute the loading [mol/m3] @ moleFractionUp
+    equilibriumLoadingUp  = computeEquilibriumLoading(pressureTotal=pressureTotal,
+                                                    temperature=temperature,
+                                                    moleFrac=moleFractionUp,
+                                                    isothermModel=isothermModel)*adsorbentDensity # [mol/m3]
+    # Compute the gradient (delp/delq*)
+    dPbydq = delP/(equilibriumLoadingUp-equilibriumLoading)
+    # Compute the correction factor for kinetic factor
+    correctionFactor = (equilibriumLoading/partialPressure)*dPbydq
+    
     # Linear driving force model (derivative of solid phase loadings)
-    df[1] = rateConstant*(equilibriumLoading-f[1])
+    df[1] = correctionFactor*rateConstant*(equilibriumLoading-f[1])
 
     # Total mass balance
     # Assumes constant pressure, so flow rate evalauted
