@@ -14,6 +14,7 @@
 # volume simulator
 #
 # Last modified:
+# - 2021-06-16, AK: Add temperature dependence to kinetics
 # - 2021-06-01, AK: Add temperature as an input
 # - 2021-05-29, AK: Add a separate MS dead volume
 # - 2021-05-13, AK: Add volumes and density as inputs
@@ -60,7 +61,13 @@ def simulateCombinedModel(**kwargs):
         rateConstant = kwargs["rateConstant"]
     else:
         rateConstant = [0.3]
-        
+    
+    # Kinetic activation energy constants [J/mol]
+    if 'kineticActEnergy' in kwargs:
+        kineticActEnergy = np.array(kwargs["kineticActEnergy"])
+    else:
+        kineticActEnergy = np.array([0]) # To simulate the case with temp. dep.
+
     # Temperature of the gas [K]
     if 'temperature' in kwargs:
         temperature = np.array(kwargs["temperature"]);
@@ -119,6 +126,7 @@ def simulateCombinedModel(**kwargs):
     # Call the simulateZLC function to simulate the sorption in a given sorbent
     timeZLC, resultMat, _ = simulateZLC(isothermModel=isothermModel,
                                         rateConstant=rateConstant,
+                                        kineticActEnergy = kineticActEnergy,
                                         temperature = temperature,
                                         flowIn = flowIn,
                                         initMoleFrac = initMoleFrac,

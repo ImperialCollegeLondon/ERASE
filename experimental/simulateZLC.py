@@ -14,6 +14,7 @@
 # model with mass transfer defined using linear driving force.
 #
 # Last modified:
+# - 2021-06-16, AK: Add temperature correction factor to LDF
 # - 2021-06-15, AK: Add correction factor to LDF
 # - 2021-05-13, AK: IMPORTANT: Change density from particle to skeletal
 # - 2021-04-27, AK: Fix inputs and add isotherm model as input
@@ -25,6 +26,7 @@
 #
 #
 # Output arguments:
+#
 #
 ############################################################################
 
@@ -52,6 +54,12 @@ def simulateZLC(**kwargs):
         rateConstant = np.array(kwargs["rateConstant"])
     else:
         rateConstant = np.array([0.1])
+        
+    # Kinetic activation energy constants [J/mol]
+    if 'kineticActEnergy' in kwargs:
+        kineticActEnergy = np.array(kwargs["kineticActEnergy"])
+    else:
+        kineticActEnergy = np.array([0]) # To simulate the case with temp. dep.
 
     # Feed flow rate [m3/s]
     if 'flowIn' in kwargs:
@@ -142,8 +150,9 @@ def simulateZLC(**kwargs):
                                                     isothermModel=isothermModel)*adsorbentDensity # [mol/m3]
     
     # Prepare tuple of input parameters for the ode solver
-    inputParameters = (adsorbentDensity, isothermModel, rateConstant, flowIn, feedMoleFrac, 
-                       initMoleFrac, pressureTotal, temperature, volSorbent, volGas)
+    inputParameters = (adsorbentDensity, isothermModel, rateConstant, kineticActEnergy,
+                       flowIn, feedMoleFrac, initMoleFrac, pressureTotal, 
+                       temperature, volSorbent, volGas)
             
     # Solve the system of ordinary differential equations
     # Stiff solver used for the problem: BDF or Radau
@@ -193,7 +202,7 @@ def solveSorptionEquation(t, f, *inputParameters):
     Rg = 8.314; # [J/mol K]
 
     # Unpack the tuple of input parameters used to solve equations
-    adsorbentDensity, isothermModel, rateConstant, flowIn, feedMoleFrac, _ , pressureTotal, temperature, volSorbent, volGas = inputParameters
+    adsorbentDensity, isothermModel, rateConstant, kineticActEnergy, flowIn, feedMoleFrac, _ , pressureTotal, temperature, volSorbent, volGas = inputParameters
 
     # Initialize the derivatives to zero
     df = np.zeros([2])
@@ -217,8 +226,13 @@ def solveSorptionEquation(t, f, *inputParameters):
                                                     isothermModel=isothermModel)*adsorbentDensity # [mol/m3]
     # Compute the gradient (delp/delq*)
     dPbydq = delP/(equilibriumLoadingUp-equilibriumLoading)
-    # Compute the correction factor for kinetic factor
-    correctionFactor = (equilibriumLoading/partialPressure)*dPbydq
+    # Compute the correction factor for kinetic constant
+    # Darken factor for concentration dependence
+    correctionFactor_Conc = (equilibriumLoading/partialPressure)*dPbydq
+    # Arrhenius factor for temperature dependence
+    correctionFactor_Temp = np.exp(kineticActEnergy/(Rg*temperature))
+    # Correction factor
+    correctionFactor = correctionFactor_Conc*correctionFactor_Temp
     
     # Linear driving force model (derivative of solid phase loadings)
     df[1] = correctionFactor*rateConstant*(equilibriumLoading-f[1])
@@ -249,7 +263,7 @@ def plotFullModelResult(timeSim, resultMat, inputParameters,
     saveFileExtension = ".png"
     
     # Unpack the tuple of input parameters used to solve equations
-    adsorbentDensity , _ , _ , flowIn, _ , _ , _ , temperature, _ , _ = inputParameters
+    adsorbentDensity , _ , _ , _ , flowIn, _ , _ , _ , temperature, _ , _ = inputParameters
 
     os.chdir("plotFunctions")
     # Plot the solid phase compositions

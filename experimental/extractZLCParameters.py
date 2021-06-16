@@ -16,6 +16,7 @@
 # Reference: 10.1016/j.ces.2014.12.062
 #
 # Last modified:
+# - 2021-06-16, AK: Add temperature dependence to kinetics
 # - 2021-06-14, AK: More fixes for error computation
 # - 2021-06-12, AK: Fix for error computation (major)
 # - 2021-06-11, AK: Change normalization for error
@@ -34,9 +35,10 @@
 #
 # Output arguments:
 #
+#
 ############################################################################
 
-def extractZLCParameters():
+def extractZLCParameters(**kwargs):
     import numpy as np
     from geneticalgorithm2 import geneticalgorithm2 as ga # GA
     from extractDeadVolume import filesToProcess # File processing script
@@ -63,10 +65,13 @@ def extractZLCParameters():
     num_cores = multiprocessing.cpu_count()
 
     #####################################
-    ###### USER DEFINED PROPERTIES ######     
-    
+    ###### USER DEFINED PROPERTIES ######
+    # If not passed to the function, default values used
     # Isotherm model type
-    modelType = 'SSL'
+    if 'modelType' in kwargs:
+        modelType = kwargs["modelType"]
+    else:
+        modelType = 'SSL'
     
     # Number of times optimization repeated
     numOptRepeat = 5
@@ -74,36 +79,18 @@ def extractZLCParameters():
     # Directory of raw data
     mainDir = 'runData'
     # File name of the experiments
-    fileName = ['ZLC_ActivatedCarbon_Exp43A_Output.mat',
-                'ZLC_ActivatedCarbon_Exp43B_Output.mat',
-                'ZLC_ActivatedCarbon_Exp43C_Output.mat',
-                'ZLC_ActivatedCarbon_Exp43D_Output.mat',
-                'ZLC_ActivatedCarbon_Exp43E_Output.mat',
-                'ZLC_ActivatedCarbon_Exp43F_Output.mat',
-                'ZLC_ActivatedCarbon_Exp44A_Output.mat',
-                'ZLC_ActivatedCarbon_Exp44B_Output.mat',
-                'ZLC_ActivatedCarbon_Exp44C_Output.mat',
-                'ZLC_ActivatedCarbon_Exp44D_Output.mat',
-                'ZLC_ActivatedCarbon_Exp44E_Output.mat',
-                'ZLC_ActivatedCarbon_Exp44F_Output.mat',
-                'ZLC_ActivatedCarbon_Exp48A_Output.mat',
-                'ZLC_ActivatedCarbon_Exp48B_Output.mat',
-                'ZLC_ActivatedCarbon_Exp48C_Output.mat',
-                'ZLC_ActivatedCarbon_Exp48D_Output.mat',
-                'ZLC_ActivatedCarbon_Exp48E_Output.mat',
-                'ZLC_ActivatedCarbon_Exp48F_Output.mat',
-                'ZLC_ActivatedCarbon_Exp49A_Output.mat',
-                'ZLC_ActivatedCarbon_Exp49B_Output.mat',
-                'ZLC_ActivatedCarbon_Exp49C_Output.mat',
-                'ZLC_ActivatedCarbon_Exp49D_Output.mat',
-                'ZLC_ActivatedCarbon_Exp49E_Output.mat',
-                'ZLC_ActivatedCarbon_Exp49F_Output.mat',]
+    if 'fileName' in kwargs:
+        fileName = kwargs["fileName"]
+    else:
+        fileName = ['ZLC_ActivatedCarbon_Exp43F_Output.mat',
+                    'ZLC_ActivatedCarbon_Exp48F_Output.mat',
+                    'ZLC_ActivatedCarbon_Exp55F_Output.mat',]
     
     # Temperature (for each experiment)
-    temperature = [306.47, 306.47, 306.47, 306.47, 306.47, 306.47, 
-                   306.47, 306.47, 306.47, 306.47, 306.47, 306.47,
-                   317.18, 317.18, 317.18, 317.18, 317.18, 317.18,
-                   317.18, 317.18, 317.18, 317.18, 317.18, 317.18,]
+    if 'temperature' in kwargs:
+        temperature = kwargs["temperature"]
+    else:
+        temperature = [306.47,317.18,339.14]
     
     # Dead volume model
     deadVolumeFile = 'deadVolumeCharacteristics_20210613_0847_8313a04.npz'
@@ -135,14 +122,17 @@ def extractZLCParameters():
     # Generate .npz file for python processing of the .mat file 
     filesToProcess(True,mainDir,fileName,'ZLC')
 
-    # Define the bounds and the type of the parameters to be optimized   
+    # Define the bounds and the type of the parameters to be optimized 
+    # Parameters optimized: qs,b0,delU (for DSL: both sites), k0 and delE
+    # (16.06.21: Arrhenius constant and activation energy)
     # Single-site Langmuir
     if modelType == 'SSL':
         optBounds = np.array(([np.finfo(float).eps,1], [np.finfo(float).eps,1],
-                              [np.finfo(float).eps,1], [np.finfo(float).eps,1]))
-        optType=np.array(['real','real','real','real'])
+                              [np.finfo(float).eps,1], [np.finfo(float).eps,1],
+                              [np.finfo(float).eps,1]))
+        optType=np.array(['real','real','real','real','real'])
         problemDimension = len(optType)
-        isoRef = [10, 1e-5, 40e3, 100] # Reference for the isotherm parameters
+        isoRef = [10, 1e-5, 40e3, 10000, 40e3] # Reference for the isotherm parameters
         isothermFile = [] # Isotherm file is empty as it is fit
         paramIso = [] # Isotherm parameters is empty as it is fit
 
@@ -151,19 +141,21 @@ def extractZLCParameters():
         optBounds = np.array(([np.finfo(float).eps,1], [np.finfo(float).eps,1],
                               [np.finfo(float).eps,1], [np.finfo(float).eps,1],
                               [np.finfo(float).eps,1], [np.finfo(float).eps,1],
-                              [np.finfo(float).eps,1]))
-        optType=np.array(['real','real','real','real','real','real','real'])
+                              [np.finfo(float).eps,1], [np.finfo(float).eps,1]))
+        optType=np.array(['real','real','real','real','real','real','real','real'])
         problemDimension = len(optType)
-        isoRef = [10, 1e-5, 40e3, 10, 1e-5, 40e3, 100] # Reference for the isotherm parameters
+        isoRef = [10, 1e-5, 40e3, 10, 1e-5, 40e3, 10000, 40e3] # Reference for the isotherm parameters
         isothermFile = [] # Isotherm file is empty as it is fit
         paramIso = [] # Isotherm parameters is empty as it is fit
 
-    # Kinetic constant only
+    # Kinetic constants only
+    # Note: This might be buggy for simulations performed before 16.06.21
+    # This is because of the addition of activation energy for kinetics
     elif modelType == 'Kinetic':
-        optBounds = np.array([[np.finfo(float).eps,1]])
-        optType=np.array(['real'])
+        optBounds = np.array(([np.finfo(float).eps,1], [np.finfo(float).eps,1]))
+        optType=np.array(['real','real'])
         problemDimension = len(optType)
-        isoRef = [100] # Reference for the parameter (has to be a list)
+        isoRef = [10000, 40e3] # Reference for the parameter (has to be a list)
         # File with parameter estimates for isotherm (ZLC)
         isothermDir = '..' + os.path.sep + 'simulationResults/'
         modelOutputTemp = load(isothermDir+isothermFile, allow_pickle=True)["modelOutput"]
@@ -261,9 +253,9 @@ def ZLCObjectiveFunction(x):
 
     # Prepare isotherm model (the first n-1 parameters are for the isotherm model)
     if len(paramIso) != 0:
-        isothermModel = paramIso[0:-1] # Use this if isotherm parameter provided (for kinetics only)
+        isothermModel = paramIso[0:-2] # Use this if isotherm parameter provided (for kinetics only)
     else:        
-        isothermModel = np.multiply(x[0:-1],isoRef[0:-1]) # Use this if both equilibrium and kinetics is fit
+        isothermModel = np.multiply(x[0:-2],isoRef[0:-2]) # Use this if both equilibrium and kinetics is fit
 
     # Load the names of the file to be used for estimating zlc parameters
     filePath = filesToProcess(False,[],[],'ZLC')
@@ -300,7 +292,8 @@ def ZLCObjectiveFunction(x):
 
         # Compute the composite response using the optimizer parameters
         _ , moleFracSim , _ = simulateCombinedModel(isothermModel = isothermModel,
-                                                    rateConstant = x[-1]*isoRef[-1], # Last element is rate constant
+                                                    rateConstant = x[-2]*isoRef[-2], # Last but one element is rate constant (Arrhenius constant)
+                                                    kineticActEnergy = x[-1]*isoRef[-1], # Last element is activation energy
                                                     temperature = temperature[ii], # Temperature [K]
                                                     timeInt = timeInt,
                                                     initMoleFrac = [moleFracExp[0]], # Initial mole fraction assumed to be the first experimental point
