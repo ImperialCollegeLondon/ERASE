@@ -230,7 +230,7 @@ def solveSorptionEquation(t, f, *inputParameters):
     # Darken factor for concentration dependence
     correctionFactor_Conc = (equilibriumLoading/partialPressure)*dPbydq
     # Arrhenius factor for temperature dependence
-    correctionFactor_Temp = np.exp(kineticActEnergy/(Rg*temperature))
+    correctionFactor_Temp = np.exp(-kineticActEnergy/(Rg*temperature))
     # Correction factor
     correctionFactor = correctionFactor_Conc*correctionFactor_Temp
     
