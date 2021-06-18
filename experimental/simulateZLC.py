@@ -128,7 +128,7 @@ def simulateZLC(**kwargs):
     if 'adsorbentDensity' in kwargs:
         adsorbentDensity = kwargs["adsorbentDensity"]
     else:
-        adsorbentDensity = 1950 # Activated carbon skeletal density [kg/m3]
+        adsorbentDensity = 2000 # Activated carbon skeletal density [kg/m3]
 
     # Total pressure of the gas [Pa]
     if 'pressureTotal' in kwargs:

@@ -109,7 +109,7 @@ def simulateCombinedModel(**kwargs):
     if 'adsorbentDensity' in kwargs:
         adsorbentDensity = kwargs["adsorbentDensity"]
     else:
-        adsorbentDensity = 1950 # Activated carbon skeletal density [kg/m3]
+        adsorbentDensity = 2000 # Activated carbon skeletal density [kg/m3]
         
     # File name with dead volume characteristics parameters
     if 'deadVolumeFile' in kwargs:

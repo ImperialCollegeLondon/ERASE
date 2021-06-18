@@ -101,7 +101,7 @@ def extractZLCParameters(**kwargs):
     # Adsorbent properties
     # Adsorbent density [kg/m3]
     # This has to be the skeletal density
-    adsorbentDensity = 1950 # Activated carbon skeletal density [kg/m3]
+    adsorbentDensity = 2000 # Activated carbon skeletal density [kg/m3]
     # Particle porosity
     particleEpsilon = 0.61
     # Particle mass [g]
