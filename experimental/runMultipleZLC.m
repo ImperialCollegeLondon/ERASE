@@ -22,13 +22,13 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function runMultipleZLC
     % Series name for the experiments
-    expSeries = 'ZLC_ActivatedCarbon_Exp11';
+    expSeries = 'ZLC_ActivatedCarbon_Exp25';
     % Maximum time of the experiment
-    expInfo.maxTime = 3600;
+    expInfo.maxTime = 400;
     % Sampling time for the device
     expInfo.samplingTime = 1;
     % Intervals for collecting MFC data
-    expInfo.MFCInterval = 100;
+    expInfo.MFCInterval = 300;
     % Define gas for MFM
     expInfo.gasName_MFM = 'He';
     % Define gas for MFC1
@@ -36,9 +36,9 @@ function runMultipleZLC
     % Define gas for MFC2
     expInfo.gasName_MFC2 = 'CO2';
     % Total flow rate
-    expTotalFlowRate = [4 6 10 15 30];
+    expTotalFlowRate = [10, 10, 10, 10, 10, 10];
     % Fraction CO2
-    fracCO2 = 0.05;
+    fracCO2 = [1/8 1/3 1 2 4 10];
     % Define set point for MFC1
     % Round the flow rate to the nearest first decimal (as this is the
     % resolution of the meter)    
@@ -46,9 +46,9 @@ function runMultipleZLC
     % Define set point for MFC2
     % Round the flow rate to the nearest first decimal (as this is the
     % resolution of the meter)    
-    MFC2_SP = round(fracCO2*expTotalFlowRate,1);
+    MFC2_SP = round(fracCO2.*expTotalFlowRate,1);
     % Start delay (used for adsorbent equilibration)
-    equilibrationTime = [14400 10800 7200 7200 3600]; % [s] 
+    equilibrationTime = [14400 3600 3600 3600 3600 3600]; % [s] 
     % Flag for meter calibration
     expInfo.calibrateMeters = false;    
     % Mixtures Flag - When a T junction instead of 6 way valve used
@@ -65,4 +65,5 @@ function runMultipleZLC
         % Wait for 1 min before starting the next experiment
         pause(30)
     end
+    defineSetPtManual(10,0)
 end

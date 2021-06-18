@@ -13,6 +13,8 @@
 % 
 %
 % Last modified:
+% - 2021-05-10, AK: Change the calibration analysis to take average of
+%                   multiple calibrations
 % - 2021-04-23, AK: Change the calibration model to Fourier series based 
 % - 2021-04-21, AK: Change the calibration equation to mole fraction like
 % - 2021-04-19, AK: Remove MFM calibration (check analyzeExperiment)
@@ -193,21 +195,24 @@ function [reconciledData, expInfo] = concatenateData(fileToLoad)
         reconciledData.moleFrac(:,2) = 1 - reconciledData.moleFrac(:,1);
     % If actual experiment is analyzed, loads the calibration MS file
     else
-        % MS Calibration File
-        load(fileToLoad.calibrationMS);
-        % Convert the raw signal to concentration
-        % When independent gas signals are used
-        if calibrationMS.flagUseIndGas
-            reconciledData.moleFrac(:,1) = polyval(calibrationMS.He,reconciledData.MS(:,2)); % He [-]
-            reconciledData.moleFrac(:,2) = polyval(calibrationMS.CO2,reconciledData.MS(:,3)); % CO2 [-]
-        % When ratio of gas signals are used
-        else
+        % Find number of calibration files being used
+        numCalibrationFiles = length(fileToLoad.calibrationMS);
+        % Loop through all calibration files and obtain the compositions
+        % for every possible calibration
+        moleFracTemp = zeros(length(reconciledData.MS(:,2)),numCalibrationFiles);
+        for ii = 1:numCalibrationFiles
+            % MS Calibration File
+            load([fileToLoad.calibrationMS{ii},'_Model']);
+            % Convert the raw signal to concentration
             % Parse out the fitting parameters
             paramFit = calibrationMS.ratioHeCO2;
             % Use a fourier series model to obtain the mole fraction
-            reconciledData.moleFrac(:,1) = paramFit(reconciledData.MS(:,2)./...
-                (reconciledData.MS(:,2)+reconciledData.MS(:,3))); % He [-]            
-            reconciledData.moleFrac(:,2) = 1 - reconciledData.moleFrac(:,1); % CO2 [-]
+            reconciledData.moleFracIndCalib(:,ii) = paramFit(reconciledData.MS(:,2)./...
+                (reconciledData.MS(:,2)+reconciledData.MS(:,3))); % He [-]
         end
+        % Take the mean of all the compositions obtained from the different
+        % calibrations
+        reconciledData.moleFrac(:,1) = mean(reconciledData.moleFracIndCalib,2);  % He [-]
+        reconciledData.moleFrac(:,2) = 1 - reconciledData.moleFrac(:,1); % CO2 [-]
     end
 end

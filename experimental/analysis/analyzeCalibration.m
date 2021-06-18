@@ -13,6 +13,7 @@
 %
 %
 % Last modified:
+% - 2021-05-10, AK: Remove single gas calibration
 % - 2021-04-27, AK: Change the calibration model to linear interpolation 
 % - 2021-04-23, AK: Change the calibration model to Fourier series based 
 % - 2021-04-21, AK: Change the calibration equation to mole fraction like
@@ -86,17 +87,17 @@ if ~isempty(parametersFlow)
     
     % Save the calibration data into a .mat file
     % Check if calibration data folder exists
-    if exist(['experimentalData',filesep,...
+    if exist(['..',filesep,'experimentalData',filesep,...
             'calibrationData'],'dir') == 7
         % Save the calibration data for further use
-        save(['experimentalData',filesep,...
+        save(['..',filesep,'experimentalData',filesep,...
             'calibrationData',filesep,parametersFlow,'_Model'],'calibrationFlow',...
             'gitCommitID');
     else
         % Create the calibration data folder if it does not exist
-        mkdir(['experimentalData',filesep,'calibrationData'])
+        mkdir(['..',filesep,'experimentalData',filesep,'calibrationData'])
         % Save the calibration data for further use
-        save(['experimentalData',filesep,...
+        save(['..',filesep,'experimentalData',filesep,...
             'calibrationData',filesep,parametersFlow,'_Model'],'calibrationFlow',...
             'gitCommitID');
     end
@@ -189,72 +190,37 @@ if ~isempty(parametersMS)
             meanMoleFrac(((kk-1)*length(setPtMFC)+ii),2) = mean(reconciledData.moleFrac(indMean,2)); % CO2
         end
     end
-    
-    % Fit a polynomial function to get the model for MS
-    % Fitting a 3rd order polynomial (check before accepting this)
-    calibrationMS.flagUseIndGas = parametersMS.flagUseIndGas;
-    if parametersMS.flagUseIndGas
-        calibrationMS.He = polyfit(meanHeSignal,meanMoleFrac(:,1),parametersMS.polyDeg); % He
-        calibrationMS.CO2 = polyfit(meanCO2Signal,meanMoleFrac(:,2),parametersMS.polyDeg); % COo2
-    else
-        % Perform an optimization to obtain parameter estimates to fit the
-        % signal fraction of the helium signal to He+CO2 signal 
-        % Use a fourier series to fit the calibration data
-        calibrationMS.ratioHeCO2 = fit((meanHeSignal./(meanCO2Signal+meanHeSignal))',meanMoleFrac(:,1),'linearinterp');
-    end
+    % Use a linear interpolation to fit the calibration data of the signal
+    % ratio w.r.t He composition
+    calibrationMS.ratioHeCO2 = fit((meanHeSignal./(meanCO2Signal+meanHeSignal))',meanMoleFrac(:,1),'linearinterp');
     
     % Save the calibration data into a .mat file
     % Check if calibration data folder exists
-    if exist(['experimentalData',filesep,...
+    if exist(['..',filesep,'experimentalData',filesep,...
             'calibrationData'],'dir') == 7
         % Save the calibration data for further use
-        save(['experimentalData',filesep,...
+        save(['..',filesep,'experimentalData',filesep,...
             'calibrationData',filesep,parametersMS.flow,'_Model'],'calibrationMS',...
             'gitCommitID','parametersMS');
     else
         % Create the calibration data folder if it does not exist
-        mkdir(['experimentalData',filesep,'calibrationData'])
+        mkdir(['..',filesep,'experimentalData',filesep,'calibrationData'])
         % Save the calibration data for further use
-        save(['experimentalData',filesep,...
+        save(['..',filesep,'experimentalData',filesep,...
             'calibrationData',filesep,parametersMS.flow,'_Model'],'calibrationMS',...
             'gitCommitID','parametersMS');
     end
     
     % Plot the raw and the calibrated data
     figure(1)
-    % Plot for independent gas calibrations
-    if parametersMS.flagUseIndGas
-        % He
-        subplot(1,2,1)
-        hold on
-        plot(1e-13:1e-13:1e-8,polyval(calibrationMS.He,1e-13:1e-13:1e-8))
-        scatter(meanHeSignal,meanMoleFrac(:,1))
-        xlim([0 1.1*max(meanHeSignal)]);
-        ylim([0 1]);
-        box on; grid on;
-        xlabel('Helium Signal [A]')
-        ylabel('Helium mole frac [-]')
-
-        % CO2
-        subplot(1,2,2)
-        hold on
-        plot(1e-13:1e-13:1e-8,polyval(calibrationMS.CO2,1e-13:1e-13:1e-8),'b')
-        plot(meanCO2Signal,meanMoleFrac(:,2),'or')
-        xlim([0 1.1*max(meanCO2Signal)]);
-        ylim([0 1]);
-        box on; grid on;
-        xlabel('CO2 Signal [A]')
-        ylabel('CO2 mole frac [-]')
-    % Ratio of He to CO2
-    else
-        plot(meanHeSignal./(meanHeSignal+meanCO2Signal),meanMoleFrac(:,1),'or') % Experimental
-        hold on
-        plot(0:0.001:1,calibrationMS.ratioHeCO2(0:0.001:1),'b')
-        xlim([0 1]);
-        ylim([0 1]);
-        box on; grid on;
-        xlabel('Helium Signal/(CO2 Signal+Helium Signal) [-]')
-        ylabel('Helium mole frac [-]')
-    end
+    plot(meanHeSignal./(meanHeSignal+meanCO2Signal),meanMoleFrac(:,1),'or') % Experimental
+    hold on
+    plot(0:0.001:1,calibrationMS.ratioHeCO2(0:0.001:1),'b')
+    xlim([0 1]);
+    ylim([0 1]);
+    box on; grid on;
+    xlabel('Helium Signal/(CO2 Signal+Helium Signal) [-]')
+    ylabel('Helium mole frac [-]')
+    set(gca,'FontSize',8)
 end
 end
