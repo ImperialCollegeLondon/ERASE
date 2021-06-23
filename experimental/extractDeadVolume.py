@@ -43,7 +43,7 @@
 #
 ############################################################################
 
-def extractDeadVolume():
+def extractDeadVolume(**kwargs):
     import numpy as np
     from geneticalgorithm2 import geneticalgorithm2 as ga # GA
     import auxiliaryFunctions
@@ -76,26 +76,29 @@ def extractDeadVolume():
     # Directory of raw data    
     mainDir = 'runData'
     # File name of the experiments
-    fileName = ['ZLC_DeadVolume_Exp19A_Output.mat',
-                'ZLC_DeadVolume_Exp19B_Output.mat',
-                'ZLC_DeadVolume_Exp19C_Output.mat',
-                'ZLC_DeadVolume_Exp19D_Output.mat',
-                'ZLC_DeadVolume_Exp19E_Output.mat']
+    if 'fileName' in kwargs:
+        fileName = kwargs["fileName"]
+    else:
+        fileName = ['ZLC_DeadVolume_Exp20A_Output.mat',
+                    'ZLC_DeadVolume_Exp20B_Output.mat',
+                    'ZLC_DeadVolume_Exp20C_Output.mat',
+                    'ZLC_DeadVolume_Exp20D_Output.mat',
+                    'ZLC_DeadVolume_Exp20E_Output.mat']
 
     # Fit MS data alone (implemented on 28.05.21)
     # Flag to fit MS data
-    flagMSFit = True
+    flagMSFit = False
     # Flow rate through the MS capillary (determined by performing experiments)
     # Pfeiffer Vaccum (in Ronny Pini's lab has 0.4 ccm)
     msFlowRate = 0.4/60 # [ccs]
     
     # MS dead volume model
     msDeadVolumeFile = [] # DO NOT CHANGE (initialization)
-    flagMSDeadVolume = False # It should be the opposite of flagMSfit (if used)
+    flagMSDeadVolume = True # It should be the opposite of flagMSfit (if used)
     # If MS dead volume used separately, use the file defined here with ms 
     # parameters
     if flagMSDeadVolume:
-        msDeadVolumeFile = 'deadVolumeCharacteristics_20210528_1110_7c0209e.npz'
+        msDeadVolumeFile = 'deadVolumeCharacteristics_20210612_2100_8313a04.npz'
 
     # Downsample the data at different compositions (this is done on 
     # normalized data)
@@ -134,7 +137,7 @@ def extractDeadVolume():
     # Algorithm parameters for GA
     algorithm_param = {'max_num_iteration':30,
                        'population_size':200,
-                       'mutation_probability':0.1,
+                       'mutation_probability':0.25,
                        'crossover_probability': 0.55,
                        'parents_portion': 0.15,
                        'elit_ratio': 0.01,
@@ -142,7 +145,7 @@ def extractDeadVolume():
 
     # Minimize an objective function to compute the dead volume and the number of 
     # tanks for the dead volume using GA
-    model = ga(function = deadVolObjectiveFunction, dimension=5, 
+    model = ga(function = deadVolObjectiveFunction, dimension=len(optType), 
                                variable_type_mixed = optType,
                                variable_boundaries = optBounds,
                                algorithm_parameters=algorithm_param,
