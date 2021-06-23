@@ -73,10 +73,10 @@ def simulateDeadVolume(**kwargs):
     else:
         deadVolume_2D = 5.93e-1
     # Flow rate in the diffusive volume [-]
-    if 'flowRate_D' in kwargs:
-        flowRate_D = kwargs["flowRate_D"]
+    if 'flowRate_2D' in kwargs:
+        flowRate_2D = kwargs["flowRate_2D"]
     else:
-        flowRate_D = 1.35e-2
+        flowRate_2D = 1.35e-2
     # Initial Mole Fraction [-]
     if 'initMoleFrac' in kwargs:
         initMoleFrac = np.array(kwargs["initMoleFrac"])
@@ -112,7 +112,7 @@ def simulateDeadVolume(**kwargs):
 
     # Prepare tuple of input parameters for the ode solver
     inputParameters = (t_eval,flowRate, deadVolume_1,deadVolume_2M,
-                       deadVolume_2D, numTanks_1, flowRate_D,
+                       deadVolume_2D, numTanks_1, flowRate_2D,
                        feedMoleFrac)
     
     # Total number of tanks[-]
@@ -140,9 +140,9 @@ def simulateDeadVolume(**kwargs):
     moleFracDiff = outputSol.y[-1]
 
     # Composition after mixing
-    flowRate_M = flowRate - flowRate_D
+    flowRate_M = flowRate - flowRate_2D
     moleFracOut = np.divide(np.multiply(flowRate_M,moleFracMix)
-                    + np.multiply(flowRate_D,moleFracDiff),flowRate)
+                    + np.multiply(flowRate_2D,moleFracDiff),flowRate)
 
     # Plot the dead volume response
     if plotFlag:
@@ -160,7 +160,7 @@ def solveTanksInSeries(t, f, *inputParameters):
     from scipy.interpolate import interp1d
 
     # Unpack the tuple of input parameters used to solve equations
-    timeElapsed, flowRateALL, deadVolume_1, deadVolume_2M, deadVolume_2D, numTanks_1, flowRate_D, feedMoleFracALL = inputParameters
+    timeElapsed, flowRateALL, deadVolume_1, deadVolume_2M, deadVolume_2D, numTanks_1, flowRate_2D, feedMoleFracALL = inputParameters
 
     # Check if experimental data available
     # If size of flowrate is one, then no need for interpolation
@@ -201,9 +201,9 @@ def solveTanksInSeries(t, f, *inputParameters):
     volTank_2D = deadVolume_2D
     
     # Residence time of each tank in the mixing and diffusive volume
-    flowRate_M = flowRate - flowRate_D
+    flowRate_M = flowRate - flowRate_2D
     residenceTime_2M = volTank_2M/(flowRate_M)
-    residenceTime_2D = volTank_2D/(flowRate_D)
+    residenceTime_2D = volTank_2D/(flowRate_2D)
     
     # Solve the odes
     # Volume 2: Mixing volume
