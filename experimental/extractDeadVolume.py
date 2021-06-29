@@ -162,13 +162,13 @@ def extractDeadVolume(**kwargs):
                                                              n_jobs = num_cores),
                   start_generation=model.output_dict['last_generation'], no_plot = True)
     
-    # Save the array concentration into a native numpy file
+    # Save the dead volume parameters into a native numpy file
     # The .npz file is saved in a folder called simulationResults (hardcoded)
     filePrefix = "deadVolumeCharacteristics"
     saveFileName = filePrefix + "_" + currentDT + "_" + gitCommitID;
     savePath = os.path.join('..','simulationResults',saveFileName)
     
-    # Check if inputResources directory exists or not. If not, create the folder
+    # Check if simulationResults directory exists or not. If not, create the folder
     if not os.path.exists(os.path.join('..','simulationResults')):
         os.mkdir(os.path.join('..','simulationResults'))
     
