@@ -36,20 +36,20 @@ numExpForEachRawFile = [4]; % Number of experiments that use the same raw MS fil
 
 % Flow rate files for calibration 
 msCalibrationFiles = {'ZLCCalibrateMS_20210506_15ccm',...
-                    'ZLCCalibrateMS_20210506_30ccm',...
-                    'ZLCCalibrateMS_20210506_45ccm',...
-                    'ZLCCalibrateMS_20210507_60ccm'};
+                      'ZLCCalibrateMS_20210506_30ccm',...
+                      'ZLCCalibrateMS_20210506_45ccm',...
+                      'ZLCCalibrateMS_20210507_60ccm'};
 
 %%%% Experimet to be analyzed %%%%     
 % List the experiments that have to be analyzed
-msExpFile = 'ZLC_ActivatedCarbon_Exp26_28'; % Raw MS data file name
+% MS Raw data should contain only two gases and the pressure. For now
+% cannot handle more gases.
+msExpFile = 'ZLC_Zeolite13X_Exp27_28'; % Raw MS data file name
 % Flow rate files for experiments 
-experimentFiles = {'ZLC_ActivatedCarbon_Exp26A',...
-                   'ZLC_ActivatedCarbon_Exp26B',...
-                   'ZLC_ActivatedCarbon_Exp26C',...
-                   'ZLC_ActivatedCarbon_Exp26D',...
-                   'ZLC_ActivatedCarbon_Exp26E',...
-                   'ZLC_ActivatedCarbon_Exp26F'};
+experimentFiles = {'ZLC_Zeolite13X_Exp27A',...
+                   'ZLC_Zeolite13X_Exp27B',...
+                   'ZLC_Zeolite13X_Exp28A',...
+                   'ZLC_Zeolite13X_Exp28B'};
 
 % Initialize the name of the msRawFile to be used for all calibrations
 startInd = 1;
@@ -86,7 +86,7 @@ if ~isempty(experimentFiles)
         experimentStruct.MS = [msFileDir,filesep,msExpFile,'.asc']; % Experimental MS file (.asc). Assumes name of file to be the date of the first flow rate
         experimentStruct.calibrationMS = msCalibrationFiles; % Experimental calibration file list
         experimentStruct.interpMS = false; % Flag for interpolating flow data, to have a higher resolution for actual experiments
-        experimentStruct.moleFracThreshold = 5e-3; % Threshold for cutting off data below a given mole fraction
+        experimentStruct.moleFracThreshold = 1e-2; % Threshold for cutting off data below a given mole fraction
         % Call the analyzeExperiment function to analyze the experimental data
         % using the calibration files given by msCalibrationFiles 
         % The output is usually in runData folder
@@ -97,24 +97,29 @@ end
 
 % Loop through all the experimental files and plot the output mole fraction
 if ~isempty(experimentFiles)
-    colorForPlot = {'5C73B9','7262C3','8852CD','9D41D7','B330E1'};
+    colorForPlot = {'5C73B9','7262C3','8852CD','9D41D7','B330E1',...
+                    '5C73B9','7262C3','8852CD','9D41D7','B330E1',...
+                    '5C73B9','7262C3','8852CD','9D41D7','B330E1',...
+                    '5C73B9','7262C3','8852CD','9D41D7','B330E1',...
+                    '5C73B9','7262C3','8852CD','9D41D7','B330E1',...
+                    '5C73B9','7262C3','8852CD','9D41D7','B330E1'};
     f1 = figure('Units','inch','Position',[2 2 7 3.3]);
     for ii = 1:length(experimentFiles)
         load([experimentFiles{ii},'_Output']);
         % Plot the output from different experiments (in y and Ft plots)
         figure(f1);
         subplot(1,2,1)
-        semilogy(experimentOutput.timeExp,experimentOutput.moleFrac,'color',['#',colorForPlot{ii}]);
+        semilogy(experimentOutput.timeExp,experimentOutput.moleFrac,'color','b');
         hold on
         box on;grid on;
-        xlim([0,500]); ylim([0,1]);
+        xlim([0,300]); ylim([0,1]);
         xlabel('{\it{t}} [s]'); ylabel('{\it{y}} [-]');
         set(gca,'FontSize',8)
         
         subplot(1,2,2)
         semilogy(experimentOutput.timeExp.*experimentOutput.totalFlowRate,experimentOutput.moleFrac,'color',['#',colorForPlot{ii}]);
         hold on
-        xlim([0,100]); ylim([0,1]);      
+        xlim([0,10]); ylim([0,1]);      
         xlabel('{\it{Ft}} [cc]'); ylabel('{\it{y}} [-]');
         set(gca,'FontSize',8)
         box on;grid on;

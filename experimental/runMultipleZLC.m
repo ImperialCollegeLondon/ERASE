@@ -23,19 +23,16 @@
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function runMultipleZLC
+    run('C:\Users\QCPML\Desktop\Ashwin\ERASE\setPathERASE.m')
     % Series name for the experiments
-    expSeries = {'ZLC_ActivatedCarbon_Exp26',...
-                 'ZLC_ActivatedCarbon_Exp27',...
-                 'ZLC_ActivatedCarbon_Exp28',...
-                 'ZLC_ActivatedCarbon_Exp29',...
-                 'ZLC_ActivatedCarbon_Exp30',...
-                 'ZLC_ActivatedCarbon_Exp31'};
+    expSeries = {'ZLC_Zeolite13X_Exp27',...
+                 'ZLC_Zeolite13X_Exp28'};
     % Maximum time of the experiment
-    expInfo.maxTime = 400;
+    expInfo.maxTime = 300;
     % Sampling time for the device
     expInfo.samplingTime = 1;
     % Intervals for collecting MFC data
-    expInfo.MFCInterval = 300;
+    expInfo.MFCInterval = 100;
     % Define gas for MFM
     expInfo.gasName_MFM = 'He';
     % Define gas for MFC1
@@ -43,14 +40,11 @@ function runMultipleZLC
     % Define gas for MFC2
     expInfo.gasName_MFC2 = 'CO2';
     % Total flow rate
-    expTotalFlowRate = [10, 10, 10, 10, 10, 10;...
-                        15, 15, 15, 15, 15, 15;...
-                        30, 30, 30, 30, 30, 30;...
-                        45, 45, 45, 45, 45, 45;...
-                        60, 60, 60, 60, 60, 60;...
-                        80, 80, 80, 80, 80, 80];
+    expTotalFlowRate = [10, 10;
+                        60, 60];
     % Fraction CO2
-    fracCO2 = repmat([1/8 1/3 1 2 4 10],[length(expSeries),1]);
+    fracCO2 = [1/8, 16;...
+               1/8, 2.66];
     % Define set point for MFC1
     % Round the flow rate to the nearest first decimal (as this is the
     % resolution of the meter)    
@@ -60,7 +54,7 @@ function runMultipleZLC
     % resolution of the meter)    
     MFC2_SP = round(fracCO2.*expTotalFlowRate,1);
     % Start delay (used for adsorbent equilibration)
-    equilibrationTime = repmat([7200 3600 3600 3600 3600 3600],[length(expSeries),1]); % [s] 
+    equilibrationTime = repmat([900, 900],[length(expSeries),1]); % [s] 
     % Flag for meter calibration
     expInfo.calibrateMeters = false;    
     % Mixtures Flag - When a T junction instead of 6 way valve used
