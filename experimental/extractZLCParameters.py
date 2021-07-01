@@ -16,6 +16,7 @@
 # Reference: 10.1016/j.ces.2014.12.062
 #
 # Last modified:
+# - 2021-07-01, AK: Add sensitivity analysis
 # - 2021-06-16, AK: Add temperature dependence to kinetics
 # - 2021-06-14, AK: More fixes for error computation
 # - 2021-06-12, AK: Fix for error computation (major)
@@ -42,6 +43,7 @@ def extractZLCParameters(**kwargs):
     import numpy as np
     from geneticalgorithm2 import geneticalgorithm2 as ga # GA
     from extractDeadVolume import filesToProcess # File processing script
+    from sensitivityAnalysis import sensitivityAnalysis
     import auxiliaryFunctions
     import os
     from numpy import savez
@@ -115,6 +117,9 @@ def extractZLCParameters(**kwargs):
     # This is used to split the compositions into two distint regions
     # Note that this is also needed for (pure) downsampling data
     thresholdFactor = 0.5
+    
+    # Confidence interval for the sensitivity analysis
+    alpha = 0.95
     
     #####################################
     #####################################
@@ -195,11 +200,11 @@ def extractZLCParameters(**kwargs):
         model.run(set_function=ga.set_function_multiprocess(ZLCObjectiveFunction,
                                                              n_jobs = num_cores),
                   start_generation=model.output_dict['last_generation'], no_plot = True)
-    
+        
     # Save the zlc parameters into a native numpy file
     # The .npz file is saved in a folder called simulationResults (hardcoded)
     filePrefix = "zlcParameters"
-    saveFileName = filePrefix + "_" + currentDT + "_" + gitCommitID;
+    saveFileName = filePrefix + "_" + currentDT + "_" + gitCommitID
     savePath = os.path.join('..','simulationResults',saveFileName)
     
     # Check if simulationResults directory exists or not. If not, create the folder
@@ -229,6 +234,9 @@ def extractZLCParameters(**kwargs):
     # Loop over all available files    
     for ii in range(len(filePath)):
         os.remove(filePath[ii])
+
+    # Perform the sensitivity analysis with the optimized parameters
+    sensitivityAnalysis(saveFileName, alpha)
     
     # Return the optimized values
     return model.output_dict

@@ -15,6 +15,7 @@
 # provided in the code
 #
 # Last modified:
+# - 2021-07-01, AK: Change structure (to call from extractZLCParameters)
 # - 2021-06-28, AK: Initial creation
 #
 # Input arguments:
@@ -25,8 +26,9 @@
 #
 ############################################################################
 
-def sensitivityAnalysis():
+def sensitivityAnalysis(fileParameter,alpha):
     import auxiliaryFunctions
+    from extractDeadVolume import filesToProcess # File processing script
     import numpy as np
     from numpy import load
     from numpy import savez
@@ -36,23 +38,15 @@ def sensitivityAnalysis():
     from scipy.stats import chi2
     import socket
     
-    # Change directory to avoid path issues
-    os.chdir("..")
-    
     # Get the commit ID of the current repository
     gitCommitID = auxiliaryFunctions.getCommitID()
-     
-    # Confidence level
-    alpha = 0.95
     
     # Directory of raw data
     mainDir = 'runData'
     # File with parameter estimates
     simulationDir = os.path.join('..','simulationResults')
-    # ZLC parameter model
-    fileParameter = 'zlcParameters_20210619_0128_36d3aa3.npz'
     # ZLC parameter path
-    zlcParameterPath = os.path.join(simulationDir,fileParameter)
+    zlcParameterPath = os.path.join(simulationDir,fileParameter+'.npz')
     # Parse out the optimized model parameters
     # Note that this is nondimensional (reference value in the function)
     pOptTemp = load(zlcParameterPath, allow_pickle=True)["modelOutput"]
@@ -142,7 +136,7 @@ def sensitivityAnalysis():
     # Save the sensitivity analysis output in .npz file
     # The .npz file is saved in a folder called simulationResults (hardcoded)
     filePrefix = "sensitivityAnalysis"
-    saveFileName = filePrefix + "_" + fileParameter[0:-12] + "_" + gitCommitID;
+    saveFileName = filePrefix + "_" + fileParameter[0:-8] + "_" + gitCommitID;
     savePath = os.path.join('..','simulationResults',saveFileName)
     
     # Check if inputResources directory exists or not. If not, create the folder
@@ -163,6 +157,13 @@ def sensitivityAnalysis():
            delpNonLinearized = delpNonLinearized, # Confidence intervals (intersection with axis)
            delpBoundingBox = delpBoundingBox, # Confidence intervals (bounding box)
            hostName = socket.gethostname()) # Hostname of the computer
+
+    # Remove all the .npy files genereated from the .mat
+    # Load the names of the file to be used for estimating ZLC parameters
+    filePath = filesToProcess(False,[],[],'ZLC')
+    # Loop over all available files    
+    for ii in range(len(filePath)):
+        os.remove(filePath[ii])
 
 # func: computeObjectiveFunction
 # Computes the objective function and the model output for a given set of
