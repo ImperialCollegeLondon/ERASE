@@ -52,8 +52,15 @@ saveFlag = False
 # Save file extension
 saveFileExtension = ".png"
 
+# File with parameter estimates
+fileParameter = 'deadVolumeCharacteristics_20210613_0847_8313a04.npz'
+
 # Flag to plot dead volume results
-flagDeadVolume = False
+# Dead volume files have a certain name, use that to find what to plot
+if fileParameter[0:10] == 'deadVolume':
+    flagDeadVolume = True
+else:
+    flagDeadVolume = False
 
 # Flag to plot simulations
 simulateModel = True
@@ -64,14 +71,12 @@ plotFt = False
 # Total pressure of the gas [Pa]
 pressureTotal = np.array([1.e5]);
 
-# Directory of raw data
-mainDir = '/Users/ash23win/Google Drive/ERASE/experimental/runData/'
-
+# Plot colors
 # colorsForPlot = ["#E5383B","#CD4448","#B55055",
 #                  "#9C5D63","#846970","#6C757D"]
 colorsForPlot = ["#FF1B6B","#A273B5","#45CAFF"]*2
 # colorsForPlot = ["#E5383B","#6C757D",]
-markerForPlot = ["o","v","o","v","o","v","o","v","o","v","o","v"]
+markerForPlot = ["o"]*len(colorsForPlot)
 
 if flagDeadVolume:
     # File name of the experiments
@@ -80,26 +85,27 @@ if flagDeadVolume:
                    'ZLC_DeadVolume_Exp20C_Output.mat',
                    'ZLC_DeadVolume_Exp20D_Output.mat',
                    'ZLC_DeadVolume_Exp20E_Output.mat',]
+    
+    # Dead volume parameter model path
+    parameterPath = os.path.join('..','simulationResults',fileParameter)
+   
     # Generate .npz file for python processing of the .mat file 
-    filesToProcess(True,mainDir,rawFileName,'DV')
+    filesToProcess(True,os.path.join('..','experimental','runData'),rawFileName,'DV')
     # Get the processed file names
     fileName = filesToProcess(False,[],[],'DV')
-
-    # File with parameter estimates
-    simulationDir = '/Users/ash23win/Google Drive/ERASE/simulationResults/'
-    fileParameter = 'deadVolumeCharacteristics_20210613_0847_8313a04.npz'
-    fileNameList = load(simulationDir+fileParameter, allow_pickle=True)["fileName"]
-    modelOutputTemp = load(simulationDir+fileParameter, allow_pickle=True)["modelOutput"]
+    # Load file names and the model
+    fileNameList = load(parameterPath, allow_pickle=True)["fileName"]
+    modelOutputTemp = load(parameterPath, allow_pickle=True)["modelOutput"]
     x = modelOutputTemp[()]["variable"]
 
     # This was added on 12.06 (not back compatible for error computation)
-    downsampleData =  load(simulationDir+fileParameter)["downsampleFlag"]
-    thresholdFactor =  load(simulationDir+fileParameter)["mleThreshold"]
+    downsampleData = load(parameterPath)["downsampleFlag"]
+    thresholdFactor = load(parameterPath)["mleThreshold"]
 
     # Get the MS fit flag, flow rates and msDeadVolumeFile (if needed)
     # Check needs to be done to see if MS file available or not
     # Checked using flagMSDeadVolume in the saved file
-    dvFileLoadTemp = load(simulationDir+fileParameter)
+    dvFileLoadTemp = load(parameterPath)
     if 'flagMSDeadVolume' in dvFileLoadTemp.files:
         flagMSFit = dvFileLoadTemp["flagMSFit"]
         msFlowRate = dvFileLoadTemp["msFlowRate"]
@@ -246,10 +252,11 @@ if flagDeadVolume:
                 plt.savefig (savePath)
        
     # Print the MLE error
-    computedError = computeMLEError(moleFracExpALL,moleFracSimALL,
-                                    downsampleData=downsampleData,
-                                    thresholdFactor=thresholdFactor)
-    print(round(computedError,0))
+    if simulateModel:
+        computedError = computeMLEError(moleFracExpALL,moleFracSimALL,
+                                        downsampleData=downsampleData,
+                                        thresholdFactor=thresholdFactor)
+        print("Sanity check objective function: ",round(computedError,0))
     
     # Remove all the .npy files genereated from the .mat
     # Loop over all available files    
@@ -258,9 +265,7 @@ if flagDeadVolume:
 
 else:
     from simulateCombinedModel import simulateCombinedModel
-    
-    # Directory of raw data
-    mainDir = '/Users/ash23win/Google Drive/ERASE/experimental/runData/'
+
     # File name of the experiments
     rawFileName = ['ZLC_ActivatedCarbon_Exp60A_Output.mat',
                    'ZLC_ActivatedCarbon_Exp62A_Output.mat',
@@ -268,22 +273,24 @@ else:
                    'ZLC_ActivatedCarbon_Exp60B_Output.mat',
                    'ZLC_ActivatedCarbon_Exp62B_Output.mat',
                    'ZLC_ActivatedCarbon_Exp64B_Output.mat']
-    # Legend flag
-    useFlow = False
+    
+    # ZLC parameter model path
+    parameterPath = os.path.join('..','simulationResults',fileParameter)
+    
     # Temperature (for each experiment)
     temperatureExp = [306.44, 325.98, 345.17]*2
+    
+    # Legend flag
+    useFlow = False
+    
     # Generate .npz file for python processing of the .mat file 
-    filesToProcess(True,mainDir,rawFileName,'ZLC')
+    filesToProcess(True,os.path.join('..','experimental','runData'),rawFileName,'ZLC')
     # Get the processed file names
     fileName = filesToProcess(False,[],[],'ZLC')
-    # File with parameter estimates
-    simulationDir = '/Users/ash23win/Google Drive/ERASE/simulationResults/'
-    # ZLC parameter model
-    fileParameter = 'zlcParameters_20210701_0843_4fd9c19.npz'
     # Mass of sorbent and particle epsilon
-    adsorbentDensity = load(simulationDir+fileParameter)["adsorbentDensity"]
-    particleEpsilon = load(simulationDir+fileParameter)["particleEpsilon"]
-    massSorbent = load(simulationDir+fileParameter)["massSorbent"]
+    adsorbentDensity = load(parameterPath)["adsorbentDensity"]
+    particleEpsilon = load(parameterPath)["particleEpsilon"]
+    massSorbent = load(parameterPath)["massSorbent"]
     # Volume of sorbent material [m3]
     volSorbent = (massSorbent/1000)/adsorbentDensity
     
@@ -291,16 +298,16 @@ else:
     volGas = volSorbent/(1-particleEpsilon)*particleEpsilon
 
     # Dead volume model
-    deadVolumeFile = str(load(simulationDir+fileParameter)["deadVolumeFile"])
+    deadVolumeFile = str(load(parameterPath)["deadVolumeFile"])
     # Isotherm parameter reference
-    parameterReference = load(simulationDir+fileParameter)["parameterReference"]
+    parameterReference = load(parameterPath)["parameterReference"]
     # Load the model
-    modelOutputTemp = load(simulationDir+fileParameter, allow_pickle=True)["modelOutput"]
+    modelOutputTemp = load(parameterPath, allow_pickle=True)["modelOutput"]
     modelNonDim = modelOutputTemp[()]["variable"] 
 
     # This was added on 12.06 (not back compatible for error computation)
-    downsampleData = load(simulationDir+fileParameter)["downsampleFlag"]
-    thresholdFactor =  load(simulationDir+fileParameter)["mleThreshold"]
+    downsampleData = load(parameterPath)["downsampleFlag"]
+    thresholdFactor =  load(parameterPath)["mleThreshold"]
     print("Objective Function",round(modelOutputTemp[()]["function"],0))
 
     numPointsExp = np.zeros(len(fileName))
@@ -395,9 +402,10 @@ else:
             massBalanceALL[ii,2] = volGas*moleFracExp[0]*(pressureTotal/(8.314*temperatureExp[ii]))/(massSorbent/1000)   
 
             # Call the deadVolume Wrapper function to obtain the outlet mole fraction
-            modelOutputTemp = load(simulationDir+deadVolumeFile, allow_pickle=True)["modelOutput"]
+            deadVolumePath = os.path.join('..','simulationResults',deadVolumeFile)
+            modelOutputTemp = load(deadVolumePath, allow_pickle=True)["modelOutput"]
             pDV = modelOutputTemp[()]["variable"]
-            dvFileLoadTemp = load(simulationDir+deadVolumeFile)
+            dvFileLoadTemp = load(deadVolumePath)
             flagMSDeadVolume = dvFileLoadTemp["flagMSDeadVolume"]
             msDeadVolumeFile = dvFileLoadTemp["msDeadVolumeFile"]
             moleFracDV = deadVolumeWrapper(timeInt, resultMat[3,:]*1e6, pDV, flagMSDeadVolume, msDeadVolumeFile, initMoleFrac = [moleFracExp[0]])
@@ -465,7 +473,7 @@ else:
         computedError = computeMLEError(moleFracExpALL,moleFracSimALL, 
                                         downsampleData = downsampleData,
                                         thresholdFactor = 0.5)
-        print(round(computedError,0))
+        print("Sanity check objective function: ",round(computedError,0))
     
     # Remove all the .npy files genereated from the .mat
     # Loop over all available files    

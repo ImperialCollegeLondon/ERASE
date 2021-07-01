@@ -45,24 +45,23 @@ saveFlag = False
 saveFileExtension = ".png"
 
 # Colors
-colorForPlot = ["ff1b6b","a273b5","45caff"]
+colorForPlot = ["FF1B6B","A273B5","45CAFF"]
 # colorForPlot = ["E5383B","6C757D"]
 
 # Plot text
 plotText = 'DSL'
 
 # Define temperature
-temperature = [306.44, 325.98]
+temperature = [306.44, 325.98, 345.17]
 
 # AC Isotherm parameters
 x_VOL = [0.44, 3.17e-6, 28.63e3, 6.10, 3.21e-6, 20.37e3, 100] # (Pini 2020)
 # x_VOL = [2.81e-5, 1.25e-7, 2.07e2, 4.12, 7.29e-7, 2.65e4, 100] # (Hassan, QC)
-# 13X Isotherm parameters (Haghpanah 2013)
+
+# 13X Isotherm parameters
 # x_VOL = [2.50, 2.05e-7, 4.29e4, 4.32, 3.06e-7, 3.10e4, 100] # (Hassan, QC)
 
-# File with parameter estimates from ZLC
-simulationDir = '/Users/ash23win/Google Drive/ERASE/simulationResults/'
-
+# ZLC parameter estimate files
 # Experiment 43 and 48
 # zlcFileName = ['zlcParameters_20210618_1837_36d3aa3.npz',
 #                 'zlcParameters_20210618_2209_36d3aa3.npz',
@@ -90,11 +89,13 @@ for jj in range(len(temperature)):
                                                           temperature = temperature[jj])
 # Loop over all available ZLC files
 for kk in range(len(zlcFileName)):
-    # ZLC Data    
-    parameterReference = load(simulationDir+zlcFileName[kk])["parameterReference"]
-    modelOutputTemp = load(simulationDir+zlcFileName[kk], allow_pickle=True)["modelOutput"]
+    # ZLC Data 
+    parameterPath = os.path.join('..','simulationResults',zlcFileName[kk])
+    parameterReference = load(parameterPath)["parameterReference"]
+    modelOutputTemp = load(parameterPath, allow_pickle=True)["modelOutput"]
     objectiveFunction[kk] = round(modelOutputTemp[()]["function"],0)
     modelNonDim = modelOutputTemp[()]["variable"] 
+
     # Get the date time of the parameter estimates
     parameterDateTime = datetime.strptime(zlcFileName[kk][14:27], '%Y%m%d_%H%M')
     # Date time when the kinetic model shifted from 1 parameter to 2 parameter
