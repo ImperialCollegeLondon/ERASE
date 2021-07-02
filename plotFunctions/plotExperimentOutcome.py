@@ -53,7 +53,7 @@ saveFlag = False
 saveFileExtension = ".png"
 
 # File with parameter estimates
-fileParameter = 'deadVolumeCharacteristics_20210613_0847_8313a04.npz'
+fileParameter = 'zlcParameters_20210702_0207_07082e3.npz'
 
 # Flag to plot dead volume results
 # Dead volume files have a certain name, use that to find what to plot
@@ -394,7 +394,7 @@ else:
             normalizeFactor = np.max(moleFracExp - np.min(moleFracExp)) # Compute the max from normalized data
             moleFracExpALL = np.hstack((moleFracExpALL, (moleFracExp-minExp)/normalizeFactor))
             moleFracSimALL = np.hstack((moleFracSimALL, (moleFracSim-minExp)/normalizeFactor))
-        
+
             # Compute the mass balance at the end end of the ZLC
             massBalanceALL[ii,0] = moleFracExp[0]
             massBalanceALL[ii,1] = ((np.trapz(np.multiply(resultMat[3,:],resultMat[0,:]),timeElapsedExp)
@@ -472,7 +472,7 @@ else:
     if simulateModel:
         computedError = computeMLEError(moleFracExpALL,moleFracSimALL, 
                                         downsampleData = downsampleData,
-                                        thresholdFactor = 0.5)
+                                        thresholdFactor = thresholdFactor)
         print("Sanity check objective function: ",round(computedError,0))
     
     # Remove all the .npy files genereated from the .mat
