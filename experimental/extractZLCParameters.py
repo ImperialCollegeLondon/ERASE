@@ -316,7 +316,7 @@ def ZLCObjectiveFunction(x):
         # Normalize the mole fraction by dividing it by maximum value to avoid
         # irregular weightings for different experiment (at diff. scales)
         minExp = np.min(moleFracExp) # Compute the minimum from experiment
-        normalizeFactor = np.max(moleFracExp - np.min(moleFracExp)) # Compute the max from normalized data
+        normalizeFactor = np.max(moleFracExp - minExp) # Compute the max from normalized data
         moleFracExpALL = np.hstack((moleFracExpALL, (moleFracExp-minExp)/normalizeFactor))
         moleFracSimALL = np.hstack((moleFracSimALL, (moleFracSim-minExp)/normalizeFactor))
     

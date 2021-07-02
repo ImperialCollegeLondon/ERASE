@@ -53,7 +53,7 @@ saveFlag = False
 saveFileExtension = ".png"
 
 # File with parameter estimates
-fileParameter = 'zlcParameters_20210702_0207_07082e3.npz'
+fileParameter = 'deadVolumeCharacteristics_20210624_1149_b092465.npz'
 
 # Flag to plot dead volume results
 # Dead volume files have a certain name, use that to find what to plot
@@ -63,7 +63,7 @@ else:
     flagDeadVolume = False
 
 # Flag to plot simulations
-simulateModel = True
+simulateModel = False
 
 # Flag to plot dead volume results
 plotFt = False
@@ -72,9 +72,9 @@ plotFt = False
 pressureTotal = np.array([1.e5]);
 
 # Plot colors
-# colorsForPlot = ["#E5383B","#CD4448","#B55055",
-#                  "#9C5D63","#846970","#6C757D"]
-colorsForPlot = ["#FF1B6B","#A273B5","#45CAFF"]*2
+colorsForPlot = ["#E5383B","#CD4448","#B55055",
+                  "#9C5D63","#846970","#6C757D"]
+# colorsForPlot = ["#FF1B6B","#A273B5","#45CAFF"]*2
 # colorsForPlot = ["#E5383B","#6C757D",]
 markerForPlot = ["o"]*len(colorsForPlot)
 
@@ -177,8 +177,10 @@ if flagDeadVolume:
             
             # Stack mole fraction from experiments and simulation for error 
             # computation
-            moleFracExpALL = np.hstack((moleFracExpALL, (moleFracExp-np.min(moleFracExp))/(np.max(moleFracExp-np.min(moleFracExp)))))
-            moleFracSimALL = np.hstack((moleFracSimALL, (moleFracSim-np.min(moleFracSim))/(np.max(moleFracSim-np.min(moleFracSim)))))
+            minExp = np.min(moleFracExp) # Compute the minimum from experiment
+            normalizeFactor = np.max(moleFracExp - minExp) # Compute the max from normalized data
+            moleFracExpALL = np.hstack((moleFracExpALL, (moleFracExp-minExp)/normalizeFactor))
+            moleFracSimALL = np.hstack((moleFracSimALL, (moleFracSim-minExp)/normalizeFactor))
             
         # Plot the expreimental and model output
         if not plotFt:
@@ -204,7 +206,7 @@ if flagDeadVolume:
                 ax2.semilogy(timeElapsedExp,moleFracSim,
                               color=colorsForPlot[ii]) # Simulation response
             ax2.set(xlabel='$t$ [s]', 
-                    xlim = [0,150], ylim = [1e-3, 1])   
+                    xlim = [0,150], ylim = [5e-3, 1])   
             ax2.locator_params(axis="x", nbins=5)
 
             

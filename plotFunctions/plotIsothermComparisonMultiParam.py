@@ -51,6 +51,12 @@ colorForPlot = ["FF1B6B","A273B5","45CAFF"]
 # Plot text
 plotText = 'DSL'
 
+# Universal gas constant
+Rg = 8.314
+
+# Total pressure
+pressureTotal = np.array([1.e5]);
+
 # Define temperature
 temperature = [306.44, 325.98, 345.17]
 
@@ -70,14 +76,16 @@ x_VOL = [0.44, 3.17e-6, 28.63e3, 6.10, 3.21e-6, 20.37e3, 100] # (Pini 2020)
 #                 'zlcParameters_20210619_0759_36d3aa3.npz',]
 
 # Experiment 60 - 
-zlcFileName = ['zlcParameters_20210701_0843_4fd9c19.npz',]
+zlcFileName = ['zlcParameters_20210701_1407_4fd9c19.npz',
+               'zlcParameters_20210701_2133_07082e3.npz',
+               'zlcParameters_20210702_0207_07082e3.npz']
 
 # Create the grid for mole fractions
 y = np.linspace(0,1.,100)
 # Initialize isotherms 
 isoLoading_VOL = np.zeros([len(y),len(temperature)])
-isoLoading_VOL_HA = np.zeros([len(y),len(temperature)])
 isoLoading_ZLC = np.zeros([len(zlcFileName),len(y),len(temperature)])
+kineticConstant_ZLC = np.zeros([len(zlcFileName),len(y),len(temperature)])
 objectiveFunction = np.zeros([len(zlcFileName)])
 
 # Loop over all the mole fractions
@@ -108,12 +116,37 @@ for kk in range(len(zlcFileName)):
     # When 2 parameter model present
     else:
         isothermModel = x_ZLC[0:-2]
+        rateConstant = x_ZLC[-2]
+        kineticActEnergy = x_ZLC[-1]
 
     for jj in range(len(temperature)):
         for ii in range(len(y)):
             isoLoading_ZLC[kk,ii,jj] = computeEquilibriumLoading(isothermModel=isothermModel,
                                                                  moleFrac = y[ii], 
-                                                                 temperature = temperature[jj])
+                                                                 temperature = temperature[jj]) # [mol/kg]
+            # Partial pressure of the gas
+            partialPressure = y[ii]*pressureTotal
+            # delta pressure to compute gradient
+            delP = 1e-3
+            # Mole fraction (up)
+            moleFractionUp = (partialPressure + delP)/pressureTotal
+            # Compute the loading [mol/m3] @ moleFractionUp
+            equilibriumLoadingUp  = computeEquilibriumLoading(pressureTotal=pressureTotal,
+                                                            temperature=temperature[jj],
+                                                            moleFrac=moleFractionUp,
+                                                            isothermModel=isothermModel) # [mol/kg]
+            # Compute the gradient (delp/delq*)
+            dPbydq = delP/(equilibriumLoadingUp-isoLoading_ZLC[kk,ii,jj])
+            # Compute the correction factor for kinetic constant
+            # Darken factor for concentration dependence
+            correctionFactor_Conc = (isoLoading_ZLC[kk,ii,jj]/partialPressure)*dPbydq
+            # Arrhenius factor for temperature dependence
+            correctionFactor_Temp = np.exp(-kineticActEnergy/(Rg*temperature[jj]))
+            # Correction factor
+            correctionFactor = correctionFactor_Conc*correctionFactor_Temp
+            
+            # Linear driving force model (derivative of solid phase loadings)
+            kineticConstant_ZLC[kk,ii,jj] = correctionFactor*rateConstant
         
 # Plot the isotherms    
 fig = plt.figure
@@ -155,3 +188,23 @@ if saveFlag:
         os.mkdir(os.path.join('..','simulationFigures'))
     plt.savefig (savePath)         
 plt.show()
+
+# Plot the kinetic constant as a function of mole fraction
+plt.style.use('singleColumn.mplstyle') # Custom matplotlib style file
+fig = plt.figure
+ax1 = plt.subplot(1,1,1)        
+for jj in range(len(temperature)):
+    for kk in range(len(zlcFileName)):
+        if kk == 0:
+            labelText = str(temperature[jj])+' K'
+        else:
+            labelText = ''
+        ax1.plot(y,kineticConstant_ZLC[kk,:,jj],color='#'+colorForPlot[jj],alpha=0.5,
+                 label=labelText) # ALL
+
+ax1.set(xlabel='$P$ [bar]', 
+ylabel='$k$ [s$^\mathregular{-1}$]',
+xlim = [0,1], ylim = [0, 0.5]) 
+ax1.locator_params(axis="x", nbins=4)
+ax1.locator_params(axis="y", nbins=4)
+ax1.legend()   
