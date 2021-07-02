@@ -14,6 +14,7 @@
 % controllers, will read flow data.
 %
 % Last modified:
+% - 2021-07-02, AK: Add check for gas flow
 % - 2021-04-15, AK: Modify function for mixture experiments
 % - 2021-04-07, AK: Add MFM with MFC1 and MFC2, add interval for MFC
 %                   collection
@@ -187,6 +188,32 @@ function initializeTimerDevice(~, thisEvent, expInfo, serialObj)
         if round(str2double(outputMFC2Temp(6)),1) ~= round(expInfo.MFC2_SP,1)
             error("You should not be here!!!")
         end
+    end
+    % Pause for 20 s and check if there is enough gas flow
+    pause(20)
+    % MFC1
+    outputMFC1 = controlAuxiliaryEquipments(serialObj.MFC1, serialObj.cmdPollData,1);
+    outputMFC1Temp = strsplit(outputMFC1,' '); % Split the output string
+    % Rounding required due to rounding errors. Differences of around
+    % eps can be observed
+    % Round the flow rate to the nearest first decimal (as this is the
+    % resolution of the meter) and check if the flow in the gas is within 1
+    % mL/min from the setpoint       
+    if ~(round(expInfo.MFC1_SP,1)-1 < round(str2double(outputMFC1Temp(4)),1)) ...
+            || ~(round(str2double(outputMFC1Temp(4)),1) < round(expInfo.MFC1_SP,1)+1)
+        error("Dude. There is no gas in MFC1!!!")
+    end
+    % MFC2
+    outputMFC2 = controlAuxiliaryEquipments(serialObj.MFC2, serialObj.cmdPollData,1);
+    outputMFC2Temp = strsplit(outputMFC2,' '); % Split the output string
+    % Rounding required due to rounding errors. Differences of around
+    % eps can be observed
+    % Round the flow rate to the nearest first decimal (as this is the
+    % resolution of the meter) and check if the flow in the gas is within 1
+    % mL/min from the setpoint
+    if ~(round(expInfo.MFC2_SP,1)-1 < round(str2double(outputMFC2Temp(4)),1)) ...
+            || ~(round(str2double(outputMFC2Temp(4)),1) < round(expInfo.MFC2_SP,1)+1)
+        error("Dude. There is no gas in MFC2!!!")
     end
     % Get the event date/time
     currentDateTime = datestr(now,'yyyymmdd_HHMMSS');
