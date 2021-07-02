@@ -14,6 +14,7 @@
 % real experiment using calibrated flow meters and MS
 %
 % Last modified:
+% - 2021-07-02, AK: Bug fix for threshold
 % - 2021-05-10, AK: Convert into a function
 % - 2021-04-20, AK: Add experiment struct to output .mat file
 % - 2021-04-19, AK: Major revamp for flow rate computation
@@ -73,7 +74,8 @@ function analyzeExperiment(experimentStruct,flagCalibration,flagFlowMeter)
         % Input for the ZLC script (Python)
         % Find the index for the mole fraction that corresponds to the
         % threshold mole fraction
-        moleFracThresholdInd = find(outputStruct.moleFrac(:,2)<experimentStruct.moleFracThreshold,1,'first');
+        moleFracThresholdInd = min([find(outputStruct.moleFrac(:,2)<experimentStruct.moleFracThreshold,1,'first'),...
+                                   find(~isnan(totalFlowRate),1,'last')]); % Additional check to weed out nan flow due to interpolation
         % Set the final index to be the length of the series, if threshold not
         % reached
         if isempty(moleFracThresholdInd)
