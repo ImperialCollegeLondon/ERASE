@@ -16,6 +16,7 @@
 # Reference: 10.1016/j.ces.2014.12.062
 #
 # Last modified:
+# - 2021-07-02, AK: Remove threshold factor
 # - 2021-07-01, AK: Add sensitivity analysis
 # - 2021-06-16, AK: Add temperature dependence to kinetics
 # - 2021-06-14, AK: More fixes for error computation
@@ -112,11 +113,6 @@ def extractZLCParameters(**kwargs):
     # Downsample the data at different compositions (this is done on 
     # normalized data)
     downsampleData = True
-        
-    # Threshold factor (If -ngative infinity not used, if not need a float)
-    # This is used to split the compositions into two distint regions
-    # Note that this is also needed for (pure) downsampling data
-    thresholdFactor = 0.5
     
     # Confidence interval for the sensitivity analysis
     alpha = 0.95
@@ -171,7 +167,7 @@ def extractZLCParameters(**kwargs):
 
     # Initialize the parameters used for ZLC fitting process
     fittingParameters(True,temperature,deadVolumeFile,adsorbentDensity,particleEpsilon,
-                      massSorbent,isoRef,downsampleData,thresholdFactor,paramIso)
+                      massSorbent,isoRef,downsampleData,paramIso)
 
     # Algorithm parameters for GA
     algorithm_param = {'max_num_iteration':15,
@@ -225,7 +221,6 @@ def extractZLCParameters(**kwargs):
            massSorbent = massSorbent, # Mass of sorbent [g]
            parameterReference = isoRef, # Parameter references [-]
            downsampleFlag = downsampleData, # Flag for downsampling data [-]
-           mleThreshold = thresholdFactor, # Threshold for MLE composition split [-]
            hostName = socket.gethostname()) # Hostname of the computer
     
     # Remove all the .npy files genereated from the .mat
@@ -252,7 +247,7 @@ def ZLCObjectiveFunction(x):
     from computeMLEError import computeMLEError
 
     # Get the zlc parameters needed for the solver
-    temperature, deadVolumeFile, adsorbentDensity, particleEpsilon, massSorbent, isoRef, downsampleData, thresholdFactor, paramIso = fittingParameters(False,[],[],[],[],[],[],[],[],[])
+    temperature, deadVolumeFile, adsorbentDensity, particleEpsilon, massSorbent, isoRef, downsampleData, paramIso = fittingParameters(False,[],[],[],[],[],[],[],[])
 
     # Volume of sorbent material [m3]
     volSorbent = (massSorbent/1000)/adsorbentDensity
@@ -322,8 +317,7 @@ def ZLCObjectiveFunction(x):
     
     # Compute the sum of the error for the difference between exp. and sim.
     computedError = computeMLEError(moleFracExpALL,moleFracSimALL,
-                                    downsampleData=downsampleData,
-                                    thresholdFactor=thresholdFactor)
+                                    downsampleData=downsampleData)
     return computedError
 
 # func: fittingParameters
@@ -332,7 +326,7 @@ def ZLCObjectiveFunction(x):
 # This is done because the ga cannot handle additional user inputs
 def fittingParameters(initFlag,temperature,deadVolumeFile,adsorbentDensity,
                       particleEpsilon,massSorbent,isoRef,downsampleData,
-                      thresholdFactor,paramIso):
+                      paramIso):
     from numpy import savez
     from numpy import load
     # Process the data for python (if needed)
@@ -346,7 +340,6 @@ def fittingParameters(initFlag,temperature,deadVolumeFile,adsorbentDensity,
                massSorbent=massSorbent,
                isoRef=isoRef,
                downsampleData=downsampleData,
-               thresholdFactor=thresholdFactor,
                paramIso = paramIso)
     # Returns the path of the .npz file to be used 
     else:
@@ -360,6 +353,5 @@ def fittingParameters(initFlag,temperature,deadVolumeFile,adsorbentDensity,
         massSorbent = load (dummyFileName)["massSorbent"]
         isoRef = load (dummyFileName)["isoRef"]
         downsampleData = load (dummyFileName)["downsampleData"]
-        thresholdFactor = load (dummyFileName)["thresholdFactor"]
         paramIso = load (dummyFileName)["paramIso"]
-        return temperature, deadVolumeFile, adsorbentDensity, particleEpsilon, massSorbent, isoRef, downsampleData, thresholdFactor, paramIso
+        return temperature, deadVolumeFile, adsorbentDensity, particleEpsilon, massSorbent, isoRef, downsampleData, paramIso

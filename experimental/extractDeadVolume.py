@@ -17,6 +17,7 @@
 # Reference: 10.1007/s10450-012-9417-z
 #
 # Last modified:
+# - 2021-07-02, AK: Remove threshold factor
 # - 2021-06-12, AK: Fix for error computation (major)
 # - 2021-05-28, AK: Add the existing DV model with MS DV model and structure change
 # - 2021-05-28, AK: Add model for MS
@@ -103,19 +104,14 @@ def extractDeadVolume(**kwargs):
     # Downsample the data at different compositions (this is done on 
     # normalized data)
     downsampleData = True
-
-    # Threshold factor (If -negative infinity not used, if not need a float)
-    # This is used to split the compositions into two distint regions
-    thresholdFactor = 0.5
-
+    
     #####################################
     #####################################
 
     # Save the parameters to be used for fitting to a dummy file (to pass 
     # through GA - IDIOTIC)
     savez ('tempFittingParametersDV.npz', 
-           downsampleData=downsampleData,thresholdFactor=thresholdFactor,
-           flagMSFit = flagMSFit, msFlowRate = msFlowRate,
+           downsampleData=downsampleData, flagMSFit = flagMSFit, msFlowRate = msFlowRate,
            flagMSDeadVolume = flagMSDeadVolume, msDeadVolumeFile = msDeadVolumeFile)
     
     # Generate .npz file for python processing of the .mat file 
@@ -183,7 +179,6 @@ def extractDeadVolume(**kwargs):
            flagMSDeadVolume = flagMSDeadVolume, # Flag for checking if ms dead volume used
            msDeadVolumeFile = msDeadVolumeFile, # MS dead volume parameter file
            downsampleFlag = downsampleData, # Flag for downsampling data [-]
-           mleThreshold = thresholdFactor, # Threshold for MLE composition split [-]
            hostName = socket.gethostname()) # Hostname of the computer
 
     # Remove all the .npy files genereated from the .mat
@@ -208,7 +203,6 @@ def deadVolObjectiveFunction(x):
     # Load the threshold factor, MS fit flag and MS flow rate from the dummy 
     # file
     downsampleData = load ('tempFittingParametersDV.npz')["downsampleData"]
-    thresholdFactor = load ('tempFittingParametersDV.npz')["thresholdFactor"]
     flagMSFit = load ('tempFittingParametersDV.npz')["flagMSFit"] # Used only if MS data is fit
     msFlowRate = load ('tempFittingParametersDV.npz')["msFlowRate"] # Used only if MS data is fit
     flagMSDeadVolume = load ('tempFittingParametersDV.npz')["flagMSDeadVolume"] # Used only if MS dead volume model is separate
@@ -277,8 +271,7 @@ def deadVolObjectiveFunction(x):
     # Compute the sum of the error for the difference between exp. and sim. and
     # add a penalty if needed (using MLE)
     computedError = computeMLEError(moleFracExpALL,moleFracSimALL,
-                                    downsampleData=downsampleData,
-                                    thresholdFactor=thresholdFactor)
+                                    downsampleData=downsampleData)
     return computedError + penaltyObj
 
 # func: filesToProcess

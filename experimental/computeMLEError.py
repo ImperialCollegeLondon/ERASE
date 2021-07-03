@@ -12,6 +12,7 @@
 # Computes the MLE error for ZLC experiments.
 #
 # Last modified:
+# - 2021-07-02, AK: Remove threshold factor
 # - 2021-07-02, AK: Bug fix for data sorting
 # - 2021-06-12, AK: Add pure data downsampling
 # - 2021-05-24, AK: Add -inf input to avoid splitting compositions
@@ -32,11 +33,6 @@ def computeMLEError(moleFracExp,moleFracSim,**kwargs):
     # Check if flag for downsampling data in low and high composition provided
     if 'downsampleData' in kwargs:
         downsampleData = kwargs["downsampleData"]
-        # Threshold Factor is needed for pure downsampling
-        if 'thresholdFactor' in kwargs:
-            thresholdFactor = np.array(kwargs["thresholdFactor"])
-        else:
-            thresholdFactor = 0.5 # Default set to 0.5 (as data scaled between 0 and 1)
     # Default is false, uses pure MLE with no downsampling
     else:
         downsampleData = False
@@ -53,8 +49,10 @@ def computeMLEError(moleFracExp,moleFracSim,**kwargs):
         concatenatedData = np.vstack((moleFracExp,moleFracSim)).T
         # Sort the data first (as everything is concatenated)
         sortedData = concatenatedData[np.argsort(concatenatedData[:,0]),:]
-        # Find error for mole fraction below a given threshold
-        lastIndThreshold = int(np.argwhere(sortedData[:,0]>thresholdFactor)[0])
+        # Find error for mole fraction below a given threshold. The threshold 
+        # corresponds to the median of the overall data (experimental)
+        # This would enable equal weights to all the compositions
+        lastIndThreshold = int(np.argwhere(sortedData[:,0]>np.median(sortedData[:,0]))[0])
 
         # Reinitialize mole fraction experimental and simulation based on sorted data        
         moleFracExp = sortedData[:,0] # Experimental

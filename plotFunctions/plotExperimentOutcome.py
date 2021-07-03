@@ -12,6 +12,7 @@
 # Plots for the experimental outcome (along with model)
 #
 # Last modified:
+# - 2021-07-03, AK: Remove threshold factor
 # - 2021-07-01, AK: Cosmetic changes
 # - 2021-05-14, AK: Fixes and structure changes
 # - 2021-05-14, AK: Improve plotting capabilities
@@ -53,7 +54,7 @@ saveFlag = False
 saveFileExtension = ".png"
 
 # File with parameter estimates
-fileParameter = 'deadVolumeCharacteristics_20210624_1149_b092465.npz'
+fileParameter = 'deadVolumeCharacteristics_20210703_1234_a021de6.npz'
 
 # Flag to plot dead volume results
 # Dead volume files have a certain name, use that to find what to plot
@@ -63,7 +64,7 @@ else:
     flagDeadVolume = False
 
 # Flag to plot simulations
-simulateModel = False
+simulateModel = True
 
 # Flag to plot dead volume results
 plotFt = False
@@ -72,8 +73,7 @@ plotFt = False
 pressureTotal = np.array([1.e5]);
 
 # Plot colors
-colorsForPlot = ["#E5383B","#CD4448","#B55055",
-                  "#9C5D63","#846970","#6C757D"]
+colorsForPlot = ["#E5383B","#B55055","#9C5D63","#6C757D"]
 # colorsForPlot = ["#FF1B6B","#A273B5","#45CAFF"]*2
 # colorsForPlot = ["#E5383B","#6C757D",]
 markerForPlot = ["o"]*len(colorsForPlot)
@@ -83,7 +83,6 @@ if flagDeadVolume:
     rawFileName = ['ZLC_DeadVolume_Exp20A_Output.mat',
                    'ZLC_DeadVolume_Exp20B_Output.mat',
                    'ZLC_DeadVolume_Exp20C_Output.mat',
-                   'ZLC_DeadVolume_Exp20D_Output.mat',
                    'ZLC_DeadVolume_Exp20E_Output.mat',]
     
     # Dead volume parameter model path
@@ -100,7 +99,6 @@ if flagDeadVolume:
 
     # This was added on 12.06 (not back compatible for error computation)
     downsampleData = load(parameterPath)["downsampleFlag"]
-    thresholdFactor = load(parameterPath)["mleThreshold"]
 
     # Get the MS fit flag, flow rates and msDeadVolumeFile (if needed)
     # Check needs to be done to see if MS file available or not
@@ -193,7 +191,7 @@ if flagDeadVolume:
                               color=colorsForPlot[ii]) # Simulation response    
             ax1.set(xlabel='$t$ [s]', 
                     ylabel='$y_1$ [-]',
-                    xlim = [0,150], ylim = [0, 1])   
+                    xlim = [0,300], ylim = [0, 1])   
             ax1.locator_params(axis="x", nbins=5)
             ax1.locator_params(axis="y", nbins=5)
             ax1.legend()
@@ -206,7 +204,7 @@ if flagDeadVolume:
                 ax2.semilogy(timeElapsedExp,moleFracSim,
                               color=colorsForPlot[ii]) # Simulation response
             ax2.set(xlabel='$t$ [s]', 
-                    xlim = [0,150], ylim = [5e-3, 1])   
+                    xlim = [0,300], ylim = [1e-3, 1])   
             ax2.locator_params(axis="x", nbins=5)
 
             
@@ -252,12 +250,11 @@ if flagDeadVolume:
                 if not os.path.exists(os.path.join('..','simulationFigures')):
                     os.mkdir(os.path.join('..','simulationFigures'))
                 plt.savefig (savePath)
-       
+    plt.show()
     # Print the MLE error
     if simulateModel:
         computedError = computeMLEError(moleFracExpALL,moleFracSimALL,
-                                        downsampleData=downsampleData,
-                                        thresholdFactor=thresholdFactor)
+                                        downsampleData=downsampleData,)
         print("Sanity check objective function: ",round(computedError,0))
     
     # Remove all the .npy files genereated from the .mat
@@ -309,7 +306,6 @@ else:
 
     # This was added on 12.06 (not back compatible for error computation)
     downsampleData = load(parameterPath)["downsampleFlag"]
-    thresholdFactor =  load(parameterPath)["mleThreshold"]
     print("Objective Function",round(modelOutputTemp[()]["function"],0))
 
     numPointsExp = np.zeros(len(fileName))
@@ -473,8 +469,7 @@ else:
     # Print the MLE error
     if simulateModel:
         computedError = computeMLEError(moleFracExpALL,moleFracSimALL, 
-                                        downsampleData = downsampleData,
-                                        thresholdFactor = thresholdFactor)
+                                        downsampleData = downsampleData,)
         print("Sanity check objective function: ",round(computedError,0))
     
     # Remove all the .npy files genereated from the .mat
