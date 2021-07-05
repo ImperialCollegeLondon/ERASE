@@ -15,6 +15,7 @@
 # provided in the code
 #
 # Last modified:
+# - 2021-07-05, AK: Bug fix
 # - 2021-07-01, AK: Change structure (to call from extractZLCParameters)
 # - 2021-06-28, AK: Initial creation
 #
@@ -185,7 +186,6 @@ def computeObjectiveFunction(mainDir, zlcParameterPath, pOpt, pRef):
     
     # Obtain the downsampling conditions
     downsampleData = load(zlcParameterPath)["downsampleFlag"]
-    thresholdFactor =  load(zlcParameterPath)["mleThreshold"]
     
     # Adsorbent density, mass of sorbent and particle epsilon
     adsorbentDensity = load(zlcParameterPath)["adsorbentDensity"]
@@ -260,8 +260,7 @@ def computeObjectiveFunction(mainDir, zlcParameterPath, pOpt, pRef):
         
     # Compute the MLE error of the model for the given parameters
     computedError = computeMLEError(moleFracExpALL,moleFracSimALL,
-                                    downsampleData=downsampleData,
-                                    thresholdFactor=thresholdFactor)
+                                    downsampleData=downsampleData)
     
     # Return the objective function value, experimental and simulated output
     return computedError, moleFracExpALL, moleFracSimALL
