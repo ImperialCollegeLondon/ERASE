@@ -61,7 +61,7 @@ def plotsForArticle_Simulation(**kwargs):
     # If sensor response curve needs to be plotted
     if 'responseShape' in kwargs:
         if kwargs["responseShape"]:
-            meanErr = plotForArticle_ResponseShape(gitCommitID, currentDT, 
+            plotForArticle_ResponseShape(gitCommitID, currentDT, 
                                        saveFlag, saveFileExtension)
 
     # If graphical tool needs to be plotted
@@ -225,13 +225,15 @@ def plotForArticle_ResponseShape(gitCommitID, currentDT,
     sensorText = ["A", "B", "C"]
     
     # File to be loaded for the simulation results
-    loadFileName = ["sensitivityAnalysis_17_20210212_1259_b02f8c3.npz", # No Noise
-                    "sensitivityAnalysis_16_20210212_1300_b02f8c3.npz", # No Noise
-                    "sensitivityAnalysis_6_20210212_1259_b02f8c3.npz"] # No Noise
-                    # "sensitivityAnalysis_17_20210212_1355_b02f8c3.npz", # Noise
-                    # "sensitivityAnalysis_16_20210212_1356_b02f8c3.npz" # Noise
-                    # "sensitivityAnalysis_6_20210212_1355_b02f8c3.npz"] # Noise
-    
+    # No Noise
+    # loadFileName = ["sensitivityAnalysis_17_20210212_1259_b02f8c3.npz", # No Noise
+    #                 "sensitivityAnalysis_16_20210212_1300_b02f8c3.npz", # No Noise
+    #                 "sensitivityAnalysis_6_20210212_1259_b02f8c3.npz"] # No Noise
+    # Noise (0.1 g/kg)
+    loadFileName = ["sensitivityAnalysis_17_20210706_2258_ecbbb3e.npz", # Noise
+                    "sensitivityAnalysis_16_20210707_0842_ecbbb3e.npz", # Noise
+                    "sensitivityAnalysis_6_20210707_1125_ecbbb3e.npz"] # Noise
+
     # Colors for plot
     colorsForPlot = ("#5fad56","#f78154","#b4436c")
     
@@ -277,7 +279,7 @@ def plotForArticle_ResponseShape(gitCommitID, currentDT,
         
     ax2.set(xlabel='$y_1$ [-]', 
             ylabel='$\psi$ [-]',
-            xlim = [0.,1.], ylim = [1e-10,100])
+            xlim = [0.,1.], ylim = [1e-8,100])
     ax2.locator_params(axis="x", nbins=4)
     ax2.set_yscale('log')
     plt.legend([],[], frameon=False)
@@ -285,11 +287,11 @@ def plotForArticle_ResponseShape(gitCommitID, currentDT,
             backgroundcolor = 'w')
 
     # Label for the materials         
-    ax2.text(0.85, 6e-3, sensorText[0], fontsize=10, 
+    ax2.text(0.85, 1e-2, sensorText[0], fontsize=10, 
         backgroundcolor = 'w', color = colorsForPlot[0])
     ax2.text(0.3, 4e-4, sensorText[1], fontsize=10, 
             backgroundcolor = 'w', color = colorsForPlot[1])
-    ax2.text(0.6, 5e-7, sensorText[2], fontsize=10, 
+    ax2.text(0.6, 3e-6, sensorText[2], fontsize=10, 
             backgroundcolor = 'w', color = colorsForPlot[2])
 
     # Label for the formula
@@ -306,7 +308,7 @@ def plotForArticle_ResponseShape(gitCommitID, currentDT,
         
     ax3.set(xlabel='$y_1$ [-]', 
             ylabel='$\chi$ [-]',
-            xlim = [0.,1.], ylim = [1e-10,100])
+            xlim = [0.,1.], ylim = [1e-8,100])
     ax3.locator_params(axis="x", nbins=4)
     ax3.set_yscale('log')
     plt.legend([],[], frameon=False)
@@ -314,11 +316,11 @@ def plotForArticle_ResponseShape(gitCommitID, currentDT,
             backgroundcolor = 'w')
 
     # Label for the materials         
-    ax3.text(0.85, 6e-2, sensorText[0], fontsize=10, 
+    ax3.text(0.85, 3e-1, sensorText[0], fontsize=10, 
         backgroundcolor = 'w', color = colorsForPlot[0])
-    ax3.text(0.81, 4e-4, sensorText[1], fontsize=10, 
+    ax3.text(0.81, 4e-5, sensorText[1], fontsize=10, 
             backgroundcolor = 'w', color = colorsForPlot[1])
-    ax3.text(0.6, 1e-6, sensorText[2], fontsize=10, 
+    ax3.text(0.6, 3e-4, sensorText[2], fontsize=10, 
             backgroundcolor = 'w', color = colorsForPlot[2])
 
     # Label for the formula
@@ -349,8 +351,12 @@ def plotForArticle_GraphicalTool(gitCommitID, currentDT,
     plt.style.use('doubleColumn2Row.mplstyle') # Custom matplotlib style file
 
     # File to be loaded for the simulation results
-    loadFileName = ["sensitivityAnalysis_6-2_20210305_1109_b02f8c3.npz", # 6,2
-                    "sensitivityAnalysis_17-16_20210305_1050_b02f8c3.npz"] # 17,16
+    # No noise
+    # loadFileName = ["sensitivityAnalysis_6-2_20210305_1109_b02f8c3.npz", # 6,2
+    #                 "sensitivityAnalysis_17-16_20210305_1050_b02f8c3.npz"] # 17,16
+    # Noise
+    loadFileName = ["sensitivityAnalysis_6-2_20210719_1117_ecbbb3e.npz", # 6,2
+                    "sensitivityAnalysis_17-16_20210706_2120_ecbbb3e.npz"] # 17,16
 
     # Materials to be plotted
     sensorID = np.array([[6,2],[17,16]])
@@ -428,9 +434,9 @@ def plotForArticle_GraphicalTool(gitCommitID, currentDT,
     ax2r.yaxis.label.set_color(colorLeft[1])
     ax2r.tick_params(axis='y', colors=colorLeft[1])
     plt.legend([],[], frameon=False)
-    ax2r.annotate("", xy=(0.5, 5e-7), xytext=(0.6, 5e-7), 
+    ax2r.annotate("", xy=(0.55, 1e-4), xytext=(0.65, 1e-4), 
                   arrowprops=dict(arrowstyle="-|>", color = colorLeft[0]))
-    ax2r.annotate("", xy=(0.95, 1e-5), xytext=(0.85, 1e-5), 
+    ax2r.annotate("", xy=(0.95, 3e-2), xytext=(0.85, 3e-2), 
                   arrowprops=dict(arrowstyle="-|>", color = colorLeft[1]))
     ax2r.text(0.025, 0.2, "(b)", fontsize=10)
     ax2r.spines["left"].set_color(colorLeft[0])
@@ -503,7 +509,7 @@ def plotForArticle_GraphicalTool(gitCommitID, currentDT,
     plt.legend([],[], frameon=False)
     ax4r.annotate("", xy=(0.2, 5e-4), xytext=(0.3, 5e-4), 
                   arrowprops=dict(arrowstyle="-|>", color = colorLeft[0]))
-    ax4r.annotate("", xy=(0.7, 1e-3), xytext=(0.6, 1e-3), 
+    ax4r.annotate("", xy=(0.7, 3e-2), xytext=(0.6, 3e-2), 
                   arrowprops=dict(arrowstyle="-|>", color = colorLeft[1]))
     ax4r.text(0.025, 0.2, "(d)", fontsize=10)
     ax4r.spines["left"].set_color(colorLeft[0])
@@ -535,9 +541,14 @@ def plotForArticle_ThreeMaterials(gitCommitID, currentDT,
     plt.style.use('doubleColumn2Row.mplstyle') # Custom matplotlib style file
 
     # File to be loaded for the simulation results
-    loadFileName = ["sensitivityAnalysis_17-15-6_20210306_1515_b02f8c3.npz", # 17,15,6
-                    "sensitivityAnalysis_17-15-16_20210306_1515_b02f8c3.npz", # 17,15,16
-                    "sensitivityAnalysis_17-15_20210308_1002_b02f8c3.npz"] # 17,15
+    # No Noise
+    # loadFileName = ["sensitivityAnalysis_17-15-6_20210306_1515_b02f8c3.npz", # 17,15,6
+    #                 "sensitivityAnalysis_17-15-16_20210306_1515_b02f8c3.npz", # 17,15,16
+    #                 "sensitivityAnalysis_17-15_20210308_1002_b02f8c3.npz"] # 17,15
+    # Noise
+    loadFileName = ["sensitivityAnalysis_17-15-6_20210707_2036_ecbbb3e.npz", # 17,15,6
+                    "sensitivityAnalysis_17-15-16_20210708_0934_ecbbb3e.npz", # 17,15,16
+                    "sensitivityAnalysis_17-15_20210709_1042_ecbbb3e.npz"] # 17,15
 
     # Materials to be plotted
     sensorID = np.array([[17,15,6],[17,15,16]])
@@ -627,17 +638,17 @@ def plotForArticle_ThreeMaterials(gitCommitID, currentDT,
     ax2r.yaxis.label.set_color(colorLeft[1])
     ax2r.tick_params(axis='y', colors=colorLeft[1])
     plt.legend([],[], frameon=False)
-    ax2r.annotate("", xy=(0.4, 2e-6), xytext=(0.5, 2e-6), 
+    ax2r.annotate("", xy=(0.4, 3e-5), xytext=(0.5, 3e-5), 
                   arrowprops=dict(arrowstyle="-|>", color = colorLeft[0]))
-    ax2r.annotate("", xy=(0.95, 5e-2), xytext=(0.85, 5e-2), 
+    ax2r.annotate("", xy=(0.95, 5e-3), xytext=(0.85, 5e-3), 
                   arrowprops=dict(arrowstyle="-|>", color = colorLeft[1]))
     ax2r.text(0.025, 0.2, "(b)", fontsize=10)
     ax2r.spines["left"].set_color(colorLeft[0])
     ax2r.spines["right"].set_color(colorLeft[1])
 
-    ax2r.text(0.78, 3e-6, "Array F", fontsize=10, 
+    ax2r.text(0.78, 1e-6, "Array F", fontsize=10, 
              color = '#0077b6')    
-    ax2r.text(0.4, 0.05, "Reference ($\gamma \zeta$)", fontsize=10, 
+    ax2r.text(0.4, 0.3, "Reference ($\gamma \zeta$)", fontsize=10, 
              color = '#0077b6', alpha = 0.35)
 
     ax3 = plt.subplot(2,2,3)        
@@ -711,9 +722,9 @@ def plotForArticle_ThreeMaterials(gitCommitID, currentDT,
     ax4r.yaxis.label.set_color(colorLeft[1])
     ax4r.tick_params(axis='y', colors=colorLeft[1])
     plt.legend([],[], frameon=False)
-    ax4r.annotate("", xy=(0.2, 5e-4), xytext=(0.3, 5e-4), 
+    ax4r.annotate("", xy=(0.08, 5e-4), xytext=(0.18, 5e-4), 
                   arrowprops=dict(arrowstyle="-|>", color = colorLeft[0]))
-    ax4r.annotate("", xy=(0.7, 3e-2), xytext=(0.6, 3e-2), 
+    ax4r.annotate("", xy=(0.72, 1e-2), xytext=(0.62, 1e-2), 
                   arrowprops=dict(arrowstyle="-|>", color = colorLeft[1]))
     ax4r.text(0.025, 0.2, "(d)", fontsize=10)
     ax4r.spines["left"].set_color(colorLeft[0])
@@ -721,7 +732,7 @@ def plotForArticle_ThreeMaterials(gitCommitID, currentDT,
 
     ax4r.text(0.6, 1e-5, "Array G", fontsize=10, 
              color = '#0077b6')    
-    ax4r.text(0.3, 0.1, "Reference ($\gamma \zeta$)", fontsize=10, 
+    ax4r.text(0.3, 0.3, "Reference ($\gamma \zeta$)", fontsize=10, 
              color = '#0077b6', alpha = 0.35)
     #  Save the figure
     if saveFlag:
@@ -799,7 +810,7 @@ def plotForArticle_KineticsImportance(gitCommitID, currentDT,
     ax1.text(20, 37, "(a)", fontsize=10)
     ax1.text(800, 37, "Array D", fontsize=10, 
              color = '#0077b6')
-    ax1.text(780, 33.5, "$y^{\mathregular{in}}_{\mathregular{1}}$ = 0.1", fontsize=10, 
+    ax1.text(720, 33.5, "$y^{\mathregular{in}}_{\mathregular{1}} (t)$ = 0.1", fontsize=10, 
              color = '#0077b6')
     
     # Label for the materials     
@@ -827,7 +838,7 @@ def plotForArticle_KineticsImportance(gitCommitID, currentDT,
     ax2.text(20, 0.185, "(b)", fontsize=10)
     ax2.text(800, 0.185, "Array D", fontsize=10, 
              color = '#0077b6')
-    ax2.text(780, 0.11, "$y^{\mathregular{in}}_{\mathregular{1}}$ = 0.1", fontsize=10, 
+    ax2.text(720, 0.11, "$y^{\mathregular{in}}_{\mathregular{1}} (t)$ = 0.1", fontsize=10, 
              color = '#0077b6')
     
     # Label for the materials     

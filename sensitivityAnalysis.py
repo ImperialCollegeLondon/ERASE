@@ -62,7 +62,7 @@ num_cores = multiprocessing.cpu_count()
 numberOfAdsorbents = 30
 
 # Number of gases
-numberOfGases = 3
+numberOfGases = 2
 
 # Sensor combination
 # Check if argument provided (from terminal)
@@ -73,17 +73,17 @@ if len(sys.argv)>1:
 # Use default values
 else:
     print("\nSensor configuration not not provided. Default used!")
-    sensorID = [6, 2, 1]
+    sensorID = [6, 2,]
 
 # Measurement noise (Guassian noise)
 meanError = 0. # [g/kg]
 stdError = 0.1 # [g/kg]
 
 # Multipler error for the sensor measurement
-multiplierError = [1., 1., 1.]
+multiplierError = [1., 1.,]
 
 # Custom input mole fraction for gas 1
-meanMoleFracG1 = np.array([0.001, 0.01, 0.1, 0.25, 0.50, 0.75, 0.90])
+meanMoleFracG1 = np.array([0.001, 0.01, 0.1, 0.25, 0.50, 0.75, 0.90, 0.99])
 diffMoleFracG1 = 0.00 # This plus/minus the mean is the bound for uniform dist.
 numberOfMoleFrac = len(meanMoleFracG1)
 # For three gases generate the input concentration from a drichlet distribution
