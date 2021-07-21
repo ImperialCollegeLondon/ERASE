@@ -16,6 +16,7 @@
 # Reference: 10.1016/j.ces.2014.12.062
 #
 # Last modified:
+# - 2021-07-21, AK: Add adsorbent density as an input
 # - 2021-07-02, AK: Remove threshold factor
 # - 2021-07-01, AK: Add sensitivity analysis
 # - 2021-06-16, AK: Add temperature dependence to kinetics
@@ -304,7 +305,8 @@ def ZLCObjectiveFunction(x):
                                                     expFlag = True,
                                                     deadVolumeFile = str(deadVolumeFile),
                                                     volSorbent = volSorbent,
-                                                    volGas = volGas)
+                                                    volGas = volGas,
+                                                    adsorbentDensity = adsorbentDensity)
 
         # Stack mole fraction from experiments and simulation for error 
         # computation
