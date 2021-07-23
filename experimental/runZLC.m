@@ -14,6 +14,7 @@
 % controllers, will read flow data.
 %
 % Last modified:
+% - 2021-07-23, AK: Modify check for CO2 set point
 % - 2021-07-02, AK: Add check for gas flow
 % - 2021-04-15, AK: Modify function for mixture experiments
 % - 2021-04-07, AK: Add MFM with MFC1 and MFC2, add interval for MFC
@@ -239,14 +240,6 @@ function executeTimerDevice(timerObj, thisEvent, expInfo, serialObj)
         % Generate serial command for volumteric flow rate set point
         cmdSetPt = generateSerialCommand('setPoint',1,0); % Same units as device
         [~] = controlAuxiliaryEquipments(serialObj.MFC2, cmdSetPt,1); % Set gas for MFC1
-        % Check if the set point was sent to the controller
-        outputMFC2 = controlAuxiliaryEquipments(serialObj.MFC2, serialObj.cmdPollData,1);
-        outputMFC2Temp = strsplit(outputMFC2,' '); % Split the output string
-        % Rounding required due to rounding errors. Differences of around
-        % eps can be observed        
-        if round(str2double(outputMFC2Temp(6)),1) ~= round(0,1)
-            error("You should not be here!!!")
-        end
     end
     % Get the sampling date/time
     currentDateTime = datestr(now,'yyyymmdd_HHMMSS');
@@ -286,6 +279,14 @@ function executeTimerDevice(timerObj, thisEvent, expInfo, serialObj)
         MFC2.massFlow = str2double(outputMFC2Temp(5)); % standard units [sccm]
         MFC2.setpoint = str2double(outputMFC2Temp(6)); % device units [ml/min]
         MFC2.gas = outputMFC2Temp(7); % gas in the controller
+        % If mixture is being run, check that MFC2 (CO2) set point is zero
+        if expInfo.runMixtures
+            % Round the flow rate to the nearest first decimal (as this is the
+            % resolution of the meter)        
+            if round(MFC2.setpoint,1) ~= round(0,1)
+                error("You should not be here!!!")
+            end
+        end
     end
     % Get the current state of the universal flow controller
     if ~isempty(serialObj.UMFM.portName)
