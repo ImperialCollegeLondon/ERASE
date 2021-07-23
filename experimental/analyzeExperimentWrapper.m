@@ -16,6 +16,7 @@
 % experiment
 %
 % Last modified:
+% - 2021-07-23, AK: Change calibration files
 % - 2021-05-17, AK: Change MS interpolation flag
 % - 2021-05-10, AK: Cosmetic changes to plots
 % - 2021-05-10, AK: Initial creation
@@ -31,25 +32,27 @@ flowMeterCalibration = 'ZLCCalibrateMeters_20210419_Model';
 %%%% Calibration files to be used %%%%
 % List the MS calibration files (this is usually in experimental data folder)
 msFileDir = 'C:\Users\QCPML\Desktop\Ashwin\MS'; % Directory with MS data
-msRawFiles = {'ZLCCalibrateMS_20210505'}; % Raw MS data file names for all calibration
-numExpForEachRawFile = [4]; % Number of experiments that use the same raw MS file (vector corresponding to number of MS files)
+msRawFiles = {'ZLCCalibrateMS_20210721',...
+              'ZLCCalibrateMS_20210722'}; % Raw MS data file names for all calibration
+numExpForEachRawFile = [2, 2]; % Number of experiments that use the same raw MS file (vector corresponding to number of MS files)
 
 % Flow rate files for calibration 
-msCalibrationFiles = {'ZLCCalibrateMS_20210506_15ccm',...
-                      'ZLCCalibrateMS_20210506_30ccm',...
-                      'ZLCCalibrateMS_20210506_45ccm',...
-                      'ZLCCalibrateMS_20210507_60ccm'};
+msCalibrationFiles = {'ZLCCalibrateMS_20210721_15ccm',...
+                      'ZLCCalibrateMS_20210722_30ccm',...
+                      'ZLCCalibrateMS_20210722_45ccm',...
+                      'ZLCCalibrateMS_20210723_60ccm'};
 
 %%%% Experimet to be analyzed %%%%     
 % List the experiments that have to be analyzed
 % MS Raw data should contain only two gases and the pressure. For now
 % cannot handle more gases.
-msExpFile = 'ZLC_Zeolite13X_Exp27_28'; % Raw MS data file name
+msExpFile = 'ZLC_DeadVolume_Exp20'; % Raw MS data file name
 % Flow rate files for experiments 
-experimentFiles = {'ZLC_Zeolite13X_Exp27A',...
-                   'ZLC_Zeolite13X_Exp27B',...
-                   'ZLC_Zeolite13X_Exp28A',...
-                   'ZLC_Zeolite13X_Exp28B'};
+experimentFiles = {'ZLC_DeadVolume_Exp20A',...
+                   'ZLC_DeadVolume_Exp20B',...
+                   'ZLC_DeadVolume_Exp20C',...
+                   'ZLC_DeadVolume_Exp20D',...
+                   'ZLC_DeadVolume_Exp20E'};
 
 % Initialize the name of the msRawFile to be used for all calibrations
 startInd = 1;
@@ -70,7 +73,7 @@ for ii = 1:length(msCalibrationFiles)
     calibrationStruct.flow = msCalibrationFiles{ii}; % Experimental flow file (.mat)
     calibrationStruct.MS = [msFileDir,filesep,msRawFileALL{ii},'.asc']; % Experimental MS file (.asc)
     calibrationStruct.interpMS = true; % Flag for interpolating MS data (true) or flow data (false)
-    calibrationStruct.numMean = 50; % Number of points for averaging
+    calibrationStruct.numMean = 25; % Number of points for averaging
     % Call the analyzeExperiment function to calibrate the MS at the conditions
     % experiment was performed for calibration
     % The output calibration model is usually in calibration folder

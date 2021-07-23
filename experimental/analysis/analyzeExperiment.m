@@ -14,6 +14,7 @@
 % real experiment using calibrated flow meters and MS
 %
 % Last modified:
+% - 2021-07-23, AK: Add calibration model to the output
 % - 2021-07-02, AK: Bug fix for threshold
 % - 2021-05-10, AK: Convert into a function
 % - 2021-04-20, AK: Add experiment struct to output .mat file
@@ -84,6 +85,14 @@ function analyzeExperiment(experimentStruct,flagCalibration,flagFlowMeter)
         experimentOutput.timeExp = outputStruct.flow(1:moleFracThresholdInd,1); % Time elapsed [s]
         experimentOutput.moleFrac = outputStruct.moleFrac(1:moleFracThresholdInd,2); % Mole fraction CO2 [-]
         experimentOutput.totalFlowRate = totalFlowRate(1:moleFracThresholdInd)./60; % Total flow rate of the gas [ccs]
+        experimentOutput.volFlow_MFM = volFlow_MFM; % Actual MFM flow rate of the gas [ccm]
+        % Flow calibration model
+        % p00 + p10*x + p01*y + p20*x^2 + p11*x*y + p02*y^2 + p21*x^2*y + p12*x*y^2 + p03*y^3
+        % x - mole fraction of CO2; y = volumetric flow rate from MFM [ccm]
+        % This wilL be used in the simulateCombinedModel.py to compute the
+        % correct flow accounting for the time lag in the concentration 
+        % due to the MS
+        experimentOutput.flowCalibration = coeffvalues(calibrationFlow.MFM)'; % Coefficient of flow calibration 
         % Save outputStruct to semiProcessedStruct
         semiProcessedStruct = outputStruct; % Check concatenateData for more (this is reconciledData there)
         % Save the experimental output into a .mat file
