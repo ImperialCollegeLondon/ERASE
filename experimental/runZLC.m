@@ -14,6 +14,7 @@
 % controllers, will read flow data.
 %
 % Last modified:
+% - 2021-07-28, AK: Bug fix for mixtures
 % - 2021-07-23, AK: Modify check for CO2 set point
 % - 2021-07-02, AK: Add check for gas flow
 % - 2021-04-15, AK: Modify function for mixture experiments
@@ -231,7 +232,7 @@ function executeTimerDevice(timerObj, thisEvent, expInfo, serialObj)
         userInput = input(promptUser,'s');
     end
     % If mixtures is run, at the first instant turn off CO2 (MFC2)
-    if expInfo.runMixtures && ~isempty(serialObj.MFC2.portName)
+    if expInfo.runMixtures && ~isempty(serialObj.MFC2.portName) && timerObj.tasksExecuted == 1
         % Parse out gas name from expInfo
         gasName_MFC2 = expInfo.gasName_MFC2;
         % Generate Gas ID for Alicat devices
