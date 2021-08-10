@@ -12,6 +12,7 @@
 # Computes the MLE error for ZLC experiments.
 #
 # Last modified:
+# - 2021-08-10, AK: Fix for error computation
 # - 2021-07-02, AK: Remove threshold factor
 # - 2021-07-02, AK: Bug fix for data sorting
 # - 2021-06-12, AK: Add pure data downsampling
@@ -72,13 +73,33 @@ def computeMLEError(moleFracExp,moleFracSim,**kwargs):
         # Higher concentrations
         moleFracHighExp = moleFracExp[lastIndThreshold:-1:int(np.round(downsampleConc[1]))]
         moleFracHighSim = moleFracSim[lastIndThreshold:-1:int(np.round(downsampleConc[1]))]
+        
+        # Normalize the mole fraction by dividing it by maximum value to avoid
+        # irregular weightings and scale it to the highest composition range
+        # This is part of the downsampling/reweighting procedure 
+        minExp = np.min(moleFracHighExp) # Compute the minimum from experiment
+        normalizeFactorHigh = np.max(moleFracHighExp - minExp) # Compute the max from normalized data
+        moleFracHighExp = (moleFracHighExp - minExp)
+        moleFracHighSim = (moleFracHighSim - minExp)
+
+        # Low concentrations
+        minExp = np.min(moleFracLowExp) # Compute the minimum from experiment
+        normalizeFactorLow = np.max(moleFracLowExp - minExp) # Compute the max from normalized data
+        moleFracLowExp = (moleFracLowExp - minExp)/normalizeFactorLow*normalizeFactorHigh
+        moleFracLowSim = (moleFracLowSim - minExp)/normalizeFactorLow*normalizeFactorHigh
+        
         # Compute the error
         computedErrorLow = np.sum(np.power(moleFracLowExp - moleFracLowSim,2))
         computedErrorHigh = np.sum(np.power(moleFracHighExp - moleFracHighSim,2))
-        computedError = np.log(computedErrorLow+computedErrorHigh)
+        # The higher and lower composition is treated as two independent
+        # measurements
+        computedError = np.log(computedErrorLow) + np.log(computedErrorHigh)
         
         # Compute the number of points per experiment (accouting for down-
         # sampling in both experiments and high and low compositions
-        numPoints = len(moleFracHighExp) + len(moleFracLowExp)
-
+        # The number of points in both the low and high compositions area 
+        # similar, so the minimum number of points from the two is chosen
+        # to be representative of the number of points in the experiments
+        numPoints = min(len(moleFracHighExp),len(moleFracLowExp))
+        
     return (numPoints/2)*(computedError)
