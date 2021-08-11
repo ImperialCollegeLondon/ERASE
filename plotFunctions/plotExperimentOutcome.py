@@ -54,7 +54,7 @@ saveFlag = False
 saveFileExtension = ".png"
 
 # File with parameter estimates
-fileParameter = 'deadVolumeCharacteristics_20210703_1234_a021de6.npz'
+fileParameter = 'zlcParameters_20210806_2230_c739801.npz'
 
 # Flag to plot dead volume results
 # Dead volume files have a certain name, use that to find what to plot
@@ -73,18 +73,18 @@ plotFt = False
 pressureTotal = np.array([1.e5]);
 
 # Plot colors
-colorsForPlot = ["#E5383B","#B55055","#9C5D63","#6C757D"]
-# colorsForPlot = ["#FF1B6B","#A273B5","#45CAFF"]*2
-# colorsForPlot = ["#E5383B","#6C757D",]
-markerForPlot = ["o"]*len(colorsForPlot)
+colorsForPlot = ["#faa307","#d00000","#03071e"]*4
+markerForPlot = ["o"]*20
 
 if flagDeadVolume:
+    # Plot colors
+    colorsForPlot = ["#FE7F2D","#B56938","#6C5342","#233D4D"]
     # File name of the experiments
-    rawFileName = ['ZLC_DeadVolume_Exp20A_Output.mat',
-                   'ZLC_DeadVolume_Exp20B_Output.mat',
-                   'ZLC_DeadVolume_Exp20C_Output.mat',
-                   'ZLC_DeadVolume_Exp20E_Output.mat',]
-    
+    rawFileName = ['ZLC_DeadVolume_Exp23A_Output.mat',
+                   'ZLC_DeadVolume_Exp23B_Output.mat',
+                   'ZLC_DeadVolume_Exp23C_Output.mat',
+                   'ZLC_DeadVolume_Exp23D_Output.mat',]
+
     # Dead volume parameter model path
     parameterPath = os.path.join('..','simulationResults',fileParameter)
    
@@ -185,13 +185,13 @@ if flagDeadVolume:
             # Linear scale
             ax1.plot(timeElapsedExp,moleFracExp,
                           marker = markerForPlot[ii],linewidth = 0,
-                          color=colorsForPlot[ii],alpha=0.1,label=str(round(np.mean(flowRateExp),2))+" ccs") # Experimental response
+                          color=colorsForPlot[ii],alpha=0.2,label=str(round(np.mean(flowRateExp),2))+" ccs") # Experimental response
             if simulateModel:
                 ax1.plot(timeElapsedExp,moleFracSim,
                               color=colorsForPlot[ii]) # Simulation response    
             ax1.set(xlabel='$t$ [s]', 
                     ylabel='$y_1$ [-]',
-                    xlim = [0,300], ylim = [0, 1])   
+                    xlim = [0,150], ylim = [0, 1])   
             ax1.locator_params(axis="x", nbins=5)
             ax1.locator_params(axis="y", nbins=5)
             ax1.legend()
@@ -199,12 +199,12 @@ if flagDeadVolume:
             # Log scale
             ax2.semilogy(timeElapsedExp,moleFracExp,
                           marker = markerForPlot[ii],linewidth = 0,
-                          color=colorsForPlot[ii],alpha=0.05,label=str(round(np.mean(flowRateExp),2))+" ccs") # Experimental response
+                          color=colorsForPlot[ii],alpha=0.2,label=str(round(np.mean(flowRateExp),2))+" ccs") # Experimental response
             if simulateModel:
                 ax2.semilogy(timeElapsedExp,moleFracSim,
                               color=colorsForPlot[ii]) # Simulation response
             ax2.set(xlabel='$t$ [s]', 
-                    xlim = [0,300], ylim = [1e-3, 1])   
+                    xlim = [0,150], ylim = [1e-2, 1])   
             ax2.locator_params(axis="x", nbins=5)
 
             
@@ -266,18 +266,24 @@ else:
     from simulateCombinedModel import simulateCombinedModel
 
     # File name of the experiments
-    rawFileName = ['ZLC_ActivatedCarbon_Exp60A_Output.mat',
-                   'ZLC_ActivatedCarbon_Exp62A_Output.mat',
-                   'ZLC_ActivatedCarbon_Exp64A_Output.mat',
-                   'ZLC_ActivatedCarbon_Exp60B_Output.mat',
-                   'ZLC_ActivatedCarbon_Exp62B_Output.mat',
-                   'ZLC_ActivatedCarbon_Exp64B_Output.mat']
-    
+    rawFileName = ['ZLC_ActivatedCarbon_Exp72A_Output.mat',
+                    'ZLC_ActivatedCarbon_Exp74A_Output.mat',
+                    'ZLC_ActivatedCarbon_Exp76A_Output.mat',
+                    'ZLC_ActivatedCarbon_Exp72B_Output.mat',
+                    'ZLC_ActivatedCarbon_Exp74B_Output.mat',
+                    'ZLC_ActivatedCarbon_Exp76B_Output.mat',
+                    'ZLC_ActivatedCarbon_Exp73A_Output.mat',
+                    'ZLC_ActivatedCarbon_Exp75A_Output.mat',
+                    'ZLC_ActivatedCarbon_Exp77A_Output.mat',
+                    'ZLC_ActivatedCarbon_Exp73B_Output.mat',
+                    'ZLC_ActivatedCarbon_Exp75B_Output.mat',
+                    'ZLC_ActivatedCarbon_Exp77B_Output.mat',]
+
     # ZLC parameter model path
     parameterPath = os.path.join('..','simulationResults',fileParameter)
     
     # Temperature (for each experiment)
-    temperatureExp = [306.44, 325.98, 345.17]*2
+    temperatureExp = [344.69, 325.39, 306.15]*4
     
     # Legend flag
     useFlow = False
@@ -319,7 +325,6 @@ else:
     downsampleInt = numPointsExp/np.min(numPointsExp)
     # Multiply the paremeters by the reference values
     x = np.multiply(modelNonDim,parameterReference)
-    
     # Initialize loadings
     computedError = 0
     numPoints = 0
@@ -380,7 +385,8 @@ else:
                                                         deadVolumeFile = deadVolumeFile,
                                                         volSorbent = volSorbent,
                                                         volGas = volGas,
-                                                        temperature = temperatureExp[ii])
+                                                        temperature = temperatureExp[ii],
+                                                        adsorbentDensity = adsorbentDensity)
             # Print simulation volume    
             print("Simulation",str(ii+1),round(np.trapz(np.multiply(resultMat[3,:]*1e6,
                                                                   moleFracSim),
@@ -411,7 +417,7 @@ else:
         # y - Linear scale
         ax1.semilogy(timeElapsedExp,moleFracExp,
                 marker = markerForPlot[ii],linewidth = 0,
-                color=colorsForPlot[ii],alpha=0.025) # Experimental response
+                color=colorsForPlot[ii],alpha=0.1) # Experimental response
         if simulateModel:
             if useFlow:
                 legendStr = str(round(np.mean(flowRateExp),2))+" ccs"
@@ -428,12 +434,12 @@ else:
                 ylabel='$y_1$ [-]',
                 xlim = [0,250], ylim = [1e-2, 1])    
         ax1.locator_params(axis="x", nbins=4)
-        ax1.legend()
+        # ax1.legend()
 
         # Ft - Log scale        
         ax2.semilogy(np.multiply(flowRateExp,timeElapsedExp),moleFracExp,
                       marker = markerForPlot[ii],linewidth = 0,
-                      color=colorsForPlot[ii],alpha=0.025) # Experimental response
+                      color=colorsForPlot[ii],alpha=0.1) # Experimental response
         if simulateModel:
             ax2.semilogy(np.multiply(resultMat[3,:]*1e6,timeElapsedExp),moleFracSim,
                           color=colorsForPlot[ii],label=str(round(np.mean(resultMat[3,:]*1e6),2))+" ccs") # Simulation response
@@ -444,7 +450,7 @@ else:
         # Flow rates
         ax3.plot(timeElapsedExp,flowRateExp,
                 marker = markerForPlot[ii],linewidth = 0,
-                color=colorsForPlot[ii],alpha=0.025,label=str(round(np.mean(flowRateExp),2))+" ccs") # Experimental response
+                color=colorsForPlot[ii],alpha=0.1,label=str(round(np.mean(flowRateExp),2))+" ccs") # Experimental response
         if simulateModel:
             ax3.plot(timeElapsedExp,resultMat[3,:]*1e6,
                       color=colorsForPlot[ii]) # Simulation response    

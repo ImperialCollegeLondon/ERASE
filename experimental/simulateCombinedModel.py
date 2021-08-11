@@ -212,4 +212,4 @@ def plotCombinedModel(timeZLC,moleFracOut,moleFracZLC,flowRateZLC):
     ax3.locator_params(axis="x", nbins=4)
     ax3.legend()
     plt.show()
-    os.chdir("..")
+    os.chdir(".."+os.path.sep+"experimental")

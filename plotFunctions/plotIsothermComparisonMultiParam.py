@@ -45,7 +45,7 @@ saveFlag = False
 saveFileExtension = ".png"
 
 # Colors
-colorForPlot = ["FF1B6B","A273B5","45CAFF"]
+colorForPlot = ["faa307","d00000","03071e"]
 # colorForPlot = ["E5383B","6C757D"]
 
 # Plot text
@@ -58,27 +58,21 @@ Rg = 8.314
 pressureTotal = np.array([1.e5]);
 
 # Define temperature
-temperature = [306.44, 325.98, 345.17]
+temperature = [303.15, 323.15, 343.15]
 
 # AC Isotherm parameters
-x_VOL = [0.44, 3.17e-6, 28.63e3, 6.10, 3.21e-6, 20.37e3, 100] # (Pini 2020)
-# x_VOL = [2.81e-5, 1.25e-7, 2.07e2, 4.12, 7.29e-7, 2.65e4, 100] # (Hassan, QC)
+x_VOL = [5.67e-1, 2.61e-5 , 2.21e4, 6.85, 1.05e-7, 2.84e4, 100] # (Hassan, QC)
 
-# 13X Isotherm parameters
+# 13X Isotherm parameters (L pellet)
 # x_VOL = [2.50, 2.05e-7, 4.29e4, 4.32, 3.06e-7, 3.10e4, 100] # (Hassan, QC)
 
-# ZLC parameter estimate files
-# Experiment 43 and 48
-# zlcFileName = ['zlcParameters_20210618_1837_36d3aa3.npz',
-#                 'zlcParameters_20210618_2209_36d3aa3.npz',
-#                 'zlcParameters_20210619_0128_36d3aa3.npz',
-#                 'zlcParameters_20210619_0447_36d3aa3.npz',
-#                 'zlcParameters_20210619_0759_36d3aa3.npz',]
+# BN Isotherm parameters
+# x_VOL = [7.01, 2.32e-07, 2.49e4, 0, 0, 0, 100] # (Hassan, QC)
 
-# Experiment 60 - 
-zlcFileName = ['zlcParameters_20210701_1407_4fd9c19.npz',
-               'zlcParameters_20210701_2133_07082e3.npz',
-               'zlcParameters_20210702_0207_07082e3.npz']
+# ZLC Parameter estimates
+zlcFileName = ['zlcParameters_20210806_2230_c739801.npz',
+               'zlcParameters_20210807_2248_c739801.npz',
+               'zlcParameters_20210810_2135_eddec53.npz']
 
 # Create the grid for mole fractions
 y = np.linspace(0,1.,100)

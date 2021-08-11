@@ -95,7 +95,7 @@ def simulateZLC(**kwargs):
     # If experimental data used, then initialize ode evaluation time to 
     # experimental time, else use default
     if expFlag is False:
-        t_eval = np.arange(timeInt[0],timeInt[-1],0.1)
+        t_eval = np.arange(timeInt[0],timeInt[-1],0.2)
     else:
         # Use experimental time (from timeInt) for ode evaluations to avoid
         # interpolating any data. t_eval is also used for interpolating
