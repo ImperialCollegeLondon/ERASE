@@ -12,6 +12,7 @@
 # Plots for the simulation manuscript
 #
 # Last modified:
+# - 2021-08-13, AK: Add plot for absolute sensor response
 # - 2021-05-03, AK: Cosmetic changes to all plots
 # - 2021-04-07, AK: Add plot for design variables
 # - 2021-03-05, AK: Add plot for full model
@@ -68,6 +69,12 @@ def plotsForArticle_Simulation(**kwargs):
     if 'graphicalTool' in kwargs:
         if kwargs["graphicalTool"]:
             plotForArticle_GraphicalTool(gitCommitID, currentDT, 
+                                       saveFlag, saveFileExtension)
+
+    # If absolute sensor response curve needs to be plotted
+    if 'absoluteResponse' in kwargs:
+        if kwargs["absoluteResponse"]:
+            plotForArticle_AbsoluteResponse(gitCommitID, currentDT, 
                                        saveFlag, saveFileExtension)
 
     # If three materials needs to be plotted
@@ -332,6 +339,134 @@ def plotForArticle_ResponseShape(gitCommitID, currentDT,
         # FileName: responseShape_<sensorID>_<currentDateTime>_<GitCommitID_Current>
         sensorText = str(sensorID).replace('[','').replace(']','').replace('  ','-').replace(' ','-')
         saveFileName = "responseShape_" + sensorText + "_" + currentDT + "_" + gitCommitID + saveFileExtension
+        savePath = os.path.join('..','simulationFigures','simulationManuscript',saveFileName)
+        # Check if inputResources directory exists or not. If not, create the folder
+        if not os.path.exists(os.path.join('..','simulationFigures','simulationManuscript')):
+            os.mkdir(os.path.join('..','simulationFigures','simulationManuscript'))
+        plt.savefig (savePath)
+    plt.show()
+    
+# fun: plotForArticle_AbsoluteResponse
+# Plots the sensor response for a given sensor array
+def plotForArticle_AbsoluteResponse(gitCommitID, currentDT, 
+                               saveFlag, saveFileExtension):
+    import numpy as np
+    import os
+    import pandas as pd
+    import seaborn as sns 
+    import matplotlib.pyplot as plt
+    plt.style.use('doubleColumn.mplstyle') # Custom matplotlib style file
+    
+    # Materials to be plotted
+    sensorID = np.array([6,2,2,2])
+    multiplierError = np.array([1,1,3,10])
+    sensorText = ["$\\alpha$", "$\\beta$", "$\\beta_3$", "$\\beta_{10}$"]
+    arrayText = ["D", "D$_3$", "D$_{10}$"]
+    
+    # File to be loaded for the simulation results
+    # Noise (0.1 g/kg)
+    loadFileName =  ["sensitivityAnalysis_6-2_20210719_1117_ecbbb3e.npz", # 1
+                     "sensitivityAnalysis_6-2_20210719_2145_ecbbb3e.npz", # 3
+                     "sensitivityAnalysis_6-2_20210719_1458_ecbbb3e.npz"] # 10
+
+    # Colors for plot
+    colorsForPlot = ("#5fad56","#FF9E00","#D66612","#AD2E24")
+    
+    # Get the sensor response and the sensor sensitive region
+    os.chdir("..")
+    moleFractionRange, arraySimResponse, _ = getSensorSensitiveRegion(sensorID)
+    os.chdir("plotFunctions")
+    
+    # Plot the figure
+    fig = plt.figure
+    ax1 = plt.subplot(1,3,1)        
+    # Loop through all sensors
+    for kk in range(arraySimResponse.shape[1]):
+        ax1.plot(moleFractionRange[:,0],arraySimResponse[:,kk]*multiplierError[kk],
+                 color=colorsForPlot[kk]) # Simulated Response
+
+    ax1.set(xlabel='$y_1$ [-]', 
+           ylabel='$m$ [g kg$^{-1}$]',
+           xlim = [0,1], ylim = [0, 150])     
+    ax1.locator_params(axis="x", nbins=4)
+    ax1.locator_params(axis="y", nbins=4)
+    ax1.text(0.05, 135, "(a)", fontsize=10, 
+            backgroundcolor = 'w')
+    
+    # Label for the materials     
+    ax1.text(0.30, 75, sensorText[0], fontsize=10, 
+            color = colorsForPlot[0])
+    ax1.text(0.8, 17, sensorText[1], fontsize=10, 
+            color = colorsForPlot[1])
+    ax1.text(0.8, 40, sensorText[2], fontsize=10, 
+            color = colorsForPlot[2])
+    ax1.text(0.8, 130, sensorText[3], fontsize=10, 
+            color = colorsForPlot[3])
+
+    # Call the concatenateConcEstimate function
+    meanErr, cvData = concatenateConcEstimate(loadFileName[0:3],sensorText)
+
+    # Mean Error - No noise 
+    ax2 = plt.subplot(1,3,2)
+    meanErr["x"] = pd.to_numeric(meanErr["x"], downcast="float")
+    sns.lineplot(data=meanErr, x='x', y='y1', hue='dataType', style='dataType',
+                 dashes = [(1,1),(1,1),(1,1)], markers = ['o','s','D'],
+                 palette = colorsForPlot[1:len(loadFileName)+1], linewidth = 0.5,
+                 markersize = 5)
+        
+    ax2.set(xlabel='$y_1$ [-]', 
+            ylabel='$\psi$ [-]',
+            xlim = [0.,1.], ylim = [1e-6,1])
+    ax2.locator_params(axis="x", nbins=4)
+    ax2.set_yscale('log')
+    plt.legend([],[], frameon=False)
+    ax2.text(0.05, 0.25, "(b)", fontsize=10,)
+    plt.minorticks_off()
+
+    # Label for the materials         
+    ax2.text(0.85, 8e-4, arrayText[0], fontsize=10, 
+        backgroundcolor = 'w', color = colorsForPlot[1])
+    ax2.text(0.3, 1.2e-4, arrayText[1], fontsize=10, 
+            color = colorsForPlot[2])
+    ax2.text(0.63, 3e-6, arrayText[2], fontsize=10, 
+            backgroundcolor = 'w', color = colorsForPlot[3])
+
+    # Label for the formula
+    ax2.text(0.38, 0.25, "$\psi = |\mu - \hat{\mu}|/\mu$", fontsize=10, 
+            backgroundcolor = 'w', color = '#0077b6')
+    
+    # CV - No noise 
+    ax3 = plt.subplot(1,3,3)
+    cvData["x"] = pd.to_numeric(cvData["x"], downcast="float")
+    sns.lineplot(data=cvData, x='x', y='y1', hue='dataType', style='dataType',
+                 dashes = [(1,1),(1,1),(1,1)], markers = ['o','s','D'],
+                 palette = colorsForPlot[1:len(loadFileName)+1], linewidth = 0.5,
+                 markersize = 5)
+        
+    ax3.set(xlabel='$y_1$ [-]', 
+            ylabel='$\chi$ [-]',
+            xlim = [0.,1.], ylim = [1e-6,1])
+    ax3.locator_params(axis="x", nbins=4)
+    ax3.set_yscale('log')
+    plt.legend([],[], frameon=False)
+    ax3.text(0.05, 0.25, "(c)", fontsize=10,)
+    plt.minorticks_off()
+
+    # Label for the materials         
+    ax3.text(0.8, 1.3e-2, arrayText[0], fontsize=10, 
+        color = colorsForPlot[1])
+    ax3.text(0.8, 3e-4, arrayText[2], fontsize=10, 
+            color = colorsForPlot[3])
+
+    # Label for the formula
+    ax3.text(0.62, 0.25, "$\chi = \hat{\sigma}/\hat{\mu}$", fontsize=10, 
+            backgroundcolor = 'w', color = '#0077b6')
+    
+    #  Save the figure
+    if saveFlag:
+        # FileName: responseShape_<sensorID>_<currentDateTime>_<GitCommitID_Current>
+        sensorText = str(sensorID).replace('[','').replace(']','').replace('  ','-').replace(' ','-')
+        saveFileName = "absoluteResponse_" + currentDT + "_" + gitCommitID + saveFileExtension
         savePath = os.path.join('..','simulationFigures','simulationManuscript',saveFileName)
         # Check if inputResources directory exists or not. If not, create the folder
         if not os.path.exists(os.path.join('..','simulationFigures','simulationManuscript')):
