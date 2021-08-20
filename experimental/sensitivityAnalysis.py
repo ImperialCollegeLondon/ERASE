@@ -15,6 +15,7 @@
 # provided in the code
 #
 # Last modified:
+# - 2021-08-20, AK: Change definition of rate constants
 # - 2021-07-05, AK: Bug fix
 # - 2021-07-01, AK: Change structure (to call from extractZLCParameters)
 # - 2021-06-28, AK: Initial creation
@@ -235,17 +236,17 @@ def computeObjectiveFunction(mainDir, zlcParameterPath, pOpt, pRef):
     
         # Parse out the xOpt to the isotherm model and kinetic parameters
         isothermModel = xOpt[0:-2]
-        rateConstant = xOpt[-2]
-        kineticActEnergy = xOpt[-1]
+        rateConstant_1 = xOpt[-2]
+        rateConstant_2 = xOpt[-1]
                 
         # Compute the model response using the optimized parameters
         _ , moleFracSim , resultMat = simulateCombinedModel(timeInt = timeInt,
                                                     initMoleFrac = [moleFracExp[0]], # Initial mole fraction assumed to be the first experimental point
                                                     flowIn = np.mean(flowRateExp[-1:-10:-1]*1e-6), # Flow rate for ZLC considered to be the mean of last 10 points (equilibrium)
                                                     expFlag = True,
-                                                    isothermModel=isothermModel,
-                                                    rateConstant=rateConstant,
-                                                    kineticActEnergy = kineticActEnergy,
+                                                    isothermModel = isothermModel,
+                                                    rateConstant_1 = rateConstant_1,
+                                                    rateConstant_2 = rateConstant_2,
                                                     deadVolumeFile = deadVolumeFile,
                                                     volSorbent = volSorbent,
                                                     volGas = volGas,
