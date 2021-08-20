@@ -236,7 +236,16 @@ def solveSorptionEquation(t, f, *inputParameters):
     k2 = rateConstant_2/dqbydc
     
     # Overall rate constant
-    rateConstant = 1/(1/k1 + 1/k2)
+    # The following conditions are done for purely numerical reasons
+    # If pure (analogous) macropore
+    if k1<1e-12:
+        rateConstant = k2
+    # If pure (analogous) micropore
+    elif k2<1e-12:
+        rateConstant = k1
+    # If both resistances are present
+    else:
+        rateConstant = 1/(1/k1 + 1/k2)
     
     # Linear driving force model (derivative of solid phase loadings)
     df[1] = rateConstant*(equilibriumLoading-f[1])

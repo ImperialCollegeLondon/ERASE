@@ -135,7 +135,7 @@ def extractZLCParameters(**kwargs):
                               [np.finfo(float).eps,1]))
         optType=np.array(['real','real','real','real','real'])
         problemDimension = len(optType)
-        isoRef = [10, 1e-5, 45e3, 100, 100] # Reference for parameters
+        isoRef = [10, 1e-5, 45e3, 1000, 1000] # Reference for parameters
         isothermFile = [] # Isotherm file is empty as it is fit
         paramIso = [] # Isotherm parameters is empty as it is fit
 
@@ -147,7 +147,7 @@ def extractZLCParameters(**kwargs):
                               [np.finfo(float).eps,1], [np.finfo(float).eps,1]))
         optType=np.array(['real','real','real','real','real','real','real','real'])
         problemDimension = len(optType)
-        isoRef = [10, 1e-5, 45e3, 10, 1e-5, 45e3, 100, 100] # Reference for the parameters
+        isoRef = [10, 1e-5, 45e3, 10, 1e-5, 45e3, 1000, 1000] # Reference for the parameters
         isothermFile = [] # Isotherm file is empty as it is fit
         paramIso = [] # Isotherm parameters is empty as it is fit
 
@@ -158,7 +158,7 @@ def extractZLCParameters(**kwargs):
         optBounds = np.array(([np.finfo(float).eps,1], [np.finfo(float).eps,1]))
         optType=np.array(['real','real'])
         problemDimension = len(optType)
-        isoRef = [100, 100] # Reference for the parameter (has to be a list)
+        isoRef = [1000, 1000] # Reference for the parameter (has to be a list)
         # File with parameter estimates for isotherm (ZLC)
         isothermDir = '..' + os.path.sep + 'simulationResults/'
         modelOutputTemp = load(isothermDir+isothermFile, allow_pickle=True)["modelOutput"]
@@ -297,8 +297,8 @@ def ZLCObjectiveFunction(x):
 
         # Compute the composite response using the optimizer parameters
         _ , moleFracSim , _ = simulateCombinedModel(isothermModel = isothermModel,
-                                                    rateConstant = x[-2]*isoRef[-2], # Last but one element is rate constant (Arrhenius constant)
-                                                    kineticActEnergy = x[-1]*isoRef[-1], # Last element is activation energy
+                                                    rateConstant_1 = x[-2]*isoRef[-2], # Last but one element is rate constant (Arrhenius constant)
+                                                    rateConstant_2 = x[-1]*isoRef[-1], # Last element is activation energy
                                                     temperature = temperature[ii], # Temperature [K]
                                                     timeInt = timeInt,
                                                     initMoleFrac = [moleFracExp[0]], # Initial mole fraction assumed to be the first experimental point
