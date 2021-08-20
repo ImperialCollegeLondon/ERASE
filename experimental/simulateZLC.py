@@ -14,6 +14,7 @@
 # model with mass transfer defined using linear driving force.
 #
 # Last modified:
+# - 2021-08-20, AK: Change definition of rate constants
 # - 2021-06-16, AK: Add temperature correction factor to LDF
 # - 2021-06-15, AK: Add correction factor to LDF
 # - 2021-05-13, AK: IMPORTANT: Change density from particle to skeletal
@@ -49,17 +50,17 @@ def simulateZLC(**kwargs):
     # Get the current date and time for saving purposes    
     currentDT = auxiliaryFunctions.getCurrentDateTime()
 
-    # Kinetic rate constants [/s]
-    if 'rateConstant' in kwargs:
-        rateConstant = np.array(kwargs["rateConstant"])
+    # Kinetic rate constant 1 (analogous to micropore resistance) [/s]
+    if 'rateConstant_1' in kwargs:
+        rateConstant_1 = np.array(kwargs["rateConstant_1"])
     else:
-        rateConstant = np.array([0.1])
+        rateConstant_1 = np.array([0.1])
         
-    # Kinetic activation energy constants [J/mol]
-    if 'kineticActEnergy' in kwargs:
-        kineticActEnergy = np.array(kwargs["kineticActEnergy"])
+    # Kinetic rate constant 2 (analogous to macropore resistance) [/s]
+    if 'rateConstant_2' in kwargs:
+        rateConstant_2 = np.array(kwargs["rateConstant_2"])
     else:
-        kineticActEnergy = np.array([0]) # To simulate the case with temp. dep.
+        rateConstant_2 = np.array([0])
 
     # Feed flow rate [m3/s]
     if 'flowIn' in kwargs:
@@ -150,7 +151,7 @@ def simulateZLC(**kwargs):
                                                     isothermModel=isothermModel)*adsorbentDensity # [mol/m3]
     
     # Prepare tuple of input parameters for the ode solver
-    inputParameters = (adsorbentDensity, isothermModel, rateConstant, kineticActEnergy,
+    inputParameters = (adsorbentDensity, isothermModel, rateConstant_1, rateConstant_2,
                        flowIn, feedMoleFrac, initMoleFrac, pressureTotal, 
                        temperature, volSorbent, volGas)
             
@@ -202,7 +203,7 @@ def solveSorptionEquation(t, f, *inputParameters):
     Rg = 8.314; # [J/mol K]
 
     # Unpack the tuple of input parameters used to solve equations
-    adsorbentDensity, isothermModel, rateConstant, kineticActEnergy, flowIn, feedMoleFrac, _ , pressureTotal, temperature, volSorbent, volGas = inputParameters
+    adsorbentDensity, isothermModel, rateConstant_1, rateConstant_2, flowIn, feedMoleFrac, _ , pressureTotal, temperature, volSorbent, volGas = inputParameters
 
     # Initialize the derivatives to zero
     df = np.zeros([2])
@@ -224,18 +225,21 @@ def solveSorptionEquation(t, f, *inputParameters):
                                                     temperature=temperature,
                                                     moleFrac=moleFractionUp,
                                                     isothermModel=isothermModel)*adsorbentDensity # [mol/m3]
-    # Compute the gradient (delp/delq*)
-    dPbydq = delP/(equilibriumLoadingUp-equilibriumLoading)
-    # Compute the correction factor for kinetic constant
-    # Darken factor for concentration dependence
-    correctionFactor_Conc = (equilibriumLoading/partialPressure)*dPbydq
-    # Arrhenius factor for temperature dependence
-    correctionFactor_Temp = np.exp(-kineticActEnergy/(Rg*temperature))
-    # Correction factor
-    correctionFactor = correctionFactor_Conc*correctionFactor_Temp
+    
+    # Compute the gradient (delq*/dc)
+    dqbydc = (equilibriumLoadingUp-equilibriumLoading)/(delP/(Rg*temperature)) # [-]
+    
+    # Rate constant 1 (analogous to micropore resistance)
+    k1 = rateConstant_1
+    
+    # Rate constant 2 (analogous to macropore resistance)
+    k2 = rateConstant_2/dqbydc
+    
+    # Overall rate constant
+    rateConstant = 1/(1/k1 + 1/k2)
     
     # Linear driving force model (derivative of solid phase loadings)
-    df[1] = correctionFactor*rateConstant*(equilibriumLoading-f[1])
+    df[1] = rateConstant*(equilibriumLoading-f[1])
 
     # Total mass balance
     # Assumes constant pressure, so flow rate evalauted

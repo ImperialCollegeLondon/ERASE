@@ -14,6 +14,7 @@
 # volume simulator
 #
 # Last modified:
+# - 2021-08-20, AK: Change definition of rate constants
 # - 2021-06-16, AK: Add temperature dependence to kinetics
 # - 2021-06-01, AK: Add temperature as an input
 # - 2021-05-29, AK: Add a separate MS dead volume
@@ -56,17 +57,17 @@ def simulateCombinedModel(**kwargs):
         # Reference: 10.1007/s10450-020-00268-7
         isothermModel = [0.44, 3.17e-6, 28.63e3, 6.10, 3.21e-6, 20.37e3]
 
-    # Kinetic rate constants [/s]
-    if 'rateConstant' in kwargs:
-        rateConstant = kwargs["rateConstant"]
+    # Kinetic rate constant 1 (analogous to micropore resistance) [/s]
+    if 'rateConstant_1' in kwargs:
+        rateConstant_1 = kwargs["rateConstant_1"]
     else:
-        rateConstant = [0.3]
+        rateConstant_1 = [0.3]
     
-    # Kinetic activation energy constants [J/mol]
-    if 'kineticActEnergy' in kwargs:
-        kineticActEnergy = np.array(kwargs["kineticActEnergy"])
+    # Kinetic rate constant 2 (analogous to macropore resistance) [/s]
+    if 'rateConstant_2' in kwargs:
+        rateConstant_2 = np.array(kwargs["rateConstant_2"])
     else:
-        kineticActEnergy = np.array([0]) # To simulate the case with temp. dep.
+        rateConstant_2 = np.array([0])
 
     # Temperature of the gas [K]
     if 'temperature' in kwargs:
@@ -124,9 +125,9 @@ def simulateCombinedModel(**kwargs):
         expFlag = False
 
     # Call the simulateZLC function to simulate the sorption in a given sorbent
-    timeZLC, resultMat, _ = simulateZLC(isothermModel=isothermModel,
-                                        rateConstant=rateConstant,
-                                        kineticActEnergy = kineticActEnergy,
+    timeZLC, resultMat, _ = simulateZLC(isothermModel = isothermModel,
+                                        rateConstant_1 = rateConstant_1,
+                                        rateConstant_2 = rateConstant_2,
                                         temperature = temperature,
                                         flowIn = flowIn,
                                         initMoleFrac = initMoleFrac,

@@ -13,6 +13,7 @@
 # different fits from ZLC
 #
 # Last modified:
+# - 2021-08-20, AK: Change definition of rate constants
 # - 2021-07-01, AK: Cosmetic changes
 # - 2021-06-15, AK: Initial creation
 #
@@ -58,10 +59,10 @@ Rg = 8.314
 pressureTotal = np.array([1.e5]);
 
 # Define temperature
-temperature = [303.15, 323.15, 343.15]
+temperature = [308.15, 328.15, 348.15]
 
 # AC Isotherm parameters
-x_VOL = [5.67e-1, 2.61e-5 , 2.21e4, 6.85, 1.05e-7, 2.84e4, 100] # (Hassan, QC)
+x_VOL = [4.65e-1, 1.02e-5 , 2.51e4, 6.51, 3.51e-7, 2.57e4, 100] # (Hassan, QC)
 
 # 13X Isotherm parameters (L pellet)
 # x_VOL = [2.50, 2.05e-7, 4.29e4, 4.32, 3.06e-7, 3.10e4, 100] # (Hassan, QC)
@@ -70,9 +71,13 @@ x_VOL = [5.67e-1, 2.61e-5 , 2.21e4, 6.85, 1.05e-7, 2.84e4, 100] # (Hassan, QC)
 # x_VOL = [7.01, 2.32e-07, 2.49e4, 0, 0, 0, 100] # (Hassan, QC)
 
 # ZLC Parameter estimates
-zlcFileName = ['zlcParameters_20210806_2230_c739801.npz',
-               'zlcParameters_20210807_2248_c739801.npz',
-               'zlcParameters_20210810_2135_eddec53.npz']
+# Activated Carbon Experiments
+# Pressure and temperature and temperature dependence
+zlcFileName = ['zlcParameters_20210812_0905_ea32ed7.npz',
+                'zlcParameters_20210812_1850_ea32ed7.npz',
+                'zlcParameters_20210813_0348_ea32ed7.npz',
+                'zlcParameters_20210813_1321_ea32ed7.npz',
+                'zlcParameters_20210813_2133_ea32ed7.npz']
 
 # Create the grid for mole fractions
 y = np.linspace(0,1.,100)
@@ -97,6 +102,9 @@ for kk in range(len(zlcFileName)):
     modelOutputTemp = load(parameterPath, allow_pickle=True)["modelOutput"]
     objectiveFunction[kk] = round(modelOutputTemp[()]["function"],0)
     modelNonDim = modelOutputTemp[()]["variable"] 
+    # Print names of files used for the parameter estimation (sanity check)
+    fileNameList = load(parameterPath, allow_pickle=True)["fileName"]
+    print(fileNameList)
 
     # Get the date time of the parameter estimates
     parameterDateTime = datetime.strptime(zlcFileName[kk][14:27], '%Y%m%d_%H%M')
@@ -110,8 +118,8 @@ for kk in range(len(zlcFileName)):
     # When 2 parameter model present
     else:
         isothermModel = x_ZLC[0:-2]
-        rateConstant = x_ZLC[-2]
-        kineticActEnergy = x_ZLC[-1]
+        rateConstant_1 = x_ZLC[-2]
+        rateConstant_2 = x_ZLC[-1]
 
     for jj in range(len(temperature)):
         for ii in range(len(y)):
@@ -129,18 +137,21 @@ for kk in range(len(zlcFileName)):
                                                             temperature=temperature[jj],
                                                             moleFrac=moleFractionUp,
                                                             isothermModel=isothermModel) # [mol/kg]
-            # Compute the gradient (delp/delq*)
-            dPbydq = delP/(equilibriumLoadingUp-isoLoading_ZLC[kk,ii,jj])
-            # Compute the correction factor for kinetic constant
-            # Darken factor for concentration dependence
-            correctionFactor_Conc = (isoLoading_ZLC[kk,ii,jj]/partialPressure)*dPbydq
-            # Arrhenius factor for temperature dependence
-            correctionFactor_Temp = np.exp(-kineticActEnergy/(Rg*temperature[jj]))
-            # Correction factor
-            correctionFactor = correctionFactor_Conc*correctionFactor_Temp
             
-            # Linear driving force model (derivative of solid phase loadings)
-            kineticConstant_ZLC[kk,ii,jj] = correctionFactor*rateConstant
+            # Compute the gradient (delq*/dc)
+            dqbydc = (equilibriumLoadingUp-isoLoading_ZLC[kk,ii,jj])/(delP/(Rg*temperature[jj])) # [-]
+            
+            # Rate constant 1 (analogous to micropore resistance)
+            k1 = rateConstant_1
+            
+            # Rate constant 2 (analogous to macropore resistance)
+            k2 = rateConstant_2/dqbydc
+            
+            # Overall rate constant
+            rateConstant = 1/(1/k1 + 1/k2)
+            
+            # Rate constant (overall)
+            kineticConstant_ZLC[kk,ii,jj] = rateConstant
         
 # Plot the isotherms    
 fig = plt.figure

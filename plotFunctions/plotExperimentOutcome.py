@@ -12,6 +12,7 @@
 # Plots for the experimental outcome (along with model)
 #
 # Last modified:
+# - 2021-08-20, AK: Change definition of rate constants
 # - 2021-07-03, AK: Remove threshold factor
 # - 2021-07-01, AK: Cosmetic changes
 # - 2021-05-14, AK: Fixes and structure changes
@@ -38,7 +39,6 @@ from numpy import load
 import os
 import matplotlib.pyplot as plt
 import auxiliaryFunctions
-from datetime import datetime
 plt.style.use('doubleColumn.mplstyle') # Custom matplotlib style file
 
 # Get the commit ID of the current repository
@@ -54,7 +54,7 @@ saveFlag = False
 saveFileExtension = ".png"
 
 # File with parameter estimates
-fileParameter = 'zlcParameters_20210806_2230_c739801.npz'
+fileParameter = 'zlcParameters_20210820_0106_ea32ed7.npz'
 
 # Flag to plot dead volume results
 # Dead volume files have a certain name, use that to find what to plot
@@ -284,7 +284,6 @@ else:
     
     # Temperature (for each experiment)
     temperatureExp = [344.69, 325.39, 306.15]*4
-    
     # Legend flag
     useFlow = False
     
@@ -359,29 +358,19 @@ else:
         print("Experiment",str(ii+1),round(np.trapz(np.multiply(flowRateExp,moleFracExp),timeElapsedExp),2))
 
         if simulateModel:
-            # Get the date time of the parameter estimates
-            parameterDateTime = datetime.strptime(fileParameter[14:27], '%Y%m%d_%H%M')
-            # Date time when the kinetic model shifted from 1 parameter to 2 parameter
-            parameterSwitchTime = datetime.strptime('20210616_0800', '%Y%m%d_%H%M')
-            # When 2 parameter model absent
-            if parameterDateTime<parameterSwitchTime:
-                isothermModel = x[0:-1]
-                rateConstant = x[-1]
-                kineticActEnergy = 0.
-            # When 2 parameter model present
-            else:
-                isothermModel = x[0:-2]
-                rateConstant = x[-2]
-                kineticActEnergy = x[-1]
+            # Parse out parameter values
+            isothermModel = x[0:-2]
+            rateConstant_1 = x[-2]
+            rateConstant_2 = x[-1]
                     
             # Compute the dead volume response using the optimizer parameters
             _ , moleFracSim , resultMat = simulateCombinedModel(timeInt = timeInt,
                                                         initMoleFrac = [moleFracExp[0]], # Initial mole fraction assumed to be the first experimental point
                                                         flowIn = np.mean(flowRateExp[-1:-10:-1]*1e-6), # Flow rate for ZLC considered to be the mean of last 10 points (equilibrium)
                                                         expFlag = True,
-                                                        isothermModel=isothermModel,
-                                                        rateConstant=rateConstant,
-                                                        kineticActEnergy = kineticActEnergy,
+                                                        isothermModel = isothermModel,
+                                                        rateConstant_1 = rateConstant_1,
+                                                        rateConstant_2 = rateConstant_2,
                                                         deadVolumeFile = deadVolumeFile,
                                                         volSorbent = volSorbent,
                                                         volGas = volGas,
@@ -432,7 +421,7 @@ else:
 
         ax1.set(xlabel='$t$ [s]', 
                 ylabel='$y_1$ [-]',
-                xlim = [0,250], ylim = [1e-2, 1])    
+                xlim = [0,200], ylim = [1e-2, 1])    
         ax1.locator_params(axis="x", nbins=4)
         # ax1.legend()
 
@@ -456,7 +445,7 @@ else:
                       color=colorsForPlot[ii]) # Simulation response    
         ax3.set(xlabel='$t$ [s]', 
                 ylabel='$F$ [ccs]',
-                xlim = [0,250], ylim = [0, 0.5])
+                xlim = [0,250], ylim = [0, 1.5])
         ax3.locator_params(axis="x", nbins=4)
         ax3.locator_params(axis="y", nbins=4)
 

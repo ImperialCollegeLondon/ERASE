@@ -12,10 +12,11 @@
 # Find the isotherm parameters and the kinetic rate constant by fitting
 # the complete response curve from the ZLC experiment. Note that currently
 # the isotherm can be SSL or DSL model. The rate constant is assumed to be a
-# constant in the LDF model
+# constant in the LDF model and is analogous to Gleuckauf approximation
 # Reference: 10.1016/j.ces.2014.12.062
 #
 # Last modified:
+# - 2021-08-20, AK: Change definition of rate constants
 # - 2021-07-21, AK: Add adsorbent density as an input
 # - 2021-07-02, AK: Remove threshold factor
 # - 2021-07-01, AK: Add sensitivity analysis
@@ -134,7 +135,7 @@ def extractZLCParameters(**kwargs):
                               [np.finfo(float).eps,1]))
         optType=np.array(['real','real','real','real','real'])
         problemDimension = len(optType)
-        isoRef = [10, 1e-5, 40e3, 10000, 40e3] # Reference for the isotherm parameters
+        isoRef = [10, 1e-5, 45e3, 100, 100] # Reference for parameters
         isothermFile = [] # Isotherm file is empty as it is fit
         paramIso = [] # Isotherm parameters is empty as it is fit
 
@@ -146,18 +147,18 @@ def extractZLCParameters(**kwargs):
                               [np.finfo(float).eps,1], [np.finfo(float).eps,1]))
         optType=np.array(['real','real','real','real','real','real','real','real'])
         problemDimension = len(optType)
-        isoRef = [10, 1e-5, 40e3, 10, 1e-5, 40e3, 10000, 40e3] # Reference for the isotherm parameters
+        isoRef = [10, 1e-5, 45e3, 10, 1e-5, 45e3, 100, 100] # Reference for the parameters
         isothermFile = [] # Isotherm file is empty as it is fit
         paramIso = [] # Isotherm parameters is empty as it is fit
 
     # Kinetic constants only
-    # Note: This might be buggy for simulations performed before 16.06.21
-    # This is because of the addition of activation energy for kinetics
+    # Note: This might be buggy for simulations performed before 20.08.21
+    # This is because of the changes to the structure of the kinetic model
     elif modelType == 'Kinetic':
         optBounds = np.array(([np.finfo(float).eps,1], [np.finfo(float).eps,1]))
         optType=np.array(['real','real'])
         problemDimension = len(optType)
-        isoRef = [10000, 40e3] # Reference for the parameter (has to be a list)
+        isoRef = [100, 100] # Reference for the parameter (has to be a list)
         # File with parameter estimates for isotherm (ZLC)
         isothermDir = '..' + os.path.sep + 'simulationResults/'
         modelOutputTemp = load(isothermDir+isothermFile, allow_pickle=True)["modelOutput"]
