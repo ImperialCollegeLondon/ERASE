@@ -135,7 +135,7 @@ def extractZLCParameters(**kwargs):
                               [np.finfo(float).eps,1]))
         optType=np.array(['real','real','real','real','real'])
         problemDimension = len(optType)
-        isoRef = [10, 1e-5, 45e3, 1000, 1000] # Reference for parameters
+        isoRef = [10, 1e-5, 40e3, 1000, 1000] # Reference for parameters
         isothermFile = [] # Isotherm file is empty as it is fit
         paramIso = [] # Isotherm parameters is empty as it is fit
 
@@ -147,7 +147,7 @@ def extractZLCParameters(**kwargs):
                               [np.finfo(float).eps,1], [np.finfo(float).eps,1]))
         optType=np.array(['real','real','real','real','real','real','real','real'])
         problemDimension = len(optType)
-        isoRef = [10, 1e-5, 45e3, 10, 1e-5, 45e3, 1000, 1000] # Reference for the parameters
+        isoRef = [10, 1e-5, 40e3, 10, 1e-5, 40e3, 1000, 1000] # Reference for the parameters
         isothermFile = [] # Isotherm file is empty as it is fit
         paramIso = [] # Isotherm parameters is empty as it is fit
 
