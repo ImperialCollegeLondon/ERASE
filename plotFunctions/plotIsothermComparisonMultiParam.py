@@ -102,6 +102,7 @@ for kk in range(len(zlcFileName)):
     modelOutputTemp = load(parameterPath, allow_pickle=True)["modelOutput"]
     objectiveFunction[kk] = round(modelOutputTemp[()]["function"],0)
     modelNonDim = modelOutputTemp[()]["variable"] 
+    adsorbentDensity = load(parameterPath, allow_pickle=True)["adsorbentDensity"]
     # Print names of files used for the parameter estimation (sanity check)
     fileNameList = load(parameterPath, allow_pickle=True)["fileName"]
     print(fileNameList)
@@ -112,6 +113,7 @@ for kk in range(len(zlcFileName)):
     parameterSwitchTime = datetime.strptime('20210616_0800', '%Y%m%d_%H%M')
     # Multiply the paremeters by the reference values
     x_ZLC = np.multiply(modelNonDim,parameterReference)
+    print(x_ZLC)
     # When 2 parameter model absent
     if parameterDateTime<parameterSwitchTime:
         isothermModel = x_ZLC[0:-1]
@@ -139,8 +141,8 @@ for kk in range(len(zlcFileName)):
                                                             isothermModel=isothermModel) # [mol/kg]
             
             # Compute the gradient (delq*/dc)
-            dqbydc = (equilibriumLoadingUp-isoLoading_ZLC[kk,ii,jj])/(delP/(Rg*temperature[jj])) # [-]
-            
+            dqbydc = (equilibriumLoadingUp-isoLoading_ZLC[kk,ii,jj])*adsorbentDensity/(delP/(Rg*temperature[jj])) # [-]
+
             # Rate constant 1 (analogous to micropore resistance)
             k1 = rateConstant_1
             
@@ -218,7 +220,7 @@ for jj in range(len(temperature)):
 
 ax1.set(xlabel='$P$ [bar]', 
 ylabel='$k$ [s$^\mathregular{-1}$]',
-xlim = [0,1], ylim = [0, 0.5]) 
+xlim = [0,1], ylim = [0, 1]) 
 ax1.locator_params(axis="x", nbins=4)
 ax1.locator_params(axis="y", nbins=4)
 ax1.legend()   
