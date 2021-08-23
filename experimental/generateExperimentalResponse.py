@@ -15,6 +15,7 @@
 # .mat file that can then be fed to the parameter estimator.
 #
 # Last modified:
+# - 2021-08-23, AK: Structure changes to reflect new kinetics
 # - 2021-08-11, AK: Initial creation
 #
 # Input arguments:
@@ -52,19 +53,33 @@ currentDT = auxiliaryFunctions.getCurrentDateTime()
 fileName = ['ZLC_ActivatedCarbon_Sim01',
             'ZLC_ActivatedCarbon_Sim02']
 
-# Material isotherm parameters and kinetic rate constants
+# Material isotherm parameters, kinetic rate constants, sorbent mass, density,
+# and poroisty
 # Note that the material isotherm parameters is obtained from the Quantachrome
 # measurements
-# Activated Carbon (non dimensional)
-x = [0.0567, 2.61, 0.5525, 0.685, 0.0105, 0.71, 0.033, 0.533];
+#### Activated Carbon (dimensional) ####
+x = [4.65e-1, 1.02e-5, 2.51e4, 6.51, 3.51e-7, 2.57e4, 1.019, 16.787];
+adsorbentDensity = 1680 # Skeletal density [kg/m3]
+massSorbent = 0.0625  # Mass of sorbent [g]
+particleEpsilon = 0.61  # Particle porosity [-]
+#######################################
 
-# Skeletal density, mass and porosity of the material used
-adsorbentDensity = 1680 # [kg/m3]
-massSorbent = 0.0625  # [g]
-particleEpsilon = 0.61  # [-]
+#### Boron Nitride (dimensional) ####
+x = [7.01, 2.32e-07, 2.49e4, 0.082, 302.962];
+adsorbentDensity = 3400 # Skeletal density [kg/m3]
+massSorbent = 0.0797  # Mass of sorbent [g]
+particleEpsilon = 0.88  # Particle porosity [-]
+#######################################
+
+#### Zeolite 13X (dimensional) ####
+x = [2.50, 2.05e-7, 4.29e4, 4.32, 3.06e-7, 3.10e4,  1.019, 16.787];
+adsorbentDensity = 4100 # Skeletal density [kg/m3]
+massSorbent = 0.0594 # Mass of sorbent [g]
+particleEpsilon = 0.79 # Particle porosity [-]
+#######################################
 
 # Temperature of the simulate experiment [K]
-temperature = 303.15
+temperature = 308.15
 
 # Inlet flow rate [ccm]
 flowRate = [10, 60]
@@ -76,9 +91,6 @@ initMoleFrac = np.array(([0.11, 0.94], [0.11, 0.73]))
 deadVolumeFile = 'deadVolumeCharacteristics_20210810_1653_eddec53.npz'
 
 ############
-
-# Reference isotherm parameters (DSL)
-isoRef = [10, 1e-5, 40e3, 10, 1e-5, 40e3, 10000, 40e3]
 
 # Integration time (set to 1000 s, default)
 timeInt = (0.0,1000.0)
@@ -103,9 +115,9 @@ for ii in range(len(flowRate)):
         # Initialize the output dictionary
         experimentOutput = {}
         # Compute the composite response using the optimizer parameters
-        timeElapsedSim , moleFracSim , resultMat = simulateCombinedModel(isothermModel = np.multiply(x[0:-2],isoRef[0:-2]),
-                                                                         rateConstant = x[-2]*isoRef[-2], # Last but one element is rate constant (Arrhenius constant)
-                                                                         kineticActEnergy = x[-1]*isoRef[-1], # Last element is activation energy
+        timeElapsedSim , moleFracSim , resultMat = simulateCombinedModel(isothermModel = x[0:-2],
+                                                                         rateConstant_1 = x[-2], # Last but one element is rate constant (analogous to micropore)
+                                                                         rateConstant_2 = x[-1], # Last element is activation energy (analogous to macropore)
                                                                          temperature = temperature, # Temperature [K]
                                                                          timeInt = timeInt,
                                                                          initMoleFrac = [initMoleFrac[ii,jj]], # Initial mole fraction assumed to be the first experimental point
@@ -142,8 +154,7 @@ for ii in range(len(flowRate)):
                     'temperature': temperature,
                     'flowRate': flowRate,
                     'initMoleFrac': initMoleFrac,
-                    'deadVolumeFile': deadVolumeFile,
-                    'isoRef': isoRef})
+                    'deadVolumeFile': deadVolumeFile})
 
         # Plot the responses for sanity check
         # y - Linear scale
