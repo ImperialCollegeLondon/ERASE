@@ -13,6 +13,7 @@
 # different fits from ZLC
 #
 # Last modified:
+# - 2021-08-20, AK: Introduce macropore diffusivity (for sanity check)
 # - 2021-08-20, AK: Change definition of rate constants
 # - 2021-07-01, AK: Cosmetic changes
 # - 2021-06-15, AK: Initial creation
@@ -29,7 +30,6 @@ import numpy as np
 from computeEquilibriumLoading import computeEquilibriumLoading
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
-from datetime import datetime
 import os
 from numpy import load
 import auxiliaryFunctions
@@ -61,23 +61,35 @@ pressureTotal = np.array([1.e5]);
 # Define temperature
 temperature = [308.15, 328.15, 348.15]
 
+# CO2 molecular diffusivity
+molDiffusivity = 1.6e-5 # m2/s
+
+# Particle Tortuosity
+tortuosity = 3
+
+# Particle Radius
+particleRadius = 2e-3
+
 # AC Isotherm parameters
-x_VOL = [4.65e-1, 1.02e-5 , 2.51e4, 6.51, 3.51e-7, 2.57e4, 100] # (Hassan, QC)
+x_VOL = [4.65e-1, 1.02e-5 , 2.51e4, 6.51, 3.51e-7, 2.57e4] # (Hassan, QC)
 
 # 13X Isotherm parameters (L pellet)
-# x_VOL = [2.50, 2.05e-7, 4.29e4, 4.32, 3.06e-7, 3.10e4, 100] # (Hassan, QC)
+# x_VOL = [2.50, 2.05e-7, 4.29e4, 4.32, 3.06e-7, 3.10e4] # (Hassan, QC)
+# x_VOL = [3.83, 1.33e-08, 40.0e3, 2.57, 4.88e-06, 35.16e3] # (Hassan, QC - Bound delU to 40e3)
 
 # BN Isotherm parameters
-# x_VOL = [7.01, 2.32e-07, 2.49e4, 0, 0, 0, 100] # (Hassan, QC)
+# x_VOL = [7.01, 2.32e-07, 2.49e4, 0, 0, 0] # (Hassan, QC)
 
 # ZLC Parameter estimates
+# New kinetic model
+# Both k1 and k2 present
+
 # Activated Carbon Experiments
-# Pressure and temperature and temperature dependence
-zlcFileName = ['zlcParameters_20210812_0905_ea32ed7.npz',
-                'zlcParameters_20210812_1850_ea32ed7.npz',
-                'zlcParameters_20210813_0348_ea32ed7.npz',
-                'zlcParameters_20210813_1321_ea32ed7.npz',
-                'zlcParameters_20210813_2133_ea32ed7.npz']
+zlcFileName = ['zlcParameters_20210822_0926_c8173b1.npz',
+                'zlcParameters_20210822_1733_c8173b1.npz',
+                'zlcParameters_20210823_0133_c8173b1.npz',
+                'zlcParameters_20210823_1007_c8173b1.npz',
+                'zlcParameters_20210823_1810_c8173b1.npz']
 
 # Create the grid for mole fractions
 y = np.linspace(0,1.,100)
@@ -85,13 +97,14 @@ y = np.linspace(0,1.,100)
 isoLoading_VOL = np.zeros([len(y),len(temperature)])
 isoLoading_ZLC = np.zeros([len(zlcFileName),len(y),len(temperature)])
 kineticConstant_ZLC = np.zeros([len(zlcFileName),len(y),len(temperature)])
+kineticConstant_Macro = np.zeros([len(zlcFileName),len(y),len(temperature)])
 objectiveFunction = np.zeros([len(zlcFileName)])
 
 # Loop over all the mole fractions
 # Volumetric data
 for jj in range(len(temperature)):
     for ii in range(len(y)):
-        isoLoading_VOL[ii,jj] = computeEquilibriumLoading(isothermModel=x_VOL[0:-1],
+        isoLoading_VOL[ii,jj] = computeEquilibriumLoading(isothermModel=x_VOL,
                                                           moleFrac = y[ii],
                                                           temperature = temperature[jj])
 # Loop over all available ZLC files
@@ -102,26 +115,21 @@ for kk in range(len(zlcFileName)):
     modelOutputTemp = load(parameterPath, allow_pickle=True)["modelOutput"]
     objectiveFunction[kk] = round(modelOutputTemp[()]["function"],0)
     modelNonDim = modelOutputTemp[()]["variable"] 
-    adsorbentDensity = load(parameterPath, allow_pickle=True)["adsorbentDensity"]
-    # Print names of files used for the parameter estimation (sanity check)
-    fileNameList = load(parameterPath, allow_pickle=True)["fileName"]
-    print(fileNameList)
-
-    # Get the date time of the parameter estimates
-    parameterDateTime = datetime.strptime(zlcFileName[kk][14:27], '%Y%m%d_%H%M')
-    # Date time when the kinetic model shifted from 1 parameter to 2 parameter
-    parameterSwitchTime = datetime.strptime('20210616_0800', '%Y%m%d_%H%M')
     # Multiply the paremeters by the reference values
     x_ZLC = np.multiply(modelNonDim,parameterReference)
     print(x_ZLC)
-    # When 2 parameter model absent
-    if parameterDateTime<parameterSwitchTime:
-        isothermModel = x_ZLC[0:-1]
-    # When 2 parameter model present
-    else:
-        isothermModel = x_ZLC[0:-2]
-        rateConstant_1 = x_ZLC[-2]
-        rateConstant_2 = x_ZLC[-1]
+
+    adsorbentDensity = load(parameterPath, allow_pickle=True)["adsorbentDensity"]
+    particleEpsilon = load(parameterPath)["particleEpsilon"]
+
+    # Print names of files used for the parameter estimation (sanity check)
+    fileNameList = load(parameterPath, allow_pickle=True)["fileName"]
+    print(fileNameList)
+    
+    # Parse out the isotherm parameter
+    isothermModel = x_ZLC[0:-2]
+    rateConstant_1 = x_ZLC[-2]
+    rateConstant_2 = x_ZLC[-1]
 
     for jj in range(len(temperature)):
         for ii in range(len(y)):
@@ -135,8 +143,7 @@ for kk in range(len(zlcFileName)):
             # Mole fraction (up)
             moleFractionUp = (partialPressure + delP)/pressureTotal
             # Compute the loading [mol/m3] @ moleFractionUp
-            equilibriumLoadingUp  = computeEquilibriumLoading(pressureTotal=pressureTotal,
-                                                            temperature=temperature[jj],
+            equilibriumLoadingUp  = computeEquilibriumLoading(temperature=temperature[jj],
                                                             moleFrac=moleFractionUp,
                                                             isothermModel=isothermModel) # [mol/kg]
             
@@ -145,10 +152,10 @@ for kk in range(len(zlcFileName)):
 
             # Rate constant 1 (analogous to micropore resistance)
             k1 = rateConstant_1
-            
+
             # Rate constant 2 (analogous to macropore resistance)
             k2 = rateConstant_2/dqbydc
-            
+                        
             # Overall rate constant
             # The following conditions are done for purely numerical reasons
             # If pure (analogous) macropore
@@ -164,6 +171,17 @@ for kk in range(len(zlcFileName)):
             # Rate constant (overall)
             kineticConstant_ZLC[kk,ii,jj] = rateConstant
         
+            # Macropore resistance from QC data
+            # Compute dqbydc for QC isotherm
+            equilibriumLoadingUp  = computeEquilibriumLoading(temperature=temperature[jj],
+                                                moleFrac=moleFractionUp,
+                                                isothermModel=x_VOL) # [mol/kg]
+            dqbydc_True = (equilibriumLoadingUp-isoLoading_VOL[ii,jj])*adsorbentDensity/(delP/(Rg*temperature[jj])) # [-]
+
+            # Macropore resistance
+            kineticConstant_Macro[kk,ii,jj] = (15*particleEpsilon*molDiffusivity
+                                               /(tortuosity*(particleRadius)**2)/dqbydc_True)
+            
 # Plot the isotherms    
 fig = plt.figure
 ax1 = plt.subplot(1,2,1)        
@@ -215,7 +233,8 @@ for jj in range(len(temperature)):
             labelText = str(temperature[jj])+' K'
         else:
             labelText = ''
-        ax1.plot(y,kineticConstant_ZLC[kk,:,jj],color='#'+colorForPlot[jj],alpha=0.5,
+        ax1.plot(y,kineticConstant_Macro[kk,:,jj],color='#'+colorForPlot[jj]) # Macropore resistance
+        ax1.plot(y,kineticConstant_ZLC[kk,:,jj],color='#'+colorForPlot[jj],alpha=0.2,
                  label=labelText) # ALL
 
 ax1.set(xlabel='$P$ [bar]', 

@@ -54,7 +54,7 @@ saveFlag = False
 saveFileExtension = ".png"
 
 # File with parameter estimates
-fileParameter = 'zlcParameters_20210820_0106_ea32ed7.npz'
+fileParameter = 'zlcParameters_20210822_0926_c8173b1.npz'
 
 # Flag to plot dead volume results
 # Dead volume files have a certain name, use that to find what to plot
@@ -284,6 +284,7 @@ else:
     
     # Temperature (for each experiment)
     temperatureExp = [344.69, 325.39, 306.15]*4
+
     # Legend flag
     useFlow = False
     
@@ -324,6 +325,7 @@ else:
     downsampleInt = numPointsExp/np.min(numPointsExp)
     # Multiply the paremeters by the reference values
     x = np.multiply(modelNonDim,parameterReference)
+
     # Initialize loadings
     computedError = 0
     numPoints = 0
@@ -466,6 +468,15 @@ else:
         computedError = computeMLEError(moleFracExpALL,moleFracSimALL, 
                                         downsampleData = downsampleData,)
         print("Sanity check objective function: ",round(computedError,0))
+    
+    # Print model data for sanity checks
+    print("\nFurther Sanity Checks (from the parameter estimate file): ")
+    print("Dead Volume File: ",str(deadVolumeFile))
+    print("Adsorbent Density: ",str(adsorbentDensity)," kg/m3")
+    print("Mass Sorbent: ",str(massSorbent)," g")
+    print("Particle Porosity: ",str(particleEpsilon))
+    print("File name list: ",load(parameterPath)["fileName"])
+    print("Temperature: ",load(parameterPath)["temperature"])
     
     # Remove all the .npy files genereated from the .mat
     # Loop over all available files    

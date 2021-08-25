@@ -65,17 +65,17 @@ particleEpsilon = 0.61  # Particle porosity [-]
 #######################################
 
 #### Boron Nitride (dimensional) ####
-x = [7.01, 2.32e-07, 2.49e4, 0.082, 302.962];
-adsorbentDensity = 3400 # Skeletal density [kg/m3]
-massSorbent = 0.0797  # Mass of sorbent [g]
-particleEpsilon = 0.88  # Particle porosity [-]
+# x = [7.01, 2.32e-07, 2.49e4, 0.082, 302.962];
+# adsorbentDensity = 3400 # Skeletal density [kg/m3]
+# massSorbent = 0.0797  # Mass of sorbent [g]
+# particleEpsilon = 0.88  # Particle porosity [-]
 #######################################
 
 #### Zeolite 13X (dimensional) ####
-x = [2.50, 2.05e-7, 4.29e4, 4.32, 3.06e-7, 3.10e4,  1.019, 16.787];
-adsorbentDensity = 4100 # Skeletal density [kg/m3]
-massSorbent = 0.0594 # Mass of sorbent [g]
-particleEpsilon = 0.79 # Particle porosity [-]
+# x = [3.83, 1.33e-08, 40.0e3, 2.57, 4.88e-06, 35.16e3, 6.64e2, 7.61e1];
+# adsorbentDensity = 4100 # Skeletal density [kg/m3]
+# massSorbent = 0.0594 # Mass of sorbent [g]
+# particleEpsilon = 0.79 # Particle porosity [-]
 #######################################
 
 # Temperature of the simulate experiment [K]
