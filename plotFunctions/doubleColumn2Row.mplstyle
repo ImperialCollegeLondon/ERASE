@@ -1,0 +1,44 @@
+# matplotlib configuration file for the ERASE project
+# https://matplotlib.org/3.3.2/tutorials/introductory/customizing.html
+
+## Figure property
+figure.figsize : 7, 6 # width, height in inches
+figure.dpi : 600 # dpi
+figure.autolayout : true # for labels not being cut out
+
+## Axes
+axes.titlesize : 10
+axes.labelsize : 10
+axes.formatter.limits : -5, 4
+
+## Grid
+axes.grid : true
+grid.color : cccccc
+grid.linewidth : 0.5
+
+## Lines & Scatter
+lines.linewidth : 1.5
+lines.markersize : 4
+scatter.marker: o
+
+## Ticks
+xtick.top : true
+ytick.right : true
+xtick.labelsize : 8
+ytick.labelsize : 8
+
+## Fonts
+font.family : arial
+font.weight : normal
+font.size : 10
+
+## Legends
+legend.frameon : true
+legend.fontsize : 10
+legend.edgecolor : 1 
+legend.framealpha : 0.6 
+
+## Save figure
+savefig.dpi : figure 
+savefig.format : png
+savefig.transparent : false
