@@ -2,7 +2,7 @@
 # https://matplotlib.org/3.3.2/tutorials/introductory/customizing.html
 
 ## Figure property
-figure.figsize : 7, 2.5 # width, height in inches
+figure.figsize : 7, 5 # width, height in inches
 figure.dpi : 600 # dpi
 figure.autolayout : true # for labels not being cut out
 
