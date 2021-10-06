@@ -858,8 +858,8 @@ def plotForArticle_figureZLCSim(gitCommitID, currentDT,
     currentDT = auxiliaryFunctions.getCurrentDateTime()
     
     # Plot colors and markers (isotherm)    
-    colorsForPlot = ["ffba08","d00000","03071e"]
-    
+    colorsForPlot = ["0091ad","5c4d7d","b7094c"]
+
     # Universal gas constant
     Rg = 8.314
     
@@ -1031,9 +1031,9 @@ def plotForArticle_figureZLCSim(gitCommitID, currentDT,
             ax1.set(ylabel='$q^*$ [mol kg$^{-1}$]',
                     xlim = [0,1], ylim = [0, 3])
             ax1.text(0.04, 2.75, "(a)", fontsize=8,)
-            ax1.text(0.45, 3.2, "AC", fontsize=8, fontweight = 'bold',color = '#4895EF')
-            ax1.text(0.79, 0.30, "TRUE", fontsize=8, fontweight = 'bold',color = '#4895EF')
-            ax1.text(0.83, 0.12, "EST.", fontsize=8, fontweight = 'bold',color = '#4895EF', alpha = 0.3)
+            ax1.text(0.45, 3.2, "AC", fontsize=8, fontweight = 'bold',color = 'k')
+            ax1.text(0.79, 0.30, "TRUE", fontsize=8, fontweight = 'bold',color = 'k')
+            ax1.text(0.83, 0.12, "EST.", fontsize=8, fontweight = 'bold',color = 'k', alpha = 0.3)
             ax1.locator_params(axis="x", nbins=4)
             ax1.locator_params(axis="y", nbins=4)
             ax1.axes.xaxis.set_ticklabels([])
@@ -1051,9 +1051,9 @@ def plotForArticle_figureZLCSim(gitCommitID, currentDT,
             # Isotherm
             ax1.set(xlim = [0,1], ylim = [0, 1.5])
             ax1.text(0.04, 1.35, "(b)", fontsize=8,)
-            ax1.text(0.45, 1.6, "BN", fontsize=8, fontweight = 'bold',color = '#4895EF')
-            ax1.text(0.79, 0.15, "TRUE", fontsize=8, fontweight = 'bold',color = '#4895EF')
-            ax1.text(0.83, 0.06, "EST.", fontsize=8, fontweight = 'bold',color = '#4895EF', alpha = 0.3)
+            ax1.text(0.45, 1.6, "BN", fontsize=8, fontweight = 'bold',color = 'k')
+            ax1.text(0.79, 0.15, "TRUE", fontsize=8, fontweight = 'bold',color = 'k')
+            ax1.text(0.83, 0.06, "EST.", fontsize=8, fontweight = 'bold',color = 'k', alpha = 0.3)
             ax1.locator_params(axis="x", nbins=4)
             ax1.locator_params(axis="y", nbins=4)
             ax1.axes.xaxis.set_ticklabels([])
@@ -1070,9 +1070,9 @@ def plotForArticle_figureZLCSim(gitCommitID, currentDT,
             # Isotherm
             ax1.set(xlim = [0,1], ylim = [0, 8])
             ax1.text(0.04, 7.3, "(c)", fontsize=8,)
-            ax1.text(0.44, 8.5, "13X", fontsize=8, fontweight = 'bold',color = '#4895EF')
-            ax1.text(0.79, 0.86, "TRUE", fontsize=8, fontweight = 'bold',color = '#4895EF')
-            ax1.text(0.83, 0.32, "EST.", fontsize=8, fontweight = 'bold',color = '#4895EF', alpha = 0.3)
+            ax1.text(0.44, 8.5, "13X", fontsize=8, fontweight = 'bold',color = 'k')
+            ax1.text(0.79, 0.86, "TRUE", fontsize=8, fontweight = 'bold',color = 'k')
+            ax1.text(0.83, 0.32, "EST.", fontsize=8, fontweight = 'bold',color = 'k', alpha = 0.3)
             ax1.locator_params(axis="x", nbins=4)
             ax1.locator_params(axis="y", nbins=4)
             ax1.axes.xaxis.set_ticklabels([])
