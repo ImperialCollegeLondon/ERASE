@@ -19,7 +19,7 @@
   				       Multifunctional Nanomaterials Group
  						Dr. Camille Petit
  						 Project: ERASE 
-				     Readme last updated: 11th May 2021, AK
+				  Readme last updated: 13th October 2021, AK
 
 ## INTRODUCTION
 The repository contains the work performed on designing sensor electronics for gas sensing applications. The work was primarily performed by Dr. Ashwin Kumar Rajagopalan, SNSF Early Postdoc.Mobility Fellow working in the group of Dr. Camille Petit, Imperial College London. The work here is funded by the Swiss National Science Foundation (Project Number: P2EZP2_191875).
@@ -47,7 +47,7 @@ git clone https://github.com/ImperialCollegeLondon/ERASE.git
 ## REFERENCES
  
 
-Ashwin Kumar Rajagopalan, Camille Petit, Material Screening for Gas Sensing using an Electronic Nose: Gas Sorption Thermodynamic and Kinetic Considerations, **2021**, *Submitted for publication*
+(1) Rajagopalan, A. K.; Petit, C. Material Screening for Gas Sensing Using an Electronic Nose: Gas Sorption Thermodynamic and Kinetic Considerations. *ACS Sensors* **2021**, 15, 38. https://doi.org/10.1021/ACSSENSORS.1C01807.
 
 ## AUTHORS
 
