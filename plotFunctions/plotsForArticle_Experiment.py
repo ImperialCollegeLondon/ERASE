@@ -213,7 +213,7 @@ def plotForArticle_figureMat(gitCommitID, currentDT,
         # Material specific text labels
         if kk == 0:
             ax.set(xlabel='$D$ [nm]', 
-                    ylabel='$V$ [cm$^{3}$ g$^{-1}$]',
+                    ylabel='$V_\mathregular{pore}$ [cm$^{3}$ g$^{-1}$]',
                     xlim = [0.1,1e6], ylim = [0, 2])
             ax.text(0.2, 1.82, "(a)", fontsize=8,)
             ax.text(1.4e5, 0.1, "AC", fontsize=8, fontweight = 'bold',color = '#e71d36')
@@ -429,7 +429,7 @@ def plotForArticle_figureDV(gitCommitID, currentDT,
             if kk == 0:
                 ax1.semilogy(timeElapsedExp,moleFracExp,
                               marker = markersForPlot[ii],linewidth = 0,
-                              color='#'+colorsForPlot[ii],alpha=0.25,label=str(round(abs(np.mean(flowRateExp)),1))+" ccs") # Experimental response
+                              color='#'+colorsForPlot[ii],alpha=0.25,label=str(round(abs(np.mean(flowRateExp)),1))+" cm$^3$ s$^{-1}$") # Experimental response
                 ax1.semilogy(timeElapsedExp,moleFracSim,
                                   color='#'+colorsForPlot[ii]) # Simulation response
                 ax1.set(xlabel='$t$ [s]', 
@@ -438,15 +438,15 @@ def plotForArticle_figureDV(gitCommitID, currentDT,
                 ax1.locator_params(axis="x", nbins=5)
                 ax1.legend(handletextpad=0.0,loc='center right')
                 ax1.text(7, 1.3, "(a)", fontsize=8,)
-                ax1.text(12.2, 0.64, "MS", fontsize=8, fontweight = 'bold',
+                ax1.text(12.7, 0.64, "MS", fontsize=8, fontweight = 'bold',
                         backgroundcolor = 'w', color = '#e71d36')
-                ax1.text(8.2, 0.39, "$V_\mathrm{d}$ = 0.02 cc", fontsize=8, 
+                ax1.text(7.4, 0.39, "$V_\mathrm{D}$ = 0.02 cm$^3$", fontsize=8, 
                         backgroundcolor = 'w', color = '#7d8597')
 
             elif kk == 1:
                 ax2.semilogy(timeElapsedExp,moleFracExp,
                               marker = markersForPlot[ii],linewidth = 0,
-                              color='#'+colorsForPlot[ii],alpha=0.25,label=str(round(abs(np.mean(flowRateExp)),1))+" ccs") # Experimental response
+                              color='#'+colorsForPlot[ii],alpha=0.25,label=str(round(abs(np.mean(flowRateExp)),1))+" cm$^3$ s$^{-1}$") # Experimental response
                 ax2.semilogy(timeElapsedExp,moleFracSim,
                                   color='#'+colorsForPlot[ii]) # Simulation response
                 ax2.set(xlabel='$t$ [s]', 
@@ -454,15 +454,15 @@ def plotForArticle_figureDV(gitCommitID, currentDT,
                 ax2.locator_params(axis="x", nbins=5)
                 ax2.legend(handletextpad=0.0,loc='center right')
                 ax2.text(70, 1.3, "(b)", fontsize=8,)
-                ax2.text(67, 0.64, "Column w/ Ball", fontsize=8,  fontweight = 'bold',
+                ax2.text(70, 0.64, "Column w/ Ball", fontsize=8,  fontweight = 'bold',
                         backgroundcolor = 'w', color = '#e71d36')
-                ax2.text(83, 0.39, "$V_\mathrm{d}$ = 3.76 cc", fontsize=8, 
+                ax2.text(78, 0.39, "$V_\mathrm{D}$ = 3.78 cm$^3$", fontsize=8, 
                         backgroundcolor = 'w', color = '#7d8597')
                 
             elif kk == 2:
                 ax3.semilogy(timeElapsedExp,moleFracExp,
                               marker = markersForPlot[ii],linewidth = 0,
-                              color='#'+colorsForPlot[ii],alpha=0.25,label=str(round(abs(np.mean(flowRateExp)),1))+" ccs") # Experimental response
+                              color='#'+colorsForPlot[ii],alpha=0.25,label=str(round(abs(np.mean(flowRateExp)),1))+" cm$^3$ s$^{-1}$") # Experimental response
                 ax3.semilogy(timeElapsedExp,moleFracSim,
                                   color='#'+colorsForPlot[ii]) # Simulation response
                 ax3.set(xlabel='$t$ [s]', 
@@ -470,9 +470,9 @@ def plotForArticle_figureDV(gitCommitID, currentDT,
                 ax3.locator_params(axis="x", nbins=5)
                 ax3.legend(handletextpad=0.0,loc='center right')
                 ax3.text(70, 1.3, "(c)", fontsize=8,)
-                ax3.text(61, 0.64, "Column w/o Ball", fontsize=8,  fontweight = 'bold',
+                ax3.text(64, 0.64, "Column w/o Ball", fontsize=8,  fontweight = 'bold',
                         backgroundcolor = 'w', color = '#e71d36')
-                ax3.text(83, 0.39, "$V_\mathrm{d}$ = 3.93 cc", fontsize=8, 
+                ax3.text(78, 0.39, "$V_\mathrm{D}$ = 3.95 cm$^3$", fontsize=8, 
                         backgroundcolor = 'w', color = '#7d8597')
 
         # Remove all the .npz files genereated from the .mat
@@ -1155,8 +1155,8 @@ def plotForArticle_figureZLCFit(gitCommitID, currentDT,
     panelLabel_H = [185/2, 60/100*185/2, 200/100*185/2]
     materialLabel_L = [182, 150/200*182, 600/200*180]
     materialLabel_H = [182/2, 60/100*182/2, 200/100*180/2]
-    flowLabel_L = [147, 150/200*147, 600/200*147]
-    flowLabel_H = [147/2, 60/100*147/2, 200/100*147/2]
+    flowLabel_L = [123, 150/200*123, 600/200*123]
+    flowLabel_H = [123/2, 60/100*123/2, 200/100*123/2]
     materialText = ["AC", "BN", "13X"]
 
     # Parameter estimate files
@@ -1315,7 +1315,7 @@ def plotForArticle_figureZLCFit(gitCommitID, currentDT,
                              color='#'+colorTemp,label=legendStr) # Simulation response    
                 if ii%3 == 0:
                     ax1.semilogy(timeElapsedExp,moleFracDV,
-                                 color='#1697a6',alpha = 0.2, linestyle=':') # Dead volume response
+                                 color='#76c893',alpha = 0.2, linestyle='-') # Dead volume response
                 ax1.set(ylabel='$y$ [-]',
                         xlim = XLIM_L[pp], ylim = [1e-2, 1])    
                 ax1.locator_params(axis="x", nbins=4)
@@ -1332,7 +1332,7 @@ def plotForArticle_figureZLCFit(gitCommitID, currentDT,
                              color='#'+colorTemp,label=legendStr) # Simulation response
                 if ii%3 == 0:
                     ax2.semilogy(timeElapsedExp,moleFracDV,
-                                 color='#1697a6',alpha = 0.2, linestyle=':') # Dead volume response
+                                 color='#76c893',alpha = 0.2, linestyle='-') # Dead volume response
                 ax2.set(xlabel='$t$ [s]',ylabel='$y$ [-]',
                         xlim = XLIM_L[pp], ylim = [1e-2, 1])    
                 ax2.locator_params(axis="x", nbins=4)
@@ -1348,7 +1348,7 @@ def plotForArticle_figureZLCFit(gitCommitID, currentDT,
                              color='#'+colorTemp,label=legendStr) # Simulation response  
                 if ii%3 == 0:
                     ax3.semilogy(timeElapsedExp,moleFracDV,
-                                 color='#1697a6',alpha = 0.2, linestyle=':') # Dead volume response
+                                 color='#76c893',alpha = 0.2, linestyle='-') # Dead volume response
                 ax3.set(xlim = XLIM_H[pp], ylim = [1e-2, 1])    
                 ax3.locator_params(axis="x", nbins=4)
                 ax3.axes.xaxis.set_ticklabels([])
@@ -1367,7 +1367,7 @@ def plotForArticle_figureZLCFit(gitCommitID, currentDT,
                              color='#'+colorTemp,label=legendStr) # Simulation response    
                 if ii%3 == 0:
                     ax4.semilogy(timeElapsedExp,moleFracDV,
-                                 color='#1697a6',alpha = 0.2, linestyle=':') # Dead volume response
+                                 color='#76c893',alpha = 0.2, linestyle='-') # Dead volume response
                 ax4.set(xlabel='$t$ [s]',
                         xlim = XLIM_H[pp], ylim = [1e-2, 1])    
                 ax4.locator_params(axis="x", nbins=4)
@@ -1388,19 +1388,19 @@ def plotForArticle_figureZLCFit(gitCommitID, currentDT,
         # Put other text entries
         ax1.text(panelLabel_L[pp], 0.67, "(a)", fontsize=8,)
         ax1.text(materialLabel_L[pp], 0.45, materialText[pp], fontsize=8, fontweight = 'bold',color = '#4895EF')
-        ax1.text(flowLabel_L[pp], 0.33, "$F^\mathregular{in}$ = 10 ccm", fontsize=8, fontweight = 'bold',color = '#4895EF')
+        ax1.text(flowLabel_L[pp], 0.33, "$F^\mathregular{in}$ = 10 cm$^3$ min$^{-1}$", fontsize=8, fontweight = 'bold',color = '#4895EF')
 
         ax2.text(panelLabel_L[pp], 0.67, "(c)", fontsize=8,)
         ax2.text(materialLabel_L[pp], 0.45, materialText[pp], fontsize=8, fontweight = 'bold',color = '#4895EF')
-        ax2.text(flowLabel_L[pp], 0.33, "$F^\mathregular{in}$ = 10 ccm", fontsize=8, fontweight = 'bold',color = '#4895EF')
+        ax2.text(flowLabel_L[pp], 0.33, "$F^\mathregular{in}$ = 10 cm$^3$ min$^{-1}$", fontsize=8, fontweight = 'bold',color = '#4895EF')
 
         ax3.text(panelLabel_H[pp], 0.67, "(b)", fontsize=8,)
         ax3.text(materialLabel_H[pp], 0.45, materialText[pp], fontsize=8, fontweight = 'bold',color = '#4895EF')
-        ax3.text(flowLabel_H[pp], 0.33, "$F^\mathregular{in}$ = 60 ccm", fontsize=8, fontweight = 'bold',color = '#4895EF')
+        ax3.text(flowLabel_H[pp], 0.33, "$F^\mathregular{in}$ = 60 cm$^3$ min$^{-1}$", fontsize=8, fontweight = 'bold',color = '#4895EF')
 
         ax4.text(panelLabel_H[pp], 0.67, "(d)", fontsize=8,)
         ax4.text(materialLabel_H[pp], 0.45, materialText[pp], fontsize=8, fontweight = 'bold',color = '#4895EF')
-        ax4.text(flowLabel_H[pp], 0.33, "$F^\mathregular{in}$ = 60 ccm", fontsize=8, fontweight = 'bold',color = '#4895EF')
+        ax4.text(flowLabel_H[pp], 0.33, "$F^\mathregular{in}$ = 60 cm$^3$ min$^{-1}$", fontsize=8, fontweight = 'bold',color = '#4895EF')
                 
         #  Save the figure
         if saveFlag:
@@ -1452,8 +1452,8 @@ def plotForArticle_figureZLCSimFit(gitCommitID, currentDT,
     panelLabel_H = [185/2, 60/100*185/2, 200/100*185/2]
     materialLabel_L = [182, 150/200*182, 600/200*180]
     materialLabel_H = [182/2, 60/100*182/2, 200/100*180/2]
-    flowLabel_L = [147, 150/200*147, 600/200*147]
-    flowLabel_H = [147/2, 60/100*147/2, 200/100*147/2]
+    flowLabel_L = [123, 150/200*123, 600/200*123]
+    flowLabel_H = [123/2, 60/100*123/2, 200/100*123/2]
     materialText = ["AC", "BN", "13X"]
 
     # Parameter estimate files
@@ -1611,7 +1611,7 @@ def plotForArticle_figureZLCSimFit(gitCommitID, currentDT,
                              color='#'+colorTemp,label=legendStr) # Simulation response    
                 if ii%3 == 0:
                     ax1.semilogy(timeElapsedExp,moleFracDV,
-                                 color='k',alpha = 0.2, linestyle=':') # Dead volume response
+                                 color='k',alpha = 0.2, linestyle='-') # Dead volume response
                 ax1.set(ylabel='$y$ [-]',
                         xlim = XLIM_L[pp], ylim = [1e-2, 1])    
                 ax1.locator_params(axis="x", nbins=4)
@@ -1628,7 +1628,7 @@ def plotForArticle_figureZLCSimFit(gitCommitID, currentDT,
                              color='#'+colorTemp,label=legendStr) # Simulation response
                 if ii%3 == 0:
                     ax2.semilogy(timeElapsedExp,moleFracDV,
-                                 color='k',alpha = 0.2, linestyle=':') # Dead volume response
+                                 color='k',alpha = 0.2, linestyle='-') # Dead volume response
                 ax2.set(xlabel='$t$ [s]',ylabel='$y$ [-]',
                         xlim = XLIM_L[pp], ylim = [1e-2, 1])    
                 ax2.locator_params(axis="x", nbins=4)
@@ -1644,7 +1644,7 @@ def plotForArticle_figureZLCSimFit(gitCommitID, currentDT,
                              color='#'+colorTemp,label=legendStr) # Simulation response  
                 if ii%3 == 0:
                     ax3.semilogy(timeElapsedExp,moleFracDV,
-                                 color='k',alpha = 0.2, linestyle=':') # Dead volume response
+                                 color='k',alpha = 0.2, linestyle='-') # Dead volume response
                 ax3.set(xlim = XLIM_H[pp], ylim = [1e-2, 1])    
                 ax3.locator_params(axis="x", nbins=4)
                 ax3.axes.xaxis.set_ticklabels([])
@@ -1663,7 +1663,7 @@ def plotForArticle_figureZLCSimFit(gitCommitID, currentDT,
                              color='#'+colorTemp,label=legendStr) # Simulation response    
                 if ii%3 == 0:
                     ax4.semilogy(timeElapsedExp,moleFracDV,
-                                 color='k',alpha = 0.2, linestyle=':') # Dead volume response
+                                 color='k',alpha = 0.2, linestyle='-') # Dead volume response
                 ax4.set(xlabel='$t$ [s]',
                         xlim = XLIM_H[pp], ylim = [1e-2, 1])    
                 ax4.locator_params(axis="x", nbins=4)
