@@ -102,6 +102,18 @@ def plotsForArticle_Experiment(**kwargs):
         if kwargs["figureZLCObj"]:
             plotForArticle_figureZLCObj(gitCommitID, currentDT,
                                        saveFlag, saveFileExtension)
+            
+    # If raw textural characterization
+    if 'figureRawTex' in kwargs:
+        if kwargs["figureRawTex"]:
+            plotForArticle_figureRawTex(gitCommitID, currentDT, 
+                           saveFlag, saveFileExtension)
+            
+    # If MS calibration comparison
+    if 'figureMSCal' in kwargs:
+        if kwargs["figureMSCal"]:
+            plotForArticle_figureMSCal(gitCommitID, currentDT, 
+                           saveFlag, saveFileExtension)
                         
 # fun: plotForArticle_figureMat
 # Plots the Figure DV of the manuscript: Material characterization (N2/MIP and QC)
@@ -2075,4 +2087,303 @@ def plotForArticle_figureZLCObj(gitCommitID, currentDT,
             os.mkdir(os.path.join('..','simulationFigures','experimentManuscript'))
         plt.savefig (savePath)
             
+    plt.show()
+    
+    # fun: plotForArticle_figureRawTex
+    # Plots the Figure SX of the manuscript: Raw Textural Characterization (MIP, N2 and XRD)
+def plotForArticle_figureRawTex(gitCommitID, currentDT, 
+                           saveFlag, saveFileExtension):
+    import numpy as np
+    import matplotlib.pyplot as plt
+    import auxiliaryFunctions
+    import scipy.io as sio
+    import os
+    plt.style.use('doubleColumn.mplstyle') # Custom matplotlib style file
+
+    # Get the commit ID of the current repository
+    gitCommitID = auxiliaryFunctions.getCommitID()
+    
+    # Get the current date and time for saving purposes    
+    currentDT = auxiliaryFunctions.getCurrentDateTime()
+    
+    # Plot colors and markers (isotherm)    
+    colorsForPlot_I = ["ffba08","d00000","03071e"]
+    markersForPlot_I = ["^","d","v"]
+
+    # Folder for material characterization
+    mainDir = os.path.join('..','experimental','materialCharacterization')
+
+    
+    # File with pore characterization data
+    rawDataALL = ['rawTexData.mat']
+        
+    # Loop over all the raw files
+    for kk in range(len(rawDataALL)):
+        # Create the instance for the plots
+        ax1 = plt.subplot(1,3,2)
+        
+        # Path of the file name
+        fileToLoad = os.path.join(mainDir,rawDataALL[kk])
+
+        # Get the MIP points
+        MIPALL = sio.loadmat(fileToLoad)["rawTexturalData"]["MIP"][0][0]
+
+        # Get the QC points
+        QCALL = sio.loadmat(fileToLoad)["rawTexturalData"]["QC"][0][0]
+        
+        # Get the XRD points
+        XRDALL = sio.loadmat(fileToLoad)["rawTexturalData"]["XRD"][0][0]
+        
+        adsorbentName = ['AC', 'BN', '13X']
+        
+        # Find indices corresponding to each material
+        for ll in range(3):
+        
+            # Plot MIP data
+            ax1.semilogx(MIPALL[:,0+2*ll],
+                    MIPALL[:,1+2*ll],
+                    linewidth = 0.5,
+                    linestyle =':',
+                    marker = markersForPlot_I[ll],
+                    color='#'+colorsForPlot_I[ll],
+                    label = str(adsorbentName[ll])) 
+          
+        # Text labels
+        ax1.set(xlabel='$P$ [psia]', 
+                ylabel='$V_{\mathrm{Hg}}$ [cm$^{3}$ g$^{-1}$]',
+                xlim = [1e-1,1e5], ylim = [0, 2])
+        # ax1.text(70, 1.3, "(a)", fontsize=8,)
+        ax1.legend(loc='upper right', handletextpad=0.0)
+
+        ax1.locator_params(axis="y", nbins=4)
+        ax1.text(0.2, 1.82, "(b)", fontsize=8,)
+
+        
+        # Create the instance for the plots
+        ax2 = plt.subplot(1,3,3)
+        
+        adsorbentName = [' AC', ' BN', ' 13X']
+        
+        # Find indices corresponding to each material
+        for ll in range(3):
+        
+            # Plot XRD data
+            ax2.plot(XRDALL[:,0+2*ll],
+                    XRDALL[:,1+2*ll]/np.max(XRDALL[:,1+2*ll])+ll,
+                    linewidth = 0.5,
+                    color='#'+colorsForPlot_I[ll],
+                    label = str(adsorbentName[ll])) 
+          
+        # Text labels
+        ax2.set(xlabel='2\u03B8 [deg]', 
+        ylabel='$I$ [-]',
+        xlim = [5,60], ylim = [0, 3.5])
+        # ax2.text(70, 1.3, "(b)", fontsize=8,)
+        ax2.legend(loc='best', handletextpad=0.0)
+
+        ax2.locator_params(axis="x", nbins=6)            
+        ax2.locator_params(axis="y", nbins=1)
+        ax2.yaxis.set_ticklabels([])
+        ax2.yaxis.set_ticks([])
+        ax2.text(7.5, 3.2, "(c)", fontsize=8,)
+        
+        # Create the instance for the plots
+        ax3 = plt.subplot(1,3,1)
+        
+        adsorbentName = [' AC', ' BN', ' 13X']
+        
+        # Find indices corresponding to each material
+        for ll in range(3):
+        
+            # Plot N2 77 K isotherm data
+            ax3.plot(QCALL[:,0+2*ll],
+                    QCALL[:,1+2*ll],
+                    linewidth = 0.5,
+                    linestyle = ':',
+                    marker = markersForPlot_I[ll],
+                    color='#'+colorsForPlot_I[ll],
+                    label = str(adsorbentName[ll])) 
+          
+        # Text labels
+        ax3.set(xlabel='$P/P_0$', 
+        ylabel='$q^*_{\mathrm{N}_2}$ [cm$^{3}$(STP) g$^{-1}$]',
+        xlim = [0,1], ylim = [0, 600])
+        # ax3.text(70, 1.3, "(c)", fontsize=8,)
+        ax3.legend(loc='upper right', handletextpad=0.0)
+
+        ax3.locator_params(axis="x", nbins=4)            
+        ax3.locator_params(axis="y", nbins=4)
+        ax3.text(0.05, 550, "(a)", fontsize=8,)
+ 
+    #  Save the figure
+    if saveFlag:
+        # FileName: figureRawTex_<currentDateTime>_<GitCommitID_Current>_<GitCommitID_Data>
+        saveFileName = "figureRawTex_" + currentDT + "_" + gitCommitID + saveFileExtension
+        savePath = os.path.join('..','simulationFigures','experimentManuscript',saveFileName)
+        # Check if inputResources directory exists or not. If not, create the folder
+        if not os.path.exists(os.path.join('..','simulationFigures','experimentManuscript')):
+            os.mkdir(os.path.join('..','simulationFigures','experimentManuscript'))
+        plt.savefig (savePath)
+ 
+    plt.show()
+
+    # fun: plotForArticle_figureMSCal
+    # Plots the Figure SX of the manuscript: Repeats of MS calibration over the course of 83 days    
+def plotForArticle_figureMSCal(gitCommitID, currentDT, 
+                           saveFlag, saveFileExtension):
+    import matplotlib.pyplot as plt
+    import auxiliaryFunctions
+    import scipy.io as sio
+    import os
+    plt.style.use('doubleColumn.mplstyle') # Custom matplotlib style file
+
+    # Get the commit ID of the current repository
+    gitCommitID = auxiliaryFunctions.getCommitID()
+    
+    # Get the current date and time for saving purposes    
+    currentDT = auxiliaryFunctions.getCurrentDateTime()
+    
+    # Plot colors and markers (isotherm)    
+    colorsForPlot_I = ["ffba08","03071e"]
+    markersForPlot_I = ["^","^","^"]
+
+    # Folder for MS Calibration
+    mainDir = os.path.join('..','experimental','msCalibrationData')
+
+    
+    # File with MS data
+    msDataNEW = ['msData_072621.mat']
+    msDataOLD = ['msData_050521.mat']
+    
+    # Create the instance for the plots
+    ax1 = plt.subplot(1,2,1)
+    ax2 = plt.subplot(1,2,2)
+        
+       
+    # Loop over all the flowrate files
+    for kk in range(len(msDataOLD)):
+        # Path of the file name
+        fileToLoad = os.path.join(mainDir,msDataOLD[kk])
+
+        # Get the MIP points
+        msDataOLDALL = sio.loadmat(fileToLoad)["msData_050521"]
+        
+        # Find indices corresponding to each flowrate
+        for ll in range(3):
+        
+            # Plot MS calibration plot for old repeat
+            if ll == 1:
+                ax1.plot(msDataOLDALL[:,0+2*ll],
+                    msDataOLDALL[:,1+2*ll],
+                    linewidth = 0.5,
+                    linestyle =':',
+                    marker = markersForPlot_I[ll],
+                    markersize = 2,
+                    color='#'+colorsForPlot_I[1],
+                    label = str('Day 1'))
+                
+                ax2.semilogy(msDataOLDALL[1:-1,0+2*ll],
+                    1-msDataOLDALL[1:-1,1+2*ll],
+                    linewidth = 0.5,
+                    linestyle =':',
+                    marker = markersForPlot_I[ll],
+                    markersize = 2,
+                    color='#'+colorsForPlot_I[1],
+                    label = str('Day 1'))
+            else:
+                ax1.plot(msDataOLDALL[:,0+2*ll],
+                    msDataOLDALL[:,1+2*ll],
+                    linewidth = 0.5,
+                    linestyle =':',
+                    marker = markersForPlot_I[ll],
+                    markersize = 2,
+                    color='#'+colorsForPlot_I[1])
+                ax2.semilogy(msDataOLDALL[1:-1,0+2*ll],
+                    1-msDataOLDALL[1:-1,1+2*ll],
+                    linewidth = 0.5,
+                    linestyle =':',
+                    marker = markersForPlot_I[ll],
+                    markersize = 2,
+                    color='#'+colorsForPlot_I[1])
+          
+        # Text labels
+        ax1.set(xlabel='$I_{\mathrm{He}}$ [-]', 
+                ylabel='$y_{\mathrm{He}}$ [-]',
+                xlim = [0,1], ylim = [0,1])
+        # ax1.text(70, 1.3, "(a)", fontsize=8,)
+        ax1.legend(loc='best', handletextpad=0.25)
+        ax1.text(0.48, 1.05, "(a)", fontsize=8,)
+        
+        ax2.set(xlabel='$I_{\mathrm{He}}$ [-]', 
+        ylabel='$1-y_{\mathrm{He}}$ [-]',
+        xlim = [0.8,1], ylim = [1e-3,0.1])
+        # ax1.text(70, 1.3, "(a)", fontsize=8,)
+        ax1.legend(loc='best', handletextpad=0.25)
+        ax2.legend(loc='best', handletextpad=0.25)
+        ax2.locator_params(axis="x", nbins=4)   
+        ax2.text(0.895, 0.13, "(b)", fontsize=8,)
+     
+    markersForPlot_I = ["v","v","v"]    
+    # Loop over all the flowrate files
+    for kk in range(len(msDataNEW)):
+        # Path of the file name
+        fileToLoad = os.path.join(mainDir,msDataNEW[kk])
+
+        # Get the MIP points
+        msDataNEWALL = sio.loadmat(fileToLoad)["msData_072621"]
+        
+        
+        # Find indices corresponding to each flowrate
+        for ll in range(3):
+        
+            # Plot MS calibration plot for new repeat
+            if ll == 1:
+                ax1.plot(msDataNEWALL[:,0+2*ll],
+                    msDataNEWALL[:,1+2*ll],
+                    linewidth = 0.5,
+                    linestyle =':',
+                    marker = markersForPlot_I[ll],
+                    markersize = 2,
+                    color='#'+colorsForPlot_I[0],
+                    label = str('Day 83')) 
+                ax2.semilogy(msDataNEWALL[1:-1,0+2*ll],
+                    1-msDataNEWALL[1:-1,1+2*ll],
+                    linewidth = 0.5,
+                    linestyle =':',
+                    marker = markersForPlot_I[ll],
+                    markersize = 2,
+                    color='#'+colorsForPlot_I[0],
+                    label = str('Day 83')) 
+            else:
+                ax1.plot(msDataNEWALL[:,0+2*ll],
+                    msDataNEWALL[:,1+2*ll],
+                    linewidth = 0.5,
+                    linestyle =':',
+                    marker = markersForPlot_I[ll],
+                    markersize = 2,
+                    color='#'+colorsForPlot_I[0])
+                ax2.semilogy(msDataNEWALL[1:-1,0+2*ll],
+                    1-msDataNEWALL[1:-1,1+2*ll],
+                    linewidth = 0.5,
+                    linestyle =':',
+                    marker = markersForPlot_I[ll],
+                    markersize = 2,
+                    color='#'+colorsForPlot_I[0])
+          
+        # Text labels
+        ax1.legend(loc='best', handletextpad=0.25)
+        ax2.legend(loc='best', handletextpad=0.25)
+        
+        
+        
+    #  Save the figure
+    if saveFlag:
+        # FileName: figureMSCal_<currentDateTime>_<GitCommitID_Current>_<GitCommitID_Data>
+        saveFileName = "figureMSCal_" + currentDT + "_" + gitCommitID + saveFileExtension
+        savePath = os.path.join('..','simulationFigures','experimentManuscript',saveFileName)
+        # Check if inputResources directory exists or not. If not, create the folder
+        if not os.path.exists(os.path.join('..','simulationFigures','experimentManuscript')):
+            os.mkdir(os.path.join('..','simulationFigures','experimentManuscript'))
+        plt.savefig (savePath)
+ 
     plt.show()
