@@ -54,7 +54,7 @@ saveFlag = False
 saveFileExtension = ".png"
 
 # File with parameter estimates
-fileParameter = 'zlcParameters_20210822_0926_c8173b1.npz'
+fileParameter = 'zlcParameters_20211012_1247_c8173b1.npz'
 
 # Flag to plot dead volume results
 # Dead volume files have a certain name, use that to find what to plot
@@ -278,13 +278,69 @@ else:
                     'ZLC_ActivatedCarbon_Exp73B_Output.mat',
                     'ZLC_ActivatedCarbon_Exp75B_Output.mat',
                     'ZLC_ActivatedCarbon_Exp77B_Output.mat',]
+    
+    # rawFileName = ['ZLC_ActivatedCarbon_Sim01A_Output.mat',
+    #                 'ZLC_ActivatedCarbon_Sim03A_Output.mat',
+    #                 'ZLC_ActivatedCarbon_Sim05A_Output.mat',
+    #                 'ZLC_ActivatedCarbon_Sim01B_Output.mat',
+    #                 'ZLC_ActivatedCarbon_Sim03B_Output.mat',
+    #                 'ZLC_ActivatedCarbon_Sim05B_Output.mat',
+    #                 'ZLC_ActivatedCarbon_Sim02A_Output.mat',
+    #                 'ZLC_ActivatedCarbon_Sim04A_Output.mat',
+    #                 'ZLC_ActivatedCarbon_Sim06A_Output.mat',
+    #                 'ZLC_ActivatedCarbon_Sim02B_Output.mat',
+    #                 'ZLC_ActivatedCarbon_Sim04B_Output.mat',
+    #                 'ZLC_ActivatedCarbon_Sim06B_Output.mat',]
 
+    # rawFileName =  ['ZLC_BoronNitride_Exp34A_Output.mat',
+    #             'ZLC_BoronNitride_Exp36A_Output.mat',
+    #             'ZLC_BoronNitride_Exp38A_Output.mat',
+    #             'ZLC_BoronNitride_Exp34B_Output.mat',
+    #             'ZLC_BoronNitride_Exp36B_Output.mat',
+    #             'ZLC_BoronNitride_Exp38B_Output.mat',
+    #             'ZLC_BoronNitride_Exp35A_Output.mat',
+    #             'ZLC_BoronNitride_Exp37A_Output.mat',
+    #             'ZLC_BoronNitride_Exp39A_Output.mat',
+    #             'ZLC_BoronNitride_Exp35B_Output.mat',
+    #             'ZLC_BoronNitride_Exp37B_Output.mat',
+    #             'ZLC_BoronNitride_Exp39B_Output.mat',]
+    
+    # rawFileName = ['ZLC_BoronNitride_Sim01A_Output.mat',
+    #                 'ZLC_BoronNitride_Sim03A_Output.mat',
+    #                 'ZLC_BoronNitride_Sim05A_Output.mat',
+    #                 'ZLC_BoronNitride_Sim01B_Output.mat',
+    #                 'ZLC_BoronNitride_Sim03B_Output.mat',
+    #                 'ZLC_BoronNitride_Sim05B_Output.mat',
+    #                 'ZLC_BoronNitride_Sim02A_Output.mat',
+    #                 'ZLC_BoronNitride_Sim04A_Output.mat',
+    #                 'ZLC_BoronNitride_Sim06A_Output.mat',
+    #                 'ZLC_BoronNitride_Sim02B_Output.mat',
+    #                 'ZLC_BoronNitride_Sim04B_Output.mat',
+    #                 'ZLC_BoronNitride_Sim06B_Output.mat',]
+
+    # rawFileName = ['ZLC_Zeolite13X_Sim01A_Output.mat',
+    #                 'ZLC_Zeolite13X_Sim03A_Output.mat',
+    #                 'ZLC_Zeolite13X_Sim05A_Output.mat',
+    #                 'ZLC_Zeolite13X_Sim01B_Output.mat',
+    #                 'ZLC_Zeolite13X_Sim03B_Output.mat',
+    #                 'ZLC_Zeolite13X_Sim05B_Output.mat',
+    #                 'ZLC_Zeolite13X_Sim02A_Output.mat',
+    #                 'ZLC_Zeolite13X_Sim04A_Output.mat',
+    #                 'ZLC_Zeolite13X_Sim06A_Output.mat',
+    #                 'ZLC_Zeolite13X_Sim02B_Output.mat',
+    #                 'ZLC_Zeolite13X_Sim04B_Output.mat',
+    #                 'ZLC_Zeolite13X_Sim06B_Output.mat',]
+        
     # ZLC parameter model path
     parameterPath = os.path.join('..','simulationResults',fileParameter)
     
     # Temperature (for each experiment)
-    temperatureExp = [344.69, 325.39, 306.15]*4
-
+    temperatureExp = [344.69, 325.39, 306.15]*4 # AC Experiments
+    # temperatureExp = [308.15, 328.15, 348.15]*4 # AC Simulations
+    
+    # temperatureExp = [344.6, 325.49, 306.17,]*4 # BN (2 pellets) Experiments
+    # temperatureExp = [308.15, 328.15, 348.15]*4 # BN (2 pellets) Simulations
+    
     # Legend flag
     useFlow = False
     

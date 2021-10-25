@@ -85,11 +85,91 @@ x_VOL = [4.65e-1, 1.02e-5 , 2.51e4, 6.51, 3.51e-7, 2.57e4] # (Hassan, QC)
 # Both k1 and k2 present
 
 # Activated Carbon Experiments
-zlcFileName = ['zlcParameters_20210822_0926_c8173b1.npz',
-                'zlcParameters_20210822_1733_c8173b1.npz',
-                'zlcParameters_20210823_0133_c8173b1.npz',
-                'zlcParameters_20210823_1007_c8173b1.npz',
-                'zlcParameters_20210823_1810_c8173b1.npz']
+# zlcFileName = ['zlcParameters_20210822_0926_c8173b1.npz',
+#                 'zlcParameters_20210822_1733_c8173b1.npz',
+#                 'zlcParameters_20210823_0133_c8173b1.npz',
+#                 'zlcParameters_20210823_1007_c8173b1.npz',
+#                 'zlcParameters_20210823_1810_c8173b1.npz']
+
+# Activated Carbon Experiments - dqbydc = Henry's constant
+# zlcFileName = ['zlcParameters_20211002_0057_c8173b1.npz',
+#                 'zlcParameters_20211002_0609_c8173b1.npz',
+#                 'zlcParameters_20211002_1119_c8173b1.npz',
+#                 'zlcParameters_20211002_1638_c8173b1.npz',
+#                 'zlcParameters_20211002_2156_c8173b1.npz']
+
+# Activated Carbon Experiments - Dead volume
+# zlcFileName = ['zlcParameters_20211011_1334_c8173b1.npz',
+#                 'zlcParameters_20211011_2058_c8173b1.npz',
+#                 'zlcParameters_20211012_0437_c8173b1.npz',
+#                 'zlcParameters_20211012_1247_c8173b1.npz',
+                # 'zlcParameters_20211012_2024_c8173b1.npz']
+
+# Activated Carbon Simulations (Main)
+zlcFileName = ['zlcParameters_20210823_1104_03c82f4.npz',
+                'zlcParameters_20210824_0000_03c82f4.npz',
+                'zlcParameters_20210824_1227_03c82f4.npz',
+                'zlcParameters_20210825_0017_03c82f4.npz',
+                'zlcParameters_20210825_1151_03c82f4.npz']
+
+# Activated Carbon Simulations (Effect of porosity)
+# 0.90
+# zlcFileName = ['zlcParameters_20210922_2242_c8173b1.npz',
+#                 'zlcParameters_20210923_0813_c8173b1.npz',
+#                 'zlcParameters_20210923_1807_c8173b1.npz',
+#                 'zlcParameters_20210924_0337_c8173b1.npz',
+#                 'zlcParameters_20210924_1314_c8173b1.npz']
+
+# 0.35
+# zlcFileName = ['zlcParameters_20210923_0816_c8173b1.npz',
+#                 'zlcParameters_20210923_2040_c8173b1.npz',
+#                 'zlcParameters_20210924_0952_c8173b1.npz',
+#                 'zlcParameters_20210924_2351_c8173b1.npz',
+#                 'zlcParameters_20210925_1243_c8173b1.npz']
+
+# Activated Carbon Simulations (Effect of mass)
+# 1.05
+# zlcFileName = ['zlcParameters_20210925_1104_c8173b1.npz',
+#                 'zlcParameters_20210925_2332_c8173b1.npz',
+#                 'zlcParameters_20210926_1132_c8173b1.npz',
+#                 'zlcParameters_20210926_2248_c8173b1.npz',
+#                 'zlcParameters_20210927_0938_c8173b1.npz']
+
+# 0.95
+# zlcFileName = ['zlcParameters_20210926_2111_c8173b1.npz',
+#                 'zlcParameters_20210927_0817_c8173b1.npz',
+#                 'zlcParameters_20210927_1933_c8173b1.npz',
+#                 'zlcParameters_20210928_0647_c8173b1.npz',
+#                 'zlcParameters_20210928_1809_c8173b1.npz']
+
+# Activated Carbon Simulations (Effect of dead volume)
+# TIS + MS
+# zlcFileName = ['zlcParameters_20211015_0957_c8173b1.npz',
+#                 'zlcParameters_20211015_1744_c8173b1.npz',
+#                 'zlcParameters_20211016_0148_c8173b1.npz',
+#                 'zlcParameters_20211016_0917_c8173b1.npz',
+#                 'zlcParameters_20211016_1654_c8173b1.npz']
+
+# Boron Nitride Experiments
+# zlcFileName = ['zlcParameters_20210823_1731_c8173b1.npz',
+#                 'zlcParameters_20210824_0034_c8173b1.npz',
+#                 'zlcParameters_20210824_0805_c8173b1.npz',
+#                 'zlcParameters_20210824_1522_c8173b1.npz',
+#                 'zlcParameters_20210824_2238_c8173b1.npz',]
+
+# Boron Nitride Simulations
+# zlcFileName = ['zlcParameters_20210823_1907_03c82f4.npz',
+#                 'zlcParameters_20210824_0555_03c82f4.npz',
+#                 'zlcParameters_20210824_2105_03c82f4.npz',
+#                 'zlcParameters_20210825_0833_03c82f4.npz',
+#                 'zlcParameters_20210825_2214_03c82f4.npz']
+
+# Zeolite 13X Simulations
+# zlcFileName = ['zlcParameters_20210824_1102_c8173b1.npz',
+#                 'zlcParameters_20210825_0243_c8173b1.npz',
+#                 'zlcParameters_20210825_1758_c8173b1.npz',
+#                 'zlcParameters_20210826_1022_c8173b1.npz',
+#                 'zlcParameters_20210827_0104_c8173b1.npz']
 
 # Create the grid for mole fractions
 y = np.linspace(0,1.,100)
@@ -171,16 +251,16 @@ for kk in range(len(zlcFileName)):
             # Rate constant (overall)
             kineticConstant_ZLC[kk,ii,jj] = rateConstant
         
-            # Macropore resistance from QC data
-            # Compute dqbydc for QC isotherm
-            equilibriumLoadingUp  = computeEquilibriumLoading(temperature=temperature[jj],
-                                                moleFrac=moleFractionUp,
-                                                isothermModel=x_VOL) # [mol/kg]
-            dqbydc_True = (equilibriumLoadingUp-isoLoading_VOL[ii,jj])*adsorbentDensity/(delP/(Rg*temperature[jj])) # [-]
+            # # Macropore resistance from QC data
+            # # Compute dqbydc for QC isotherm
+            # equilibriumLoadingUp  = computeEquilibriumLoading(temperature=temperature[jj],
+            #                                     moleFrac=moleFractionUp,
+            #                                     isothermModel=x_VOL) # [mol/kg]
+            # dqbydc_True = (equilibriumLoadingUp-isoLoading_VOL[ii,jj])*adsorbentDensity/(delP/(Rg*temperature[jj])) # [-]
 
-            # Macropore resistance
-            kineticConstant_Macro[kk,ii,jj] = (15*particleEpsilon*molDiffusivity
-                                               /(tortuosity*(particleRadius)**2)/dqbydc_True)
+            # # Macropore resistance
+            # kineticConstant_Macro[kk,ii,jj] = (15*particleEpsilon*molDiffusivity
+            #                                    /(tortuosity*(particleRadius)**2)/dqbydc_True)
             
 # Plot the isotherms    
 fig = plt.figure

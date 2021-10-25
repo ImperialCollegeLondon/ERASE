@@ -452,7 +452,7 @@ def plotForArticle_figureDV(gitCommitID, currentDT,
                 ax1.text(7, 1.3, "(a)", fontsize=8,)
                 ax1.text(12.7, 0.64, "MS", fontsize=8, fontweight = 'bold',
                         backgroundcolor = 'w', color = '#e71d36')
-                ax1.text(7.4, 0.39, "$V_\mathrm{D}$ = 0.02 cm$^3$", fontsize=8, 
+                ax1.text(7.4, 0.39, "$V^\mathrm{MS}$ = 0.02 cm$^3$", fontsize=8, 
                         backgroundcolor = 'w', color = '#7d8597')
 
             elif kk == 1:
@@ -466,9 +466,9 @@ def plotForArticle_figureDV(gitCommitID, currentDT,
                 ax2.locator_params(axis="x", nbins=5)
                 ax2.legend(handletextpad=0.0,loc='center right')
                 ax2.text(70, 1.3, "(b)", fontsize=8,)
-                ax2.text(70, 0.64, "Column w/ Ball", fontsize=8,  fontweight = 'bold',
+                ax2.text(80, 0.64, "Setup w/ Ball", fontsize=8,  fontweight = 'bold',
                         backgroundcolor = 'w', color = '#e71d36')
-                ax2.text(78, 0.39, "$V_\mathrm{D}$ = 3.78 cm$^3$", fontsize=8, 
+                ax2.text(78, 0.39, "$V^\mathrm{S}$ = 3.76 cm$^3$", fontsize=8, 
                         backgroundcolor = 'w', color = '#7d8597')
                 
             elif kk == 2:
@@ -482,9 +482,9 @@ def plotForArticle_figureDV(gitCommitID, currentDT,
                 ax3.locator_params(axis="x", nbins=5)
                 ax3.legend(handletextpad=0.0,loc='center right')
                 ax3.text(70, 1.3, "(c)", fontsize=8,)
-                ax3.text(64, 0.64, "Column w/o Ball", fontsize=8,  fontweight = 'bold',
+                ax3.text(74, 0.64, "Setup w/o Ball", fontsize=8,  fontweight = 'bold',
                         backgroundcolor = 'w', color = '#e71d36')
-                ax3.text(78, 0.39, "$V_\mathrm{D}$ = 3.95 cm$^3$", fontsize=8, 
+                ax3.text(78, 0.39, "$V^\mathrm{S}$ = 3.93 cm$^3$", fontsize=8, 
                         backgroundcolor = 'w', color = '#7d8597')
 
         # Remove all the .npz files genereated from the .mat
@@ -1696,19 +1696,19 @@ def plotForArticle_figureZLCSimFit(gitCommitID, currentDT,
         # Put other text entries
         ax1.text(panelLabel_L[pp], 0.67, "(a)", fontsize=8,)
         ax1.text(materialLabel_L[pp], 0.45, materialText[pp], fontsize=8, fontweight = 'bold',color = '#7d8597')
-        ax1.text(flowLabel_L[pp], 0.33, "$F^\mathregular{in}$ = 10 ccm", fontsize=8, fontweight = 'bold',color = '#7d8597')
+        ax1.text(flowLabel_L[pp], 0.33, "$F^\mathregular{in}$ = 10 cm$^3$ min$^{-1}$", fontsize=8, fontweight = 'bold',color = '#7d8597')
 
         ax2.text(panelLabel_L[pp], 0.67, "(c)", fontsize=8,)
         ax2.text(materialLabel_L[pp], 0.45, materialText[pp], fontsize=8, fontweight = 'bold',color = '#7d8597')
-        ax2.text(flowLabel_L[pp], 0.33, "$F^\mathregular{in}$ = 10 ccm", fontsize=8, fontweight = 'bold',color = '#7d8597')
+        ax2.text(flowLabel_L[pp], 0.33, "$F^\mathregular{in}$ = 10 cm$^3$ min$^{-1}$", fontsize=8, fontweight = 'bold',color = '#7d8597')
 
         ax3.text(panelLabel_H[pp], 0.67, "(b)", fontsize=8,)
         ax3.text(materialLabel_H[pp], 0.45, materialText[pp], fontsize=8, fontweight = 'bold',color = '#7d8597')
-        ax3.text(flowLabel_H[pp], 0.33, "$F^\mathregular{in}$ = 60 ccm", fontsize=8, fontweight = 'bold',color = '#7d8597')
+        ax3.text(flowLabel_H[pp], 0.33, "$F^\mathregular{in}$ = 60 cm$^3$ min$^{-1}$", fontsize=8, fontweight = 'bold',color = '#7d8597')
 
         ax4.text(panelLabel_H[pp], 0.67, "(d)", fontsize=8,)
         ax4.text(materialLabel_H[pp], 0.45, materialText[pp], fontsize=8, fontweight = 'bold',color = '#7d8597')
-        ax4.text(flowLabel_H[pp], 0.33, "$F^\mathregular{in}$ = 60 ccm", fontsize=8, fontweight = 'bold',color = '#7d8597')
+        ax4.text(flowLabel_H[pp], 0.33, "$F^\mathregular{in}$ = 60 cm$^3$ min$^{-1}$", fontsize=8, fontweight = 'bold',color = '#7d8597')
                 
         #  Save the figure
         if saveFlag:
@@ -1758,8 +1758,8 @@ def plotForArticle_figureZLCRep(gitCommitID, currentDT,
     panelLabel_H = [175/2, 60/100*175/2, 200/100*175/2]
     materialLabel_L = [172, 150/200*172, 600/200*165]
     materialLabel_H = [172/2, 60/100*172/2, 200/100*165/2]
-    flowLabel_L = [113, 150/200*113, 600/200*113]
-    flowLabel_H = [113/2, 60/100*113/2, 200/100*113/2]
+    flowLabel_L = [75, 150/200*75, 600/200*72]
+    flowLabel_H = [75/2, 60/100*75/2, 200/100*72/2]
     materialText = ["AC", "BN", "13X"]
     panelLabel = ["(a)","(b)","(c)","(d)","(e)","(f)"]
     repLabel_L = [10, 10*150/200, 10*600/200]
@@ -1905,13 +1905,13 @@ def plotForArticle_figureZLCRep(gitCommitID, currentDT,
         # # Put other text entries
         ax1.text(panelLabel_L[pp], 0.67, panelLabel[pp], fontsize=8,)
         ax1.text(materialLabel_L[pp], 0.45, materialText[pp], fontsize=8, fontweight = 'bold',color = '#4895EF')
-        ax1.text(flowLabel_L[pp], 0.33, "$F^\mathregular{in}$ = 10 ccm", fontsize=8, fontweight = 'bold',color = '#4895EF')
+        ax1.text(flowLabel_L[pp], 0.33, "$F^\mathregular{in}$ = 10 cm$^3$ min$^{-1}$", fontsize=8, fontweight = 'bold',color = '#4895EF')
         ax1.text(repLabel_L[pp], 0.015, "REP1", fontsize=8, fontweight = 'bold',color = 'k')
         ax1.text(repLabel_L[pp], 0.011, "REP2", fontsize=8, fontweight = 'bold',color = 'k', alpha = 0.25)
 
         ax3.text(panelLabel_H[pp], 0.67, panelLabel[pp+3], fontsize=8,)
         ax3.text(materialLabel_H[pp], 0.45, materialText[pp], fontsize=8, fontweight = 'bold',color = '#4895EF')
-        ax3.text(flowLabel_H[pp], 0.33, "$F^\mathregular{in}$ = 60 ccm", fontsize=8, fontweight = 'bold',color = '#4895EF')
+        ax3.text(flowLabel_H[pp], 0.33, "$F^\mathregular{in}$ = 60 cm$^3$ min$^{-1}$", fontsize=8, fontweight = 'bold',color = '#4895EF')
         ax3.text(repLabel_H[pp], 0.015, "REP1", fontsize=8, fontweight = 'bold',color = 'k')
         ax3.text(repLabel_H[pp], 0.011, "REP2", fontsize=8, fontweight = 'bold',color = 'k', alpha = 0.25)
                 
