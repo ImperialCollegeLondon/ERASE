@@ -465,7 +465,7 @@ def plotForArticle_figureDV(gitCommitID, currentDT,
                 ax1.text(7, 1.3, "(a)", fontsize=8,)
                 ax1.text(12.7, 0.64, "MS", fontsize=8, fontweight = 'bold',
                         backgroundcolor = 'w', color = '#e71d36')
-                ax1.text(7.4, 0.39, "$V^\mathrm{MS}$ = 0.02 cm$^3$", fontsize=8, 
+                ax1.text(7.2, 0.39, "$V^\mathrm{MS}$ = 0.02 cm$^3$", fontsize=8, 
                         backgroundcolor = 'w', color = '#7d8597')
                 ax1.grid(which='minor', linestyle=':')
             elif kk == 1:
@@ -1154,6 +1154,7 @@ def plotForArticle_figureZLCFit(gitCommitID, currentDT,
                            saveFlag, saveFileExtension):
     import numpy as np
     import matplotlib.pyplot as plt
+    from matplotlib.pyplot import figure    
     import auxiliaryFunctions
     from numpy import load
     import os
@@ -1181,8 +1182,8 @@ def plotForArticle_figureZLCFit(gitCommitID, currentDT,
     panelLabel_H = [185/2, 60/100*185/2, 200/100*185/2]
     materialLabel_L = [182, 150/200*182, 600/200*180]
     materialLabel_H = [182/2, 60/100*182/2, 200/100*180/2]
-    flowLabel_L = [123, 150/200*123, 600/200*123]
-    flowLabel_H = [123/2, 60/100*123/2, 200/100*123/2]
+    flowLabel_L = [118, 150/200*118, 600/200*118]
+    flowLabel_H = [118/2, 60/100*118/2, 200/100*118/2]
     materialText = ["AC", "BN", "13X"]
 
     # Parameter estimate files
@@ -1206,6 +1207,7 @@ def plotForArticle_figureZLCFit(gitCommitID, currentDT,
                           'zlcParameters_20210827_0124_6b88505.npz',]]
     
     for pp in range(len(zlcFileNameALL)):
+        fig = figure(figsize=(6.5,5))   
         zlcFileName = zlcFileNameALL[pp]
         objectiveFunction = np.zeros([len(zlcFileName)])
         # Loop over all available ZLC files for a given material
@@ -1453,6 +1455,7 @@ def plotForArticle_figureZLCSimFit(gitCommitID, currentDT,
                            saveFlag, saveFileExtension):
     import numpy as np
     import matplotlib.pyplot as plt
+    from matplotlib.pyplot import figure
     import auxiliaryFunctions
     from numpy import load
     import os
@@ -1480,8 +1483,8 @@ def plotForArticle_figureZLCSimFit(gitCommitID, currentDT,
     panelLabel_H = [185/2, 60/100*185/2, 200/100*185/2]
     materialLabel_L = [182, 150/200*182, 600/200*180]
     materialLabel_H = [182/2, 60/100*182/2, 200/100*180/2]
-    flowLabel_L = [123, 150/200*123, 600/200*123]
-    flowLabel_H = [123/2, 60/100*123/2, 200/100*123/2]
+    flowLabel_L = [118, 150/200*118, 600/200*118]
+    flowLabel_H = [118/2, 60/100*118/2, 200/100*118/2]
     materialText = ["AC", "BN", "13X"]
 
     # Parameter estimate files
@@ -1503,8 +1506,9 @@ def plotForArticle_figureZLCSimFit(gitCommitID, currentDT,
                        'zlcParameters_20210825_1758_c8173b1.npz',
                        'zlcParameters_20210826_1022_c8173b1.npz',
                        'zlcParameters_20210827_0104_c8173b1.npz']]
-    
-    for pp in range(len(zlcFileNameALL)):
+ 
+    for pp in range(len(zlcFileNameALL)):        
+        fig = figure(figsize=(6.5,5))   
         zlcFileName = zlcFileNameALL[pp]
         objectiveFunction = np.zeros([len(zlcFileName)])
         # Loop over all available ZLC files for a given material
@@ -1627,7 +1631,7 @@ def plotForArticle_figureZLCSimFit(gitCommitID, currentDT,
             elif 340<temperatureExp[ii] and temperatureExp[ii]<350:
                 colorTemp = colorsForPlot[2]
                 markersTemp =markersForPlot[2]
-    
+     
             if ii in range(0,3):                    
                 # Plot the experimental data with model output
                 legendStr = str(int(round(temperatureExp[ii],0)))+" K"
@@ -2138,7 +2142,7 @@ def plotForArticle_figureRawTex(gitCommitID, currentDT,
     
     # File with pore characterization data
     rawDataALL = ['rawTexData.mat']
-        
+
     # Loop over all the raw files
     for kk in range(len(rawDataALL)):
         # Create the instance for the plots
@@ -2248,6 +2252,7 @@ def plotForArticle_figureRawTex(gitCommitID, currentDT,
 def plotForArticle_figureMSCal(gitCommitID, currentDT, 
                            saveFlag, saveFileExtension):
     import matplotlib.pyplot as plt
+    from matplotlib.pyplot import figure
     import auxiliaryFunctions
     import scipy.io as sio
     import os
@@ -2272,6 +2277,7 @@ def plotForArticle_figureMSCal(gitCommitID, currentDT,
     msDataOLD = ['msData_050521.mat']
     
     # Create the instance for the plots
+    fig = figure(figsize=(6,3))        
     ax1 = plt.subplot(1,2,1)
     ax2 = plt.subplot(1,2,2)
         
@@ -2405,8 +2411,8 @@ def plotForArticle_figureMSCal(gitCommitID, currentDT,
  
     plt.show()
     
-# fun: plotForArticle_figureZLC
-# Plots the Figure ZLC of the manuscript: ZLC parameter estimates
+# fun: plotForArticle_figureSensitivity
+# Plots the Figure Sensitivity of the manuscript: Variable sensitivity analysis
 def plotForArticle_figureSensitivity(gitCommitID, currentDT, 
                            saveFlag, saveFileExtension):
     import numpy as np
@@ -2681,13 +2687,13 @@ def plotForArticle_figureSensitivity(gitCommitID, currentDT,
         # Check if inputResources directory exists or not. If not, create the folder
         if not os.path.exists(os.path.join('..','simulationFigures','experimentManuscript')):
             os.mkdir(os.path.join('..','simulationFigures','experimentManuscript'))
-        plt.savefig (savePath)
+        plt.savefig (savePath, bbox_inches = "tight")
  
     plt.show()
     
     
 # fun: plotForArticle_figureDVSensitivity
-# Plots the Figure DV Sensitivity of the manuscript: Dead volume characterization
+# Plots the Figure DV Sensitivity of the manuscript: Dead volume characterization different models
 def plotForArticle_figureDVSensitivity(gitCommitID, currentDT, 
                            saveFlag, saveFileExtension):
     import numpy as np
@@ -2853,6 +2859,6 @@ def plotForArticle_figureDVSensitivity(gitCommitID, currentDT,
         # Check if inputResources directory exists or not. If not, create the folder
         if not os.path.exists(os.path.join('..','simulationFigures','experimentManuscript')):
             os.mkdir(os.path.join('..','simulationFigures','experimentManuscript'))
-        plt.savefig (savePath)
+        plt.savefig (savePath, bbox_inches = "tight")
  
     plt.show()
