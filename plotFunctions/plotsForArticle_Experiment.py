@@ -12,6 +12,7 @@
 # Plots for the experiment manuscript
 #
 # Last modified:
+# - 2021-10-27, AK: Add plots for sensitivity analysis
 # - 2021-10-15, AK: Add plots for SI
 # - 2021-10-08, AK: Add plots for experimental fits
 # - 2021-10-06, AK: Add plots for experimental and computational data (iso)
@@ -113,6 +114,18 @@ def plotsForArticle_Experiment(**kwargs):
     if 'figureMSCal' in kwargs:
         if kwargs["figureMSCal"]:
             plotForArticle_figureMSCal(gitCommitID, currentDT, 
+                           saveFlag, saveFileExtension)
+
+    # If sensitivity plots 
+    if 'figureSensitivity' in kwargs:
+        if kwargs["figureSensitivity"]:
+            plotForArticle_figureSensitivity(gitCommitID, currentDT, 
+                           saveFlag, saveFileExtension)
+
+    # If DV sensitivity plots 
+    if 'figureDVSensitivity' in kwargs:
+        if kwargs["figureDVSensitivity"]:
+            plotForArticle_figureDVSensitivity(gitCommitID, currentDT, 
                            saveFlag, saveFileExtension)
                         
 # fun: plotForArticle_figureMat
@@ -454,7 +467,7 @@ def plotForArticle_figureDV(gitCommitID, currentDT,
                         backgroundcolor = 'w', color = '#e71d36')
                 ax1.text(7.4, 0.39, "$V^\mathrm{MS}$ = 0.02 cm$^3$", fontsize=8, 
                         backgroundcolor = 'w', color = '#7d8597')
-
+                ax1.grid(which='minor', linestyle=':')
             elif kk == 1:
                 ax2.semilogy(timeElapsedExp,moleFracExp,
                               marker = markersForPlot[ii],linewidth = 0,
@@ -470,7 +483,7 @@ def plotForArticle_figureDV(gitCommitID, currentDT,
                         backgroundcolor = 'w', color = '#e71d36')
                 ax2.text(78, 0.39, "$V^\mathrm{S}$ = 3.76 cm$^3$", fontsize=8, 
                         backgroundcolor = 'w', color = '#7d8597')
-                
+                ax2.grid(which='minor', linestyle=':')
             elif kk == 2:
                 ax3.semilogy(timeElapsedExp,moleFracExp,
                               marker = markersForPlot[ii],linewidth = 0,
@@ -486,6 +499,7 @@ def plotForArticle_figureDV(gitCommitID, currentDT,
                         backgroundcolor = 'w', color = '#e71d36')
                 ax3.text(78, 0.39, "$V^\mathrm{S}$ = 3.93 cm$^3$", fontsize=8, 
                         backgroundcolor = 'w', color = '#7d8597')
+                ax3.grid(which='minor', linestyle=':')
 
         # Remove all the .npz files genereated from the .mat
         # Loop over all available files    
@@ -1332,6 +1346,7 @@ def plotForArticle_figureZLCFit(gitCommitID, currentDT,
                         xlim = XLIM_L[pp], ylim = [1e-2, 1])    
                 ax1.locator_params(axis="x", nbins=4)
                 ax1.axes.xaxis.set_ticklabels([])
+                ax1.grid(which='minor', linestyle=':')
 
             if ii in range(3,6):
                 # Plot the experimental data with model output
@@ -1348,7 +1363,8 @@ def plotForArticle_figureZLCFit(gitCommitID, currentDT,
                 ax2.set(xlabel='$t$ [s]',ylabel='$y$ [-]',
                         xlim = XLIM_L[pp], ylim = [1e-2, 1])    
                 ax2.locator_params(axis="x", nbins=4)
-                
+                ax2.grid(which='minor', linestyle=':')
+
             if ii in range(6,9):
                 # Plot the experimental data with model output
                 legendStr = str(int(round(temperatureExp[ii],0)))+" K"
@@ -1366,7 +1382,7 @@ def plotForArticle_figureZLCFit(gitCommitID, currentDT,
                 ax3.axes.xaxis.set_ticklabels([])
                 ax3.locator_params(axis="x", nbins=4)
                 ax3.axes.xaxis.set_ticklabels([])
-                # ax3.axes.yaxis.set_ticklabels([])
+                ax3.grid(which='minor', linestyle=':')
                 
             if ii in range(9,12):
                 # Plot the experimental data with model output
@@ -1383,7 +1399,7 @@ def plotForArticle_figureZLCFit(gitCommitID, currentDT,
                 ax4.set(xlabel='$t$ [s]',
                         xlim = XLIM_H[pp], ylim = [1e-2, 1])    
                 ax4.locator_params(axis="x", nbins=4)
-                # ax4.axes.yaxis.set_ticklabels([])
+                ax4.grid(which='minor', linestyle=':')
 
         # Get the order of temperatures for each plot        
         temperatureOrder = np.argsort(temperatureExp[0:3])
@@ -1628,6 +1644,7 @@ def plotForArticle_figureZLCSimFit(gitCommitID, currentDT,
                         xlim = XLIM_L[pp], ylim = [1e-2, 1])    
                 ax1.locator_params(axis="x", nbins=4)
                 ax1.axes.xaxis.set_ticklabels([])
+                ax1.grid(which='minor', linestyle=':')
 
             if ii in range(3,6):
                 # Plot the experimental data with model output
@@ -1644,6 +1661,7 @@ def plotForArticle_figureZLCSimFit(gitCommitID, currentDT,
                 ax2.set(xlabel='$t$ [s]',ylabel='$y$ [-]',
                         xlim = XLIM_L[pp], ylim = [1e-2, 1])    
                 ax2.locator_params(axis="x", nbins=4)
+                ax2.grid(which='minor', linestyle=':')
                 
             if ii in range(6,9):
                 # Plot the experimental data with model output
@@ -1662,7 +1680,7 @@ def plotForArticle_figureZLCSimFit(gitCommitID, currentDT,
                 ax3.axes.xaxis.set_ticklabels([])
                 ax3.locator_params(axis="x", nbins=4)
                 ax3.axes.xaxis.set_ticklabels([])
-                # ax3.axes.yaxis.set_ticklabels([])
+                ax3.grid(which='minor', linestyle=':')
                 
             if ii in range(9,12):
                 # Plot the experimental data with model output
@@ -1679,7 +1697,7 @@ def plotForArticle_figureZLCSimFit(gitCommitID, currentDT,
                 ax4.set(xlabel='$t$ [s]',
                         xlim = XLIM_H[pp], ylim = [1e-2, 1])    
                 ax4.locator_params(axis="x", nbins=4)
-                # ax4.axes.yaxis.set_ticklabels([])
+                ax4.grid(which='minor', linestyle=':')
 
         # Get the order of temperatures for each plot        
         temperatureOrder = np.argsort(temperatureExp[0:3])
@@ -1866,6 +1884,7 @@ def plotForArticle_figureZLCRep(gitCommitID, currentDT,
                     ax1.set(xlabel='$t$ [s]',
                             xlim = XLIM_L[pp], ylim = [1e-2, 1])    
                     ax1.locator_params(axis="x", nbins=4)
+                ax1.grid(which='minor', linestyle=':')
 
             if ii in range(6,9):
                 ax2 = plt.subplot(2,3,pp+1)
@@ -1873,6 +1892,7 @@ def plotForArticle_figureZLCRep(gitCommitID, currentDT,
                              marker = markersForPlot[0],linewidth = 0,
                              color='#'+colorTemp, alpha = 0.25,
                              markevery = 4) # Experimental response
+                ax2.grid(which='minor', linestyle=':')
                 
             if ii in range(3,6):
                 legendStr = str(int(round(temperatureExp[ii],0)))+" K"                   
@@ -1893,6 +1913,7 @@ def plotForArticle_figureZLCRep(gitCommitID, currentDT,
                     ax3.set(xlabel='$t$ [s]',
                             xlim = XLIM_H[pp], ylim = [1e-2, 1])    
                     ax3.locator_params(axis="x", nbins=4)                
+                ax3.grid(which='minor', linestyle=':')
 
             if ii in range(9,12):
                 # Plot the experimental data with model output
@@ -1901,6 +1922,7 @@ def plotForArticle_figureZLCRep(gitCommitID, currentDT,
                              marker = markersForPlot[0],linewidth = 0,
                              color='#'+colorTemp, alpha = 0.25,
                              markevery = 4) # Experimental response 
+                ax4.grid(which='minor', linestyle=':')
      
         # # Put other text entries
         ax1.text(panelLabel_L[pp], 0.67, panelLabel[pp], fontsize=8,)
@@ -2089,8 +2111,8 @@ def plotForArticle_figureZLCObj(gitCommitID, currentDT,
             
     plt.show()
     
-    # fun: plotForArticle_figureRawTex
-    # Plots the Figure SX of the manuscript: Raw Textural Characterization (MIP, N2 and XRD)
+# fun: plotForArticle_figureRawTex
+# Plots the Figure SX of the manuscript: Raw Textural Characterization (MIP, N2 and XRD)
 def plotForArticle_figureRawTex(gitCommitID, currentDT, 
                            saveFlag, saveFileExtension):
     import numpy as np
@@ -2107,7 +2129,7 @@ def plotForArticle_figureRawTex(gitCommitID, currentDT,
     currentDT = auxiliaryFunctions.getCurrentDateTime()
     
     # Plot colors and markers (isotherm)    
-    colorsForPlot_I = ["ffba08","d00000","03071e"]
+    colorsForPlot_I = ["E4572E","76B041","FFC914"]
     markersForPlot_I = ["^","d","v"]
 
     # Folder for material characterization
@@ -2153,7 +2175,7 @@ def plotForArticle_figureRawTex(gitCommitID, currentDT,
                 ylabel='$V_{\mathrm{Hg}}$ [cm$^{3}$ g$^{-1}$]',
                 xlim = [1e-1,1e5], ylim = [0, 2])
         # ax1.text(70, 1.3, "(a)", fontsize=8,)
-        ax1.legend(loc='upper right', handletextpad=0.0)
+        ax1.legend(loc='upper right', handletextpad=0.2)
 
         ax1.locator_params(axis="y", nbins=4)
         ax1.text(0.2, 1.82, "(b)", fontsize=8,)
@@ -2161,9 +2183,6 @@ def plotForArticle_figureRawTex(gitCommitID, currentDT,
         
         # Create the instance for the plots
         ax2 = plt.subplot(1,3,3)
-        
-        adsorbentName = [' AC', ' BN', ' 13X']
-        
         # Find indices corresponding to each material
         for ll in range(3):
         
@@ -2179,7 +2198,7 @@ def plotForArticle_figureRawTex(gitCommitID, currentDT,
         ylabel='$I$ [-]',
         xlim = [5,60], ylim = [0, 3.5])
         # ax2.text(70, 1.3, "(b)", fontsize=8,)
-        ax2.legend(loc='best', handletextpad=0.0)
+        ax2.legend(loc='best', handletextpad=0.2)
 
         ax2.locator_params(axis="x", nbins=6)            
         ax2.locator_params(axis="y", nbins=1)
@@ -2188,10 +2207,7 @@ def plotForArticle_figureRawTex(gitCommitID, currentDT,
         ax2.text(7.5, 3.2, "(c)", fontsize=8,)
         
         # Create the instance for the plots
-        ax3 = plt.subplot(1,3,1)
-        
-        adsorbentName = [' AC', ' BN', ' 13X']
-        
+        ax3 = plt.subplot(1,3,1)      
         # Find indices corresponding to each material
         for ll in range(3):
         
@@ -2205,11 +2221,11 @@ def plotForArticle_figureRawTex(gitCommitID, currentDT,
                     label = str(adsorbentName[ll])) 
           
         # Text labels
-        ax3.set(xlabel='$P/P_0$', 
+        ax3.set(xlabel='$P/P_0$ [-]', 
         ylabel='$q^*_{\mathrm{N}_2}$ [cm$^{3}$(STP) g$^{-1}$]',
         xlim = [0,1], ylim = [0, 600])
         # ax3.text(70, 1.3, "(c)", fontsize=8,)
-        ax3.legend(loc='upper right', handletextpad=0.0)
+        ax3.legend(loc='upper right', handletextpad=0.2)
 
         ax3.locator_params(axis="x", nbins=4)            
         ax3.locator_params(axis="y", nbins=4)
@@ -2227,8 +2243,8 @@ def plotForArticle_figureRawTex(gitCommitID, currentDT,
  
     plt.show()
 
-    # fun: plotForArticle_figureMSCal
-    # Plots the Figure SX of the manuscript: Repeats of MS calibration over the course of 83 days    
+# fun: plotForArticle_figureMSCal
+# Plots the Figure SX of the manuscript: Repeats of MS calibration over the course of 83 days    
 def plotForArticle_figureMSCal(gitCommitID, currentDT, 
                            saveFlag, saveFileExtension):
     import matplotlib.pyplot as plt
@@ -2244,11 +2260,11 @@ def plotForArticle_figureMSCal(gitCommitID, currentDT,
     currentDT = auxiliaryFunctions.getCurrentDateTime()
     
     # Plot colors and markers (isotherm)    
-    colorsForPlot_I = ["ffba08","03071e"]
+    colorsForPlot_I = ["797d62","d08c60"]
     markersForPlot_I = ["^","^","^"]
 
     # Folder for MS Calibration
-    mainDir = os.path.join('..','experimental','msCalibrationData')
+    mainDir = os.path.join('..','experimental','materialCharacterization')
 
     
     # File with MS data
@@ -2373,13 +2389,466 @@ def plotForArticle_figureMSCal(gitCommitID, currentDT,
         # Text labels
         ax1.legend(loc='best', handletextpad=0.25)
         ax2.legend(loc='best', handletextpad=0.25)
-        
-        
+ 
+        ax1.grid(which='minor', linestyle=':')
+        ax2.grid(which='minor', linestyle=':')
         
     #  Save the figure
     if saveFlag:
         # FileName: figureMSCal_<currentDateTime>_<GitCommitID_Current>_<GitCommitID_Data>
         saveFileName = "figureMSCal_" + currentDT + "_" + gitCommitID + saveFileExtension
+        savePath = os.path.join('..','simulationFigures','experimentManuscript',saveFileName)
+        # Check if inputResources directory exists or not. If not, create the folder
+        if not os.path.exists(os.path.join('..','simulationFigures','experimentManuscript')):
+            os.mkdir(os.path.join('..','simulationFigures','experimentManuscript'))
+        plt.savefig (savePath)
+ 
+    plt.show()
+    
+# fun: plotForArticle_figureZLC
+# Plots the Figure ZLC of the manuscript: ZLC parameter estimates
+def plotForArticle_figureSensitivity(gitCommitID, currentDT, 
+                           saveFlag, saveFileExtension):
+    import numpy as np
+    import matplotlib.pyplot as plt
+    from matplotlib.pyplot import figure
+    from matplotlib.lines import Line2D
+    import auxiliaryFunctions
+    from numpy import load
+    import os
+    from computeEquilibriumLoading import computeEquilibriumLoading
+    plt.style.use('doubleColumn.mplstyle') # Custom matplotlib style file
+
+    # Get the commit ID of the current repository
+    gitCommitID = auxiliaryFunctions.getCommitID()
+    
+    # Get the current date and time for saving purposes    
+    currentDT = auxiliaryFunctions.getCurrentDateTime()
+    
+    # Plot colors and markers (isotherm)    
+    colorsForPlot = ["0091ad","5c4d7d","b7094c"]
+    alphaForPlot = [0.5, 1., 0.5]
+    lineForPlot = [':', '-', '--']
+
+    # DV alpha and lines
+    alphaForPlot_DV = [0.5, 0.5, 1.0]
+    lineForPlot_DV = [':', '--', '-']
+    
+    # Porosity label
+    porosityLabel = ['$\epsilon_\mathregular{T}$ = 0.35',
+                     '$\epsilon_\mathregular{T}$ = 0.61',
+                     '$\epsilon_\mathregular{T}$ = 0.90']
+
+    # Mass label
+    massLabel = ['$m_\mathregular{ads}$ = 59.38 mg',
+                 '$m_\mathregular{ads}$ = 62.50 mg',
+                 '$m_\mathregular{ads}$ = 65.63 mg']
+
+    # Dead Volume
+    deadLabel = ['TIS',
+                 'TIS + D/M',
+                 'TIS + D/M + MS']
+
+    # Custom Legend Lines
+    custom_lines = [Line2D([0], [0], linestyle=lineForPlot[0], lw=1, dash_capstyle = 'round', alpha = alphaForPlot[0], color = 'k'),
+                    Line2D([0], [0], linestyle=lineForPlot[1], lw=1, dash_capstyle = 'round', alpha = alphaForPlot[1], color = 'k'),
+                    Line2D([0], [0], linestyle=lineForPlot[2], lw=1, dash_capstyle = 'round', alpha = alphaForPlot[2], color = 'k')]
+
+    # Custom Legend Lines (DV)
+    custom_linesDV = [Line2D([0], [0], linestyle=lineForPlot_DV[0], lw=1, dash_capstyle = 'round', alpha = alphaForPlot_DV[0], color = 'k'),
+                        Line2D([0], [0], linestyle=lineForPlot_DV[1], lw=1, dash_capstyle = 'round', alpha = alphaForPlot_DV[1], color = 'k'),
+                        Line2D([0], [0], linestyle=lineForPlot_DV[2], lw=1, dash_capstyle = 'round', alpha = alphaForPlot_DV[2], color = 'k')]
+
+    
+    
+    # Define temperature
+    temperature = [308.15, 328.15, 348.15]
+    
+    # Parameter estimate files
+    # Effect of porosity
+                  
+    porosityALL = [# Porosity - 0.35
+                   ['zlcParameters_20210923_0816_c8173b1.npz',
+                    'zlcParameters_20210923_2040_c8173b1.npz',
+                    'zlcParameters_20210924_0952_c8173b1.npz',
+                    'zlcParameters_20210924_2351_c8173b1.npz',
+                    'zlcParameters_20210925_1243_c8173b1.npz'],
+                    # Activated Carbon Simulation (Base)
+                   ['zlcParameters_20210823_1104_03c82f4.npz',
+                    'zlcParameters_20210824_0000_03c82f4.npz',
+                    'zlcParameters_20210824_1227_03c82f4.npz',
+                    'zlcParameters_20210825_0017_03c82f4.npz',
+                    'zlcParameters_20210825_1151_03c82f4.npz'],
+                   # Porosity - 0.90
+                   ['zlcParameters_20210922_2242_c8173b1.npz',
+                    'zlcParameters_20210923_0813_c8173b1.npz',
+                    'zlcParameters_20210923_1807_c8173b1.npz',
+                    'zlcParameters_20210924_0337_c8173b1.npz',
+                    'zlcParameters_20210924_1314_c8173b1.npz']]
+
+    # Effect of mass
+    massALL = [    # Mass - 0.95
+                   ['zlcParameters_20210926_2111_c8173b1.npz',
+                    'zlcParameters_20210927_0817_c8173b1.npz',
+                    'zlcParameters_20210927_1933_c8173b1.npz',
+                    'zlcParameters_20210928_0647_c8173b1.npz',
+                    'zlcParameters_20210928_1809_c8173b1.npz'],
+                   # Activated Carbon Simulation (Base)
+                   ['zlcParameters_20210823_1104_03c82f4.npz',
+                    'zlcParameters_20210824_0000_03c82f4.npz',
+                    'zlcParameters_20210824_1227_03c82f4.npz',
+                    'zlcParameters_20210825_0017_03c82f4.npz',
+                    'zlcParameters_20210825_1151_03c82f4.npz'],
+                   # Mass - 1.05
+                   ['zlcParameters_20210925_1104_c8173b1.npz',
+                    'zlcParameters_20210925_2332_c8173b1.npz',
+                    'zlcParameters_20210926_1132_c8173b1.npz',
+                    'zlcParameters_20210926_2248_c8173b1.npz',
+                    'zlcParameters_20210927_0938_c8173b1.npz']]
+
+    # Effect of DV Model
+    deadALL = [    # TIS
+                   ['zlcParameters_20211018_1029_c8173b1.npz',
+                   'zlcParameters_20211018_1648_c8173b1.npz',
+                   'zlcParameters_20211018_2358_c8173b1.npz',
+                   'zlcParameters_20211019_0625_c8173b1.npz',
+                   'zlcParameters_20211019_1303_c8173b1.npz'],
+                   # TIS + D/M
+                   ['zlcParameters_20211026_1152_c8173b1.npz',
+                    'zlcParameters_20211026_2220_c8173b1.npz',],
+                   # Activated Carbon Simulation (Base)
+                   ['zlcParameters_20210823_1104_03c82f4.npz',
+                    'zlcParameters_20210824_0000_03c82f4.npz',
+                    'zlcParameters_20210824_1227_03c82f4.npz',
+                    'zlcParameters_20210825_0017_03c82f4.npz',
+                    'zlcParameters_20210825_1151_03c82f4.npz'],]
+
+    # Create the grid for mole fractions
+    y = np.linspace(0,1.,100)
+    fig = figure(figsize=(7,2.65))
+    # Effect of porosity
+    for pp in range(len(porosityALL)):
+        zlcFileName = porosityALL[pp]
+
+        # Initialize isotherms 
+        isoLoading_ZLC = np.zeros([len(zlcFileName),len(y),len(temperature)])
+        objectiveFunction = np.zeros([len(zlcFileName)])
+
+        # Loop over all available ZLC files for a given porosity
+        for kk in range(len(zlcFileName)):
+            # ZLC Data 
+            parameterPath = os.path.join('..','simulationResults',zlcFileName[kk])
+            parameterReference = load(parameterPath)["parameterReference"]
+            modelOutputTemp = load(parameterPath, allow_pickle=True)["modelOutput"]
+            objectiveFunction[kk] = round(modelOutputTemp[()]["function"],0)
+            modelNonDim = modelOutputTemp[()]["variable"] 
+            # Multiply the paremeters by the reference values
+            x_ZLC = np.multiply(modelNonDim,parameterReference)    
+    
+            # Parse out the isotherm parameter
+            isothermModel = x_ZLC[0:-2]
+        
+            for jj in range(len(temperature)):
+                for ii in range(len(y)):
+                    isoLoading_ZLC[kk,ii,jj] = computeEquilibriumLoading(isothermModel=isothermModel,
+                                                                         moleFrac = y[ii], 
+                                                                         temperature = temperature[jj]) # [mol/kg]
+    
+        # Plot the isotherms    
+        ax1 = plt.subplot(1,3,1)
+        minJ = np.argwhere(objectiveFunction == min(objectiveFunction))
+        for jj in range(len(temperature)):
+            ax1.plot(y,isoLoading_ZLC[int(minJ[0]),:,jj],color='#'+colorsForPlot[jj],
+                     linestyle = lineForPlot[pp],alpha = alphaForPlot[pp],
+                     dash_capstyle = 'round',)  # Lowest J
+        if pp == 0:
+            # Isotherm
+            ax1.set(xlabel = '$P$ [bar]', 
+                    ylabel='$q^*$ [mol kg$^{-1}$]',
+                    xlim = [0,1], ylim = [0, 3])
+            ax1.text(0.04, 2.75, "(a)", fontsize=8,)
+            ax1.text(0.72, 0.15, "Porosity", fontsize=8, fontweight = 'bold',color = 'k')
+            ax1.locator_params(axis="x", nbins=4)
+            ax1.locator_params(axis="y", nbins=4)
+            # ax1.axes.xaxis.set_ticklabels([])
+            ax1.legend(custom_lines, porosityLabel)
+
+    # Effect of mass            
+    for pp in range(len(massALL)):
+        zlcFileName = massALL[pp]
+
+        # Initialize isotherms 
+        isoLoading_ZLC = np.zeros([len(zlcFileName),len(y),len(temperature)])
+        objectiveFunction = np.zeros([len(zlcFileName)])
+
+        # Loop over all available ZLC files for a given mass
+        for kk in range(len(zlcFileName)):
+            # ZLC Data 
+            parameterPath = os.path.join('..','simulationResults',zlcFileName[kk])
+            parameterReference = load(parameterPath)["parameterReference"]
+            modelOutputTemp = load(parameterPath, allow_pickle=True)["modelOutput"]
+            objectiveFunction[kk] = round(modelOutputTemp[()]["function"],0)
+            modelNonDim = modelOutputTemp[()]["variable"] 
+            # Multiply the paremeters by the reference values
+            x_ZLC = np.multiply(modelNonDim,parameterReference)    
+    
+            # Parse out the isotherm parameter
+            isothermModel = x_ZLC[0:-2]
+        
+            for jj in range(len(temperature)):
+                for ii in range(len(y)):
+                    isoLoading_ZLC[kk,ii,jj] = computeEquilibriumLoading(isothermModel=isothermModel,
+                                                                         moleFrac = y[ii], 
+                                                                         temperature = temperature[jj]) # [mol/kg]
+    
+        # Plot the isotherms    
+        ax2 = plt.subplot(1,3,2)
+        minJ = np.argwhere(objectiveFunction == min(objectiveFunction))
+        for jj in range(len(temperature)):
+            if pp == 1:
+                ax2.plot(y,isoLoading_ZLC[int(minJ[0]),:,jj],color='#'+colorsForPlot[jj],
+                         linestyle = lineForPlot[pp],alpha = alphaForPlot[pp],
+                         dash_capstyle = 'round',
+                         label = str(temperature[jj]) + ' K')  # Lowest J
+            else:
+                ax2.plot(y,isoLoading_ZLC[int(minJ[0]),:,jj],color='#'+colorsForPlot[jj],
+                     linestyle = lineForPlot[pp],alpha = alphaForPlot[pp],
+                     dash_capstyle = 'round',)  # Lowest J
+        if pp == 0:
+            # Isotherm
+            ax2.set(xlabel = '$P$ [bar]', 
+                    xlim = [0,1], ylim = [0, 3])
+            ax2.text(0.04, 2.75, "(b)", fontsize=8,)
+            ax2.text(0.81, 0.15, "Mass", fontsize=8, fontweight = 'bold',color = 'k')
+            ax2.locator_params(axis="x", nbins=4)
+            ax2.locator_params(axis="y", nbins=4)
+            ax2.legend(custom_lines, massLabel)
+
+    # Effect of dead volume            
+    for pp in range(len(deadALL)):
+        zlcFileName = deadALL[pp]
+
+        # Initialize isotherms 
+        isoLoading_ZLC = np.zeros([len(zlcFileName),len(y),len(temperature)])
+        objectiveFunction = np.zeros([len(zlcFileName)])
+
+        # Loop over all available ZLC files for a given DV model
+        for kk in range(len(zlcFileName)):
+            # ZLC Data 
+            parameterPath = os.path.join('..','simulationResults',zlcFileName[kk])
+            parameterReference = load(parameterPath)["parameterReference"]
+            modelOutputTemp = load(parameterPath, allow_pickle=True)["modelOutput"]
+            objectiveFunction[kk] = round(modelOutputTemp[()]["function"],0)
+            modelNonDim = modelOutputTemp[()]["variable"] 
+            # Multiply the paremeters by the reference values
+            x_ZLC = np.multiply(modelNonDim,parameterReference)    
+    
+            # Parse out the isotherm parameter
+            isothermModel = x_ZLC[0:-2]
+        
+            for jj in range(len(temperature)):
+                for ii in range(len(y)):
+                    isoLoading_ZLC[kk,ii,jj] = computeEquilibriumLoading(isothermModel=isothermModel,
+                                                                         moleFrac = y[ii], 
+                                                                         temperature = temperature[jj]) # [mol/kg]
+    
+        # Plot the isotherms    
+        ax3 = plt.subplot(1,3,3)
+        minJ = np.argwhere(objectiveFunction == min(objectiveFunction))
+        for jj in range(len(temperature)):
+            ax3.plot(y,isoLoading_ZLC[int(minJ[0]),:,jj],color='#'+colorsForPlot[jj],
+                     linestyle = lineForPlot_DV[pp],alpha = alphaForPlot_DV[pp],
+                     dash_capstyle = 'round',)  # Lowest J
+        if pp == 0:
+            # Isotherm
+            ax3.set(xlabel = '$P$ [bar]', 
+                    xlim = [0,1], ylim = [0, 3])
+            ax3.text(0.04, 2.75, "(c)", fontsize=8,)
+            ax3.text(0.58, 0.15, "Dead Volume", fontsize=8, fontweight = 'bold',color = 'k')
+            ax3.locator_params(axis="x", nbins=4)
+            ax3.locator_params(axis="y", nbins=4)
+            ax3.legend(custom_linesDV, deadLabel, loc = 'upper right')
+ 
+        # Temperature legend
+        if pp == 1:
+            fig.legend(bbox_to_anchor=(0.3,0.93,0.4,0.1), mode="expand", ncol=3, borderaxespad=0)   
+ 
+    #  Save the figure
+    if saveFlag:
+        # FileName: figureSensitivity_<currentDateTime>_<GitCommitID_Current>_<GitCommitID_Data>
+        saveFileName = "figureSensitivity_" + currentDT + "_" + gitCommitID + saveFileExtension
+        savePath = os.path.join('..','simulationFigures','experimentManuscript',saveFileName)
+        # Check if inputResources directory exists or not. If not, create the folder
+        if not os.path.exists(os.path.join('..','simulationFigures','experimentManuscript')):
+            os.mkdir(os.path.join('..','simulationFigures','experimentManuscript'))
+        plt.savefig (savePath)
+ 
+    plt.show()
+    
+    
+# fun: plotForArticle_figureDVSensitivity
+# Plots the Figure DV Sensitivity of the manuscript: Dead volume characterization
+def plotForArticle_figureDVSensitivity(gitCommitID, currentDT, 
+                           saveFlag, saveFileExtension):
+    import numpy as np
+    from deadVolumeWrapper import deadVolumeWrapper
+    from extractDeadVolume import filesToProcess # File processing script
+    from numpy import load
+    import os
+    import matplotlib.pyplot as plt
+    from matplotlib.pyplot import figure
+    from matplotlib.lines import Line2D
+    import auxiliaryFunctions
+    plt.style.use('singleColumn.mplstyle') # Custom matplotlib style file
+    
+    # Get the commit ID of the current repository
+    gitCommitID = auxiliaryFunctions.getCommitID()
+    
+    # Get the current date and time for saving purposes    
+    currentDT = auxiliaryFunctions.getCurrentDateTime()
+    
+    # File with parameter estimates
+    fileParameterALL = ['deadVolumeCharacteristics_20211002_1307_c8173b1.npz', # TIS
+                        'deadVolumeCharacteristics_20211026_0025_c8173b1.npz', # TIS + M/D
+                        'deadVolumeCharacteristics_20210810_1653_eddec53.npz',] # TIS + M/D + MS
+
+    # Flag to plot simulations
+    simulateModel = True
+
+    # Plot colors and markers
+    colorsForPlot = ["03045e","0077b6","00b4d8","90e0ef"]
+    markersForPlot = ["^",">","v","<"]
+
+    # Line style and alpha    
+    alphaForPlot_DV = [0.5, 0.5, 1.0]
+    lineForPlot_DV = [':', '--', '-']
+
+    # Dead Volume
+    deadLabel = ['TIS',
+                 'TIS + D/M',
+                 'TIS + D/M + MS']
+
+    # Custom Legend Lines
+    custom_lines = [Line2D([0], [0], linestyle=lineForPlot_DV[0], lw=1, dash_capstyle = 'round', alpha = alphaForPlot_DV[0], color = 'k'),
+                    Line2D([0], [0], linestyle=lineForPlot_DV[1], lw=1, dash_capstyle = 'round', alpha = alphaForPlot_DV[1], color = 'k'),
+                    Line2D([0], [0], linestyle=lineForPlot_DV[2], lw=1, dash_capstyle = 'round', alpha = alphaForPlot_DV[2], color = 'k')]
+
+    fig = figure(figsize=(3.3,2.65))
+    # Loop over all the files
+    for kk in range(len(fileParameterALL)):
+        fileParameter = fileParameterALL[kk] # Parse out the parameter estimate name
+        # Dead volume parameter model path
+        parameterPath = os.path.join('..','simulationResults',fileParameter)
+        # Load file names and the model
+        fileNameList = load(parameterPath, allow_pickle=True)["fileName"]
+
+        # Generate .npz file for python processing of the .mat file 
+        filesToProcess(True,os.path.join('..','experimental','runData'),fileNameList,'DV')
+        # Get the processed file names
+        fileName = filesToProcess(False,[],[],'DV')
+        # Load the model
+        modelOutputTemp = load(parameterPath, allow_pickle=True)["modelOutput"]
+        x = modelOutputTemp[()]["variable"]
+        print(x)
+
+        # Get the MS fit flag, flow rates and msDeadVolumeFile (if needed)
+        # Check needs to be done to see if MS file available or not
+        # Checked using flagMSDeadVolume in the saved file
+        dvFileLoadTemp = load(parameterPath)
+        if 'flagMSDeadVolume' in dvFileLoadTemp.files:
+            flagMSFit = dvFileLoadTemp["flagMSFit"]
+            msFlowRate = dvFileLoadTemp["msFlowRate"]
+            flagMSDeadVolume = dvFileLoadTemp["flagMSDeadVolume"]
+            msDeadVolumeFile = dvFileLoadTemp["msDeadVolumeFile"]
+        else:
+            flagMSFit = False
+            msFlowRate = -np.inf
+            flagMSDeadVolume = False
+            msDeadVolumeFile = []
+        
+        numPointsExp = np.zeros(len(fileName))
+        for ii in range(len(fileName)): 
+            fileToLoad = fileName[ii]
+            # Load experimental molefraction
+            timeElapsedExp = load(fileToLoad)["timeElapsed"].flatten()
+            numPointsExp[ii] = len(timeElapsedExp)
+        
+        # Downsample intervals
+        downsampleInt = numPointsExp/np.min(numPointsExp)
+    
+        # Print the objective function and volume from model parameters
+        print("Model Volume",round(sum(x[0:2]),2))
+        moleFracExpALL = np.array([])
+        moleFracSimALL = np.array([])
+    
+        # Create the instance for the plots
+        ax1 = plt.subplot(1,1,1)
+        
+        # Initialize error for objective function
+        # Loop over all available files    
+        for ii in range(len(fileName)):
+            # Initialize outputs
+            moleFracSim = []
+            # Path of the file name
+            fileToLoad = fileName[ii]   
+            # Load experimental time, molefraction and flowrate (accounting for downsampling)
+            timeElapsedExpTemp = load(fileToLoad)["timeElapsed"].flatten()
+            moleFracExpTemp = load(fileToLoad)["moleFrac"].flatten()
+            flowRateTemp = load(fileToLoad)["flowRate"].flatten()
+            timeElapsedExp = timeElapsedExpTemp[::int(np.round(downsampleInt[ii]))]
+            moleFracExp = moleFracExpTemp[::int(np.round(downsampleInt[ii]))]
+            flowRateExp = flowRateTemp[::int(np.round(downsampleInt[ii]))]
+            # Get the flow rates from the fit file
+            # When MS used
+            if flagMSFit:
+                flowRateDV = msFlowRate
+            else:
+                flowRateDV = np.mean(flowRateExp[-1:-10:-1])
+            
+            # Integration and ode evaluation time
+            timeInt = timeElapsedExp
+            
+            if simulateModel:    
+                # Call the deadVolume Wrapper function to obtain the outlet mole fraction
+                moleFracSim = deadVolumeWrapper(timeInt, flowRateDV, x, flagMSDeadVolume, msDeadVolumeFile)
+                       
+                # Stack mole fraction from experiments and simulation for error 
+                # computation
+                minExp = np.min(moleFracExp) # Compute the minimum from experiment
+                normalizeFactor = np.max(moleFracExp - minExp) # Compute the max from normalized data
+                moleFracExpALL = np.hstack((moleFracExpALL, (moleFracExp-minExp)/normalizeFactor))
+                moleFracSimALL = np.hstack((moleFracSimALL, (moleFracSim-minExp)/normalizeFactor))
+                
+            # Plot the expreimental and model output
+            # Log scale
+            if kk == 0:
+                ax1.semilogy(timeElapsedExp,moleFracExp,
+                              marker = markersForPlot[ii],linewidth = 0,
+                              color='#'+colorsForPlot[ii],alpha=0.25,label=str(round(abs(np.mean(flowRateExp)),1))+" cm$^3$ s$^{-1}$") # Experimental response
+            ax1.semilogy(timeElapsedExp,moleFracSim,
+                              color='#'+colorsForPlot[ii],
+                              linestyle = lineForPlot_DV[kk],
+                              alpha = alphaForPlot_DV[kk],
+                              dash_capstyle = 'round',) # Simulation response
+            ax1.set(xlabel='$t$ [s]', 
+                    ylabel='$y$ [-]',
+                    xlim = [0,150], ylim = [1e-2, 1])
+            ax1.locator_params(axis="x", nbins=5)
+            ax1.legend(handletextpad=0.0)
+            ax1.grid(which='minor', linestyle=':')
+
+        # Model legend
+        fig.legend(custom_lines,deadLabel,bbox_to_anchor=(0.07,0.93,0.9,0.1), mode="expand", ncol=3, borderaxespad=0)   
+            
+        # Remove all the .npz files genereated from the .mat
+        # Loop over all available files    
+        for ii in range(len(fileName)):
+            os.remove(fileName[ii])
+
+    #  Save the figure
+    if saveFlag:
+        # FileName: figureDVSensitivity<currentDateTime>_<GitCommitID_Current>_<GitCommitID_Data>
+        saveFileName = "figureDVSensitivity" + currentDT + "_" + gitCommitID + saveFileExtension
         savePath = os.path.join('..','simulationFigures','experimentManuscript',saveFileName)
         # Check if inputResources directory exists or not. If not, create the folder
         if not os.path.exists(os.path.join('..','simulationFigures','experimentManuscript')):
