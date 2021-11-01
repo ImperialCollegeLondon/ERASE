@@ -2521,7 +2521,10 @@ def plotForArticle_figureSensitivity(gitCommitID, currentDT,
                    'zlcParameters_20211019_1303_c8173b1.npz'],
                    # TIS + D/M
                    ['zlcParameters_20211026_1152_c8173b1.npz',
-                    'zlcParameters_20211026_2220_c8173b1.npz',],
+                    'zlcParameters_20211026_2220_c8173b1.npz',
+                    'zlcParameters_20211027_0918_c8173b1.npz',
+                    'zlcParameters_20211027_2016_c8173b1.npz',
+                    'zlcParameters_20211028_0645_c8173b1.npz'],
                    # Activated Carbon Simulation (Base)
                    ['zlcParameters_20210823_1104_03c82f4.npz',
                     'zlcParameters_20210824_0000_03c82f4.npz',
@@ -2661,6 +2664,7 @@ def plotForArticle_figureSensitivity(gitCommitID, currentDT,
         # Plot the isotherms    
         ax3 = plt.subplot(1,3,3)
         minJ = np.argwhere(objectiveFunction == min(objectiveFunction))
+
         for jj in range(len(temperature)):
             ax3.plot(y,isoLoading_ZLC[int(minJ[0]),:,jj],color='#'+colorsForPlot[jj],
                      linestyle = lineForPlot_DV[pp],alpha = alphaForPlot_DV[pp],
