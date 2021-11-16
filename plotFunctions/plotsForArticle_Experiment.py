@@ -127,7 +127,13 @@ def plotsForArticle_Experiment(**kwargs):
         if kwargs["figureDVSensitivity"]:
             plotForArticle_figureDVSensitivity(gitCommitID, currentDT, 
                            saveFlag, saveFileExtension)
-                        
+
+    # If Ft plots 
+    if 'figureFt' in kwargs:
+        if kwargs["figureFt"]:
+            plotForArticle_figureFt(gitCommitID, currentDT, 
+                           saveFlag, saveFileExtension)
+                   
 # fun: plotForArticle_figureMat
 # Plots the Figure DV of the manuscript: Material characterization (N2/MIP and QC)
 def plotForArticle_figureMat(gitCommitID, currentDT, 
@@ -137,6 +143,8 @@ def plotForArticle_figureMat(gitCommitID, currentDT,
     import auxiliaryFunctions
     import scipy.io as sio
     import os
+    from matplotlib.ticker import FormatStrFormatter
+
     plt.style.use('doubleColumn2Row.mplstyle') # Custom matplotlib style file
 
     # Get the commit ID of the current repository
@@ -241,28 +249,31 @@ def plotForArticle_figureMat(gitCommitID, currentDT,
                     ylabel='$V_\mathregular{pore}$ [cm$^{3}$ g$^{-1}$]',
                     xlim = [0.1,1e6], ylim = [0, 2])
             ax.text(0.2, 1.82, "(a)", fontsize=8,)
-            ax.text(1.4e5, 0.1, "AC", fontsize=8, fontweight = 'bold',color = '#e71d36')
+            # ax.text(1.4e5, 0.1, "AC", fontsize=8, fontweight = 'bold',color = '#e71d36')
             ax.text(1.6e3, combinedPorosityData[-2,2]+0.07, 
                     str(round(combinedPorosityData[-2,2],2))+' cm$^{3}$ g$^{-1}$',
                     fontsize=8,color = '#7d8597')
+            ax.text(2.5e2, 2.15, "AC", fontsize=8, fontweight = 'bold',color = 'k')
         elif kk == 1:
             ax.set(xlabel='$D$ [nm]', 
                     xlim = [0.1,1e6], ylim = [0, 2])
             ax.text(0.2, 1.82, "(b)", fontsize=8,)
-            ax.text(1.4e5, 0.1, "BN", fontsize=8, fontweight = 'bold',color = '#e71d36')
+            # ax.text(1.4e5, 0.1, "BN", fontsize=8, fontweight = 'bold',color = '#e71d36')
             ax.text(5, combinedPorosityData[-2,2]-0.15, 
                     str(round(combinedPorosityData[-2,2],2))+' cm$^{3}$ g$^{-1}$',
                     fontsize=8,color = '#7d8597')
+            ax.text(2.5e2, 2.15, "BN", fontsize=8, fontweight = 'bold',color = 'k')
         elif kk == 2:
             ax.set(xlabel='$D$ [nm]', 
                     xlim = [0.1,1e6], ylim = [0, 2])
             ax.text(0.2, 1.82, "(c)", fontsize=8,)
-            ax.text(1e5, 0.1, "13X", fontsize=8, fontweight = 'bold',color = '#e71d36')
+            # ax.text(1e5, 0.1, "13X", fontsize=8, fontweight = 'bold',color = '#e71d36')
             ax.text(1.6e3, combinedPorosityData[-2,2]+0.07, 
                     str(round(combinedPorosityData[-2,2],2))+' cm$^{3}$ g$^{-1}$',
                     fontsize=8,color = '#7d8597')
-            
+            ax.text(2.5e2, 2.15, "13X", fontsize=8, fontweight = 'bold',color = 'k')            
         ax.locator_params(axis="y", nbins=5)
+        ax.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
         
     # Loop over all the isotherm files
     for kk in range(len(isothermALL)):
@@ -300,25 +311,26 @@ def plotForArticle_figureMat(gitCommitID, currentDT,
         # Material specific text labels
         if kk == 0:
             ax.set(xlabel='$P$ [bar]', 
-                    ylabel='$q^*$ [mol kg$^{-1}$]',
+                    ylabel='$q^*_\mathregular{CO_2}$ [mol kg$^{-1}$]',
                     xlim = [0,1], ylim = [0, 3])
             ax.text(0.89, 2.75, "(d)", fontsize=8,)
-            ax.text(0.87, 0.13, "AC", fontsize=8, fontweight = 'bold',color = '#4895EF')
+            # ax.text(0.87, 0.13, "AC", fontsize=8, fontweight = 'bold',color = '#4895EF')
 
         elif kk == 1:
             ax.set(xlabel='$P$ [bar]', 
                     xlim = [0,1], ylim = [0, 2])
             ax.text(0.89, 1.82, "(e)", fontsize=8,)
-            ax.text(0.87, 0.09, "BN", fontsize=8, fontweight = 'bold',color = '#4895EF')
+            # ax.text(0.87, 0.09, "BN", fontsize=8, fontweight = 'bold',color = '#4895EF')
 
         elif kk == 2:
             ax.set(xlabel='$P$ [bar]', 
                     xlim = [0,1], ylim = [0, 8])
             ax.text(0.89, 7.25, "(f)", fontsize=8,)
-            ax.text(0.85, 0.35, "13X", fontsize=8, fontweight = 'bold',color = '#4895EF')
+            # ax.text(0.85, 0.35, "13X", fontsize=8, fontweight = 'bold',color = '#4895EF')
 
         ax.locator_params(axis="x", nbins=4)            
         ax.locator_params(axis="y", nbins=4)
+        ax.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
  
     #  Save the figure
     if saveFlag:
@@ -458,14 +470,14 @@ def plotForArticle_figureDV(gitCommitID, currentDT,
                 ax1.semilogy(timeElapsedExp,moleFracSim,
                                   color='#'+colorsForPlot[ii]) # Simulation response
                 ax1.set(xlabel='$t$ [s]', 
-                        ylabel='$y$ [-]',
+                        ylabel='$y\mathregular{_{CO_2}}$ [-]',
                         xlim = [0,15], ylim = [1e-2, 1])
                 ax1.locator_params(axis="x", nbins=5)
                 ax1.legend(handletextpad=0.0,loc='center right')
                 ax1.text(7, 1.3, "(a)", fontsize=8,)
                 ax1.text(12.7, 0.64, "MS", fontsize=8, fontweight = 'bold',
                         backgroundcolor = 'w', color = '#e71d36')
-                ax1.text(7.2, 0.39, "$V^\mathrm{MS}$ = 0.02 cm$^3$", fontsize=8, 
+                ax1.text(7.2, 0.385, "$V^\mathrm{MS}$ = 0.02 cm$^3$", fontsize=8, 
                         backgroundcolor = 'w', color = '#7d8597')
                 ax1.grid(which='minor', linestyle=':')
             elif kk == 1:
@@ -481,7 +493,7 @@ def plotForArticle_figureDV(gitCommitID, currentDT,
                 ax2.text(70, 1.3, "(b)", fontsize=8,)
                 ax2.text(80, 0.64, "Setup w/ Ball", fontsize=8,  fontweight = 'bold',
                         backgroundcolor = 'w', color = '#e71d36')
-                ax2.text(78, 0.39, "$V^\mathrm{S}$ = 3.76 cm$^3$", fontsize=8, 
+                ax2.text(78, 0.385, "$V^\mathrm{S}$ = 3.76 cm$^3$", fontsize=8, 
                         backgroundcolor = 'w', color = '#7d8597')
                 ax2.grid(which='minor', linestyle=':')
             elif kk == 2:
@@ -497,7 +509,7 @@ def plotForArticle_figureDV(gitCommitID, currentDT,
                 ax3.text(70, 1.3, "(c)", fontsize=8,)
                 ax3.text(74, 0.64, "Setup w/o Ball", fontsize=8,  fontweight = 'bold',
                         backgroundcolor = 'w', color = '#e71d36')
-                ax3.text(78, 0.39, "$V^\mathrm{S}$ = 3.93 cm$^3$", fontsize=8, 
+                ax3.text(78, 0.385, "$V^\mathrm{S}$ = 3.93 cm$^3$", fontsize=8, 
                         backgroundcolor = 'w', color = '#7d8597')
                 ax3.grid(which='minor', linestyle=':')
 
@@ -528,6 +540,7 @@ def plotForArticle_figureZLC(gitCommitID, currentDT,
     from numpy import load
     import os
     from computeEquilibriumLoading import computeEquilibriumLoading
+    from matplotlib.ticker import FormatStrFormatter
     plt.style.use('doubleColumn2Row.mplstyle') # Custom matplotlib style file
 
     # Get the commit ID of the current repository
@@ -660,10 +673,10 @@ def plotForArticle_figureZLC(gitCommitID, currentDT,
         
         if pp == 0:
             # Isotherm
-            ax1.set(ylabel='$q^*$ [mol kg$^{-1}$]',
+            ax1.set(ylabel='$q^*_\mathregular{CO_2}$ [mol kg$^{-1}$]',
                     xlim = [0,1], ylim = [0, 3])
             ax1.text(0.04, 2.75, "(a)", fontsize=8,)
-            ax1.text(0.45, 3.2, "AC", fontsize=8, fontweight = 'bold',color = '#4895EF')
+            ax1.text(0.45, 3.2, "AC", fontsize=8, fontweight = 'bold',color = 'k')
             ax1.text(0.84, 0.30, "OPT", fontsize=8, fontweight = 'bold',color = '#4895EF')
             ax1.text(0.84, 0.12, "REP", fontsize=8, fontweight = 'bold',color = '#4895EF', alpha = 0.3)
             ax1.locator_params(axis="x", nbins=4)
@@ -672,7 +685,7 @@ def plotForArticle_figureZLC(gitCommitID, currentDT,
             ax1.legend()
             # Kinetics
             ax2.set(xlabel='$P$ [bar]', 
-                    ylabel='$k$ [s$^{-1}$]',
+                    ylabel='$k\mathregular{_{CO_2}}$ [s$^{-1}$]',
                     xlim = [0,1], ylim = [0, 1])
             ax2.text(0.04, 0.9, "(d)", fontsize=8,)
             # ax2.text(0.87, 0.9, "AC", fontsize=8, fontweight = 'bold',color = '#4895EF')
@@ -683,7 +696,7 @@ def plotForArticle_figureZLC(gitCommitID, currentDT,
             # Isotherm
             ax1.set(xlim = [0,1], ylim = [0, 1.5])
             ax1.text(0.04, 1.35, "(b)", fontsize=8,)
-            ax1.text(0.45, 1.6, "BN", fontsize=8, fontweight = 'bold',color = '#4895EF')
+            ax1.text(0.45, 1.6, "BN", fontsize=8, fontweight = 'bold',color = 'k')
             ax1.text(0.84, 0.15, "OPT", fontsize=8, fontweight = 'bold',color = '#4895EF')
             ax1.text(0.84, 0.06, "REP", fontsize=8, fontweight = 'bold',color = '#4895EF', alpha = 0.3)
             ax1.locator_params(axis="x", nbins=4)
@@ -702,7 +715,7 @@ def plotForArticle_figureZLC(gitCommitID, currentDT,
             # Isotherm
             ax1.set(xlim = [0,1], ylim = [0, 8])
             ax1.text(0.04, 7.3, "(c)", fontsize=8,)
-            ax1.text(0.44, 8.5, "13X", fontsize=8, fontweight = 'bold',color = '#4895EF')
+            ax1.text(0.44, 8.5, "13X", fontsize=8, fontweight = 'bold',color = 'k')
             ax1.text(0.84, 0.86, "OPT", fontsize=8, fontweight = 'bold',color = '#4895EF')
             ax1.text(0.84, 0.32, "REP", fontsize=8, fontweight = 'bold',color = '#4895EF', alpha = 0.3)
             ax1.locator_params(axis="x", nbins=4)
@@ -717,7 +730,8 @@ def plotForArticle_figureZLC(gitCommitID, currentDT,
             # ax2.text(0.53, 1.66, "Experimental", fontsize=8, fontweight = 'bold',color = '#4895EF')
             ax2.locator_params(axis="x", nbins=4)
             ax2.locator_params(axis="y", nbins=4)
- 
+        ax1.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
+        ax2.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
     #  Save the figure
     if saveFlag:
         # FileName: figureZLC_<currentDateTime>_<GitCommitID_Current>_<GitCommitID_Data>
@@ -741,6 +755,7 @@ def plotForArticle_figureComp(gitCommitID, currentDT,
     import scipy.io as sio
     import os
     from computeEquilibriumLoading import computeEquilibriumLoading
+    from matplotlib.ticker import FormatStrFormatter
     plt.style.use('doubleColumn.mplstyle') # Custom matplotlib style file
 
     # Get the commit ID of the current repository
@@ -849,10 +864,10 @@ def plotForArticle_figureComp(gitCommitID, currentDT,
         if pp == 0:
             # Isotherm
             ax1.set(xlabel='$P$ [bar]', 
-                    ylabel='$q^*$ [mol kg$^{-1}$]',
+                    ylabel='$q^*_\mathregular{CO_2}$ [mol kg$^{-1}$]',
                     xlim = [0,1], ylim = [0, 3])
             ax1.text(0.04, 2.75, "(a)", fontsize=8,)
-            ax1.text(0.45, 3.2, "AC", fontsize=8, fontweight = 'bold',color = '#4895EF')
+            ax1.text(0.45, 3.2, "AC", fontsize=8, fontweight = 'bold',color = 'k')
             ax1.text(0.84, 0.32, "VOL", fontsize=8, fontweight = 'bold',color = '#4895EF')
             ax1.text(0.84, 0.12, "OPT", fontsize=8, fontweight = 'bold',color = '#4895EF', alpha = 0.3)
             ax1.locator_params(axis="x", nbins=4)
@@ -862,7 +877,7 @@ def plotForArticle_figureComp(gitCommitID, currentDT,
             # Isotherm
             ax1.set(xlabel='$P$ [bar]', xlim = [0,1], ylim = [0, 1.5])
             ax1.text(0.04, 1.35, "(b)", fontsize=8,)
-            ax1.text(0.45, 1.6, "BN", fontsize=8, fontweight = 'bold',color = '#4895EF')
+            ax1.text(0.45, 1.6, "BN", fontsize=8, fontweight = 'bold',color = 'k')
             ax1.text(0.84, 0.16, "VOL", fontsize=8, fontweight = 'bold',color = '#4895EF')
             ax1.text(0.84, 0.06, "OPT", fontsize=8, fontweight = 'bold',color = '#4895EF', alpha = 0.3)
             ax1.locator_params(axis="x", nbins=4)
@@ -872,13 +887,13 @@ def plotForArticle_figureComp(gitCommitID, currentDT,
             # Isotherm
             ax1.set(xlabel='$P$ [bar]', xlim = [0,1], ylim = [0, 8])
             ax1.text(0.04, 7.3, "(c)", fontsize=8,)
-            ax1.text(0.44, 8.5, "13X", fontsize=8, fontweight = 'bold',color = '#4895EF')
+            ax1.text(0.44, 8.5, "13X", fontsize=8, fontweight = 'bold',color = 'k')
             ax1.text(0.84, 0.86, "VOL", fontsize=8, fontweight = 'bold',color = '#4895EF')
             ax1.text(0.84, 0.32, "OPT", fontsize=8, fontweight = 'bold',color = '#4895EF', alpha = 0.3)
             ax1.locator_params(axis="x", nbins=4)
             ax1.locator_params(axis="y", nbins=4)
             ax1.legend(loc='upper right')
- 
+        ax1.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
     #  Save the figure
     if saveFlag:
         # FileName: figureComp_<currentDateTime>_<GitCommitID_Current>_<GitCommitID_Data>
@@ -902,6 +917,7 @@ def plotForArticle_figureZLCSim(gitCommitID, currentDT,
     import scipy.io as sio
     import os
     from computeEquilibriumLoading import computeEquilibriumLoading
+    from matplotlib.ticker import FormatStrFormatter
     plt.style.use('doubleColumn2Row.mplstyle') # Custom matplotlib style file
 
     # Get the commit ID of the current repository
@@ -1078,7 +1094,7 @@ def plotForArticle_figureZLCSim(gitCommitID, currentDT,
         
         if pp == 0:
             # Isotherm
-            ax1.set(ylabel='$q^*$ [mol kg$^{-1}$]',
+            ax1.set(ylabel='$q^*_\mathregular{CO_2}$ [mol kg$^{-1}$]',
                     xlim = [0,1], ylim = [0, 3])
             ax1.text(0.04, 2.75, "(a)", fontsize=8,)
             ax1.text(0.45, 3.2, "AC", fontsize=8, fontweight = 'bold',color = 'k')
@@ -1090,7 +1106,7 @@ def plotForArticle_figureZLCSim(gitCommitID, currentDT,
             ax1.legend()
             # Kinetics
             ax2.set(xlabel='$P$ [bar]', 
-                    ylabel='$k$ [s$^{-1}$]',
+                    ylabel='$k\mathregular{_{CO_2}}$ [s$^{-1}$]',
                     xlim = [0,1], ylim = [0, 1])
             ax2.text(0.04, 0.9, "(d)", fontsize=8,)
             # ax2.text(0.87, 0.9, "AC", fontsize=8, fontweight = 'bold',color = '#4895EF')
@@ -1135,7 +1151,8 @@ def plotForArticle_figureZLCSim(gitCommitID, currentDT,
             # ax2.text(0.53, 1.66, "Experimental", fontsize=8, fontweight = 'bold',color = '#4895EF')
             ax2.locator_params(axis="x", nbins=4)
             ax2.locator_params(axis="y", nbins=4)
- 
+        ax1.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
+        ax2.yaxis.set_major_formatter(FormatStrFormatter('%.2f')) 
     #  Save the figure
     if saveFlag:
         # FileName: figureZLCSim_<currentDateTime>_<GitCommitID_Current>_<GitCommitID_Data>
@@ -1344,7 +1361,7 @@ def plotForArticle_figureZLCFit(gitCommitID, currentDT,
                 if ii%3 == 0:
                     ax1.semilogy(timeElapsedExp,moleFracDV,
                                  color='#76c893',alpha = 0.2, linestyle='-') # Dead volume response
-                ax1.set(ylabel='$y$ [-]',
+                ax1.set(ylabel='$y\mathregular{_{CO_2}}$ [-]',
                         xlim = XLIM_L[pp], ylim = [1e-2, 1])    
                 ax1.locator_params(axis="x", nbins=4)
                 ax1.axes.xaxis.set_ticklabels([])
@@ -1362,7 +1379,7 @@ def plotForArticle_figureZLCFit(gitCommitID, currentDT,
                 if ii%3 == 0:
                     ax2.semilogy(timeElapsedExp,moleFracDV,
                                  color='#76c893',alpha = 0.2, linestyle='-') # Dead volume response
-                ax2.set(xlabel='$t$ [s]',ylabel='$y$ [-]',
+                ax2.set(xlabel='$t$ [s]',ylabel='$y\mathregular{_{CO_2}}$ [-]',
                         xlim = XLIM_L[pp], ylim = [1e-2, 1])    
                 ax2.locator_params(axis="x", nbins=4)
                 ax2.grid(which='minor', linestyle=':')
@@ -1644,7 +1661,7 @@ def plotForArticle_figureZLCSimFit(gitCommitID, currentDT,
                 if ii%3 == 0:
                     ax1.semilogy(timeElapsedExp,moleFracDV,
                                  color='k',alpha = 0.2, linestyle='-') # Dead volume response
-                ax1.set(ylabel='$y$ [-]',
+                ax1.set(ylabel='$y\mathregular{_{CO_2}}$ [-]',
                         xlim = XLIM_L[pp], ylim = [1e-2, 1])    
                 ax1.locator_params(axis="x", nbins=4)
                 ax1.axes.xaxis.set_ticklabels([])
@@ -1662,7 +1679,7 @@ def plotForArticle_figureZLCSimFit(gitCommitID, currentDT,
                 if ii%3 == 0:
                     ax2.semilogy(timeElapsedExp,moleFracDV,
                                  color='k',alpha = 0.2, linestyle='-') # Dead volume response
-                ax2.set(xlabel='$t$ [s]',ylabel='$y$ [-]',
+                ax2.set(xlabel='$t$ [s]',ylabel='$y\mathregular{_{CO_2}}$ [-]',
                         xlim = XLIM_L[pp], ylim = [1e-2, 1])    
                 ax2.locator_params(axis="x", nbins=4)
                 ax2.grid(which='minor', linestyle=':')
@@ -1881,7 +1898,7 @@ def plotForArticle_figureZLCRep(gitCommitID, currentDT,
                              label = legendStr) # Experimental response
                 ax1.legend(loc = "center right", handletextpad=0.0)
                 if pp == 0:
-                    ax1.set(xlabel='$t$ [s]',ylabel='$y$ [-]',
+                    ax1.set(xlabel='$t$ [s]',ylabel='$y\mathregular{_{CO_2}}$ [-]',
                             xlim = XLIM_L[pp], ylim = [1e-2, 1])    
                     ax1.locator_params(axis="x", nbins=4)
                 else: 
@@ -1910,7 +1927,7 @@ def plotForArticle_figureZLCRep(gitCommitID, currentDT,
                              label = legendStr) # Experimental response
                 ax3.legend(loc = "center right", handletextpad=0.0)
                 if pp == 0:
-                    ax3.set(xlabel='$t$ [s]',ylabel='$y$ [-]',
+                    ax3.set(xlabel='$t$ [s]',ylabel='$y\mathregular{_{CO_2}}$ [-]',
                             xlim = XLIM_H[pp], ylim = [1e-2, 1])    
                     ax3.locator_params(axis="x", nbins=4)
                 else: 
@@ -2423,6 +2440,7 @@ def plotForArticle_figureSensitivity(gitCommitID, currentDT,
     from numpy import load
     import os
     from computeEquilibriumLoading import computeEquilibriumLoading
+    from matplotlib.ticker import FormatStrFormatter
     plt.style.use('doubleColumn.mplstyle') # Custom matplotlib style file
 
     # Get the commit ID of the current repository
@@ -2573,10 +2591,10 @@ def plotForArticle_figureSensitivity(gitCommitID, currentDT,
         if pp == 0:
             # Isotherm
             ax1.set(xlabel = '$P$ [bar]', 
-                    ylabel='$q^*$ [mol kg$^{-1}$]',
+                    ylabel='$q^*_\mathregular{CO_2}$ [mol kg$^{-1}$]',
                     xlim = [0,1], ylim = [0, 3])
             ax1.text(0.04, 2.75, "(a)", fontsize=8,)
-            ax1.text(0.72, 0.15, "Porosity", fontsize=8, fontweight = 'bold',color = 'k')
+            ax1.text(0.70, 0.15, "Porosity", fontsize=8, fontweight = 'bold',color = 'k')
             ax1.locator_params(axis="x", nbins=4)
             ax1.locator_params(axis="y", nbins=4)
             # ax1.axes.xaxis.set_ticklabels([])
@@ -2628,7 +2646,7 @@ def plotForArticle_figureSensitivity(gitCommitID, currentDT,
             ax2.set(xlabel = '$P$ [bar]', 
                     xlim = [0,1], ylim = [0, 3])
             ax2.text(0.04, 2.75, "(b)", fontsize=8,)
-            ax2.text(0.81, 0.15, "Mass", fontsize=8, fontweight = 'bold',color = 'k')
+            ax2.text(0.79, 0.15, "Mass", fontsize=8, fontweight = 'bold',color = 'k')
             ax2.locator_params(axis="x", nbins=4)
             ax2.locator_params(axis="y", nbins=4)
             ax2.legend(custom_lines, massLabel)
@@ -2674,7 +2692,7 @@ def plotForArticle_figureSensitivity(gitCommitID, currentDT,
             ax3.set(xlabel = '$P$ [bar]', 
                     xlim = [0,1], ylim = [0, 3])
             ax3.text(0.04, 2.75, "(c)", fontsize=8,)
-            ax3.text(0.58, 0.15, "Dead Volume", fontsize=8, fontweight = 'bold',color = 'k')
+            ax3.text(0.56, 0.15, "Dead Volume", fontsize=8, fontweight = 'bold',color = 'k')
             ax3.locator_params(axis="x", nbins=4)
             ax3.locator_params(axis="y", nbins=4)
             ax3.legend(custom_linesDV, deadLabel, loc = 'upper right')
@@ -2682,6 +2700,10 @@ def plotForArticle_figureSensitivity(gitCommitID, currentDT,
         # Temperature legend
         if pp == 1:
             fig.legend(bbox_to_anchor=(0.3,0.93,0.4,0.1), mode="expand", ncol=3, borderaxespad=0)   
+ 
+        ax1.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
+        ax2.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
+        ax3.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
  
     #  Save the figure
     if saveFlag:
@@ -2841,7 +2863,7 @@ def plotForArticle_figureDVSensitivity(gitCommitID, currentDT,
                               alpha = alphaForPlot_DV[kk],
                               dash_capstyle = 'round',) # Simulation response
             ax1.set(xlabel='$t$ [s]', 
-                    ylabel='$y$ [-]',
+                    ylabel='$y\mathregular{_{CO_2}}$ [-]',
                     xlim = [0,150], ylim = [1e-2, 1])
             ax1.locator_params(axis="x", nbins=5)
             ax1.legend(handletextpad=0.0)
@@ -2866,3 +2888,205 @@ def plotForArticle_figureDVSensitivity(gitCommitID, currentDT,
         plt.savefig (savePath, bbox_inches = "tight")
  
     plt.show()
+    
+    
+# fun: plotForArticle_figureFt
+# Plots the Figure Ftof the manuscript: Ft plots for parameter estimates
+def plotForArticle_figureFt(gitCommitID, currentDT, 
+                           saveFlag, saveFileExtension):    
+    from simulateCombinedModel import simulateCombinedModel
+    import numpy as np
+    import os
+    import matplotlib.pyplot as plt
+    from matplotlib.pyplot import figure    
+    import scipy.io as sio    
+    from numpy import load
+    from matplotlib.lines import Line2D
+    
+    os.chdir(".."+os.path.sep+"plotFunctions")
+    plt.style.use('doubleColumn.mplstyle') # Custom matplotlib style file
+    os.chdir(".."+os.path.sep+"experimental")
+    
+    # Move to top level folder (to avoid path issues)    
+    os.chdir("..")
+    import auxiliaryFunctions    
+    # Get the commit ID of the current repository
+    gitCommitID = auxiliaryFunctions.getCommitID()
+    os.chdir("experimental")
+    
+    # Get the current date and time for saving purposes    
+    currentDT = auxiliaryFunctions.getCurrentDateTime()
+    
+    # Temperature of the simulate experiment [K]
+    temperature = 308.15
+    
+    # Inlet flow rate [ccm]
+    flowRate = [10, 60]
+    
+    # Saturation mole fraction (works for a binary system)
+    initMoleFrac = np.array(([0.11, 0.94], [0.11, 0.94]))
+    
+    # Parameter estimate files
+                        # Activated Carbon Experiments
+    zlcFileNameALL = [['zlcParameters_20210822_0926_c8173b1.npz',
+                       'zlcParameters_20210822_1733_c8173b1.npz',
+                       # 'zlcParameters_20210823_0133_c8173b1.npz', # DSL BAD (but lowest J)
+                       # 'zlcParameters_20210823_1007_c8173b1.npz', # DSL BAD (but lowest J)
+                       'zlcParameters_20210823_1810_c8173b1.npz'],
+                        # Boron Nitride Experiments
+                        ['zlcParameters_20210823_1731_c8173b1.npz',
+                          'zlcParameters_20210824_0034_c8173b1.npz',
+                          'zlcParameters_20210824_0805_c8173b1.npz',
+                          'zlcParameters_20210824_1522_c8173b1.npz',
+                          'zlcParameters_20210824_2238_c8173b1.npz',],
+                          # Zeolite 13X Experiments
+                        ['zlcParameters_20210824_1552_6b88505.npz',
+                          'zlcParameters_20210825_0559_6b88505.npz',
+                          'zlcParameters_20210825_1854_6b88505.npz',
+                          'zlcParameters_20210826_0847_6b88505.npz',
+                          'zlcParameters_20210827_0124_6b88505.npz',]]
+    
+    # Create the instance for the plots
+    fig = plt.figure
+    ax1 = plt.subplot(1,3,1)
+    ax2 = plt.subplot(1,3,2)
+    ax3 = plt.subplot(1,3,3)
+    
+    # Plot colors
+    colorsForPlot = ["#ef233c","#8d99ae"]*2
+    styleForPlot = [":","-"]*2
+    alphaForPlot = [0.4,1.0]*2
+    
+    # Flow labels
+    flowStr = [str(int(flowRate[0]))+ " cm$^3$ min$^{-1}$",
+               str(int(flowRate[1]))+ " cm$^3$ min$^{-1}$"]
+    
+    # Legend labels
+    legendStr = ["$y^\mathregular{in}$ = " + str(initMoleFrac[0,0]),
+                 "$y^\mathregular{in}$ = " + str(initMoleFrac[0,1])]
+    
+    # Custom Legend Lines
+    custom_lines = [Line2D([0], [0], linestyle=':', lw=1, dash_capstyle = 'round', color = 'k'),
+                    Line2D([0], [0], linestyle='-', lw=1, dash_capstyle = 'round', color = 'k')]
+    
+    
+    # Loop over all materials
+    for pp in range(len(zlcFileNameALL)):
+        fig = figure(figsize=(6.5,5))   
+        zlcFileName = zlcFileNameALL[pp]
+        objectiveFunction = np.zeros([len(zlcFileName)])
+        # Loop over all available ZLC files for a given material
+        for kk in range(len(zlcFileName)):
+            # Obtain the onjective function values
+            parameterPath = os.path.join('..','simulationResults',zlcFileName[kk])
+            modelOutputTemp = load(parameterPath, allow_pickle=True)["modelOutput"]
+            objectiveFunction[kk] = round(modelOutputTemp[()]["function"],0)
+    
+        # Find the experiment with the min objective function
+        minJ = np.argwhere(objectiveFunction == min(objectiveFunction))
+        fileParameter = zlcFileName[int(minJ[0])]
+        
+        # ZLC parameter model path
+        parameterPath = os.path.join('..','simulationResults',fileParameter)
+           
+        # Parse out experiments names and temperature used for the fitting
+        rawFileName = load(parameterPath)["fileName"]
+        temperatureExp = load(parameterPath)["temperature"]
+    
+        # Parse out all the necessary quantities to obtain model fit
+        # Mass of sorbent and particle epsilon
+        adsorbentDensity = load(parameterPath)["adsorbentDensity"]
+        particleEpsilon = load(parameterPath)["particleEpsilon"]
+        massSorbent = load(parameterPath)["massSorbent"]
+        # Volume of sorbent material [m3]
+        volSorbent = (massSorbent/1000)/adsorbentDensity
+        # Volume of gas chamber (dead volume) [m3]
+        volGas = volSorbent/(1-particleEpsilon)*particleEpsilon
+        # Dead volume model
+        deadVolumeFile = str(load(parameterPath)["deadVolumeFile"])
+        # Isotherm parameter reference
+        parameterReference = load(parameterPath)["parameterReference"]
+        # Load the model
+        modelOutputTemp = load(parameterPath, allow_pickle=True)["modelOutput"]
+        modelNonDim = modelOutputTemp[()]["variable"] 
+        # Multiply the paremeters by the reference values
+        x = np.multiply(modelNonDim,parameterReference)
+        # Integration time (set to 1000 s, default)
+        timeInt = (0.0,1000.0)
+        
+        # Loop over all the conditions
+        for ii in range(len(flowRate)):
+            for jj in range(np.size(initMoleFrac,1)):
+                # Initialize the output dictionary
+                experimentOutput = {}
+                # Compute the composite response using the optimizer parameters
+                timeElapsedSim , _ , resultMat = simulateCombinedModel(isothermModel = x[0:-2],
+                                                                                 rateConstant_1 = x[-2], # Last but one element is rate constant (analogous to micropore)
+                                                                                 rateConstant_2 = x[-1], # Last element is activation energy (analogous to macropore)
+                                                                                 temperature = temperature, # Temperature [K]
+                                                                                 timeInt = timeInt,
+                                                                                 initMoleFrac = [initMoleFrac[ii,jj]], # Initial mole fraction assumed to be the first experimental point
+                                                                                 flowIn = flowRate[ii]*1e-6/60, # Flow rate [m3/s] for ZLC considered to be the mean of last 10 points (equilibrium)
+                                                                                 expFlag = False,
+                                                                                 deadVolumeFile = str(deadVolumeFile),
+                                                                                 volSorbent = volSorbent,
+                                                                                 volGas = volGas,
+                                                                                 adsorbentDensity = adsorbentDensity)
+                
+                # Find the index that corresponds to 1e-2 (to be consistent with the 
+                # experiments)
+                lastIndThreshold = int(np.argwhere(resultMat[0,:]<=1e-2)[0])
+                # Cut the time, mole fraction and the flow rate to the last index
+                # threshold
+                timeExp = timeElapsedSim[0:lastIndThreshold] # Time elapsed [s]
+                moleFrac = resultMat[0,0:lastIndThreshold] # Mole fraction [-]
+                totalFlowRate = resultMat[3,0:lastIndThreshold]*1e6 # Total flow rate[ccs]
+                
+                # Acticated Carbon
+                if pp == 0:
+                    # Ft - Log scale        
+                    ax1.semilogy(np.multiply(totalFlowRate,timeExp),moleFrac,
+                                  color=colorsForPlot[ii],linestyle=styleForPlot[jj],
+                                  dash_capstyle = 'round',alpha=alphaForPlot[jj])
+                    ax1.set(xlabel='$Ft$ [cm$^3$]', ylabel='$y\mathregular{_{CO_2}}$ [-]',
+                            xlim = [0,60], ylim = [1e-2, 1])         
+                    ax1.locator_params(axis="x", nbins=4)
+                    ax1.legend(custom_lines, legendStr, loc = 'upper right')
+                    ax1.text(2, 0.67, "(a)", fontsize=8,)
+                    if ii == 0:
+                        ax1.text(5, 0.2, flowStr[ii], fontsize=8, color=colorsForPlot[ii])
+                    if ii == 1:
+                        ax1.text(30, 0.03, flowStr[ii], fontsize=8, color=colorsForPlot[ii])
+                    ax1.text(28, 1.3, "AC", fontsize=8, fontweight = 'bold',color = 'k')
+                # Boron Nitride
+                if pp == 1:
+                    # Ft - Log scale        
+                    ax2.semilogy(np.multiply(totalFlowRate,timeExp),moleFrac,
+                                  color=colorsForPlot[ii],linestyle=styleForPlot[jj],
+                                  dash_capstyle = 'round',alpha=alphaForPlot[jj])
+                    ax2.set(xlabel='$Ft$ [cm$^3$]', 
+                            xlim = [0,60], ylim = [1e-2, 1])         
+                    ax2.locator_params(axis="x", nbins=4)
+                    ax2.legend(custom_lines, legendStr, loc = 'upper right')
+                    ax2.text(2, 0.67, "(b)", fontsize=8,)
+                    if ii == 0:
+                        ax2.text(5, 0.2, flowStr[ii], fontsize=8, color=colorsForPlot[ii])
+                    if ii == 1:
+                        ax2.text(22, 0.03, flowStr[ii], fontsize=8, color=colorsForPlot[ii])
+                ax2.text(28, 1.3, "BN", fontsize=8, fontweight = 'bold',color = 'k')
+                # Zeolite 13X
+                if pp == 2:
+                    # Ft - Log scale        
+                    ax3.semilogy(np.multiply(totalFlowRate,timeExp),moleFrac,
+                                  color=colorsForPlot[ii],linestyle=styleForPlot[jj],
+                                  dash_capstyle = 'round',alpha=alphaForPlot[jj])
+                    ax3.set(xlabel='$Ft$ [cm$^3$]', 
+                            xlim = [0,150], ylim = [1e-2, 1])         
+                    ax3.locator_params(axis="x", nbins=4)
+                    ax3.legend(custom_lines, legendStr, loc = 'upper right')
+                    ax3.text(2*150/60, 0.67, "(c)", fontsize=8,)
+                    if ii == 0:
+                        ax3.text(10, 0.2, flowStr[ii], fontsize=8, color=colorsForPlot[ii])
+                    if ii == 1:
+                        ax3.text(65, 0.03, flowStr[ii], fontsize=8, color=colorsForPlot[ii])
+                    ax3.text(67, 1.3, "13X", fontsize=8, fontweight = 'bold',color = 'k')
