@@ -12,6 +12,7 @@
 # Plots for the experiment manuscript
 #
 # Last modified:
+# - 2021-11-16, AK: Add Ft plot and minor fixes
 # - 2021-10-27, AK: Add plots for sensitivity analysis
 # - 2021-10-15, AK: Add plots for SI
 # - 2021-10-08, AK: Add plots for experimental fits
@@ -3090,3 +3091,15 @@ def plotForArticle_figureFt(gitCommitID, currentDT,
                     if ii == 1:
                         ax3.text(65, 0.03, flowStr[ii], fontsize=8, color=colorsForPlot[ii])
                     ax3.text(67, 1.3, "13X", fontsize=8, fontweight = 'bold',color = 'k')
+                    
+    #  Save the figure
+    if saveFlag:
+        # FileName: figureFt_<currentDateTime>_<GitCommitID_Current>_<GitCommitID_Data>
+        saveFileName = "figureFt" + currentDT + "_" + gitCommitID + saveFileExtension
+        savePath = os.path.join('..','simulationFigures','experimentManuscript',saveFileName)
+        # Check if inputResources directory exists or not. If not, create the folder
+        if not os.path.exists(os.path.join('..','simulationFigures','experimentManuscript')):
+            os.mkdir(os.path.join('..','simulationFigures','experimentManuscript'))
+        plt.savefig (savePath, bbox_inches = "tight")
+ 
+    plt.show()
