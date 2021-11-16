@@ -2881,7 +2881,7 @@ def plotForArticle_figureDVSensitivity(gitCommitID, currentDT,
     #  Save the figure
     if saveFlag:
         # FileName: figureDVSensitivity<currentDateTime>_<GitCommitID_Current>_<GitCommitID_Data>
-        saveFileName = "figureDVSensitivity" + currentDT + "_" + gitCommitID + saveFileExtension
+        saveFileName = "figureDVSensitivity_" + currentDT + "_" + gitCommitID + saveFileExtension
         savePath = os.path.join('..','simulationFigures','experimentManuscript',saveFileName)
         # Check if inputResources directory exists or not. If not, create the folder
         if not os.path.exists(os.path.join('..','simulationFigures','experimentManuscript')):
@@ -2902,8 +2902,7 @@ def plotForArticle_figureFt(gitCommitID, currentDT,
     from matplotlib.pyplot import figure    
     import scipy.io as sio    
     from numpy import load
-    from matplotlib.lines import Line2D
-    
+    from matplotlib.lines import Line2D  
     os.chdir(".."+os.path.sep+"plotFunctions")
     plt.style.use('doubleColumn.mplstyle') # Custom matplotlib style file
     os.chdir(".."+os.path.sep+"experimental")
@@ -2956,7 +2955,7 @@ def plotForArticle_figureFt(gitCommitID, currentDT,
     # Plot colors
     colorsForPlot = ["#ef233c","#8d99ae"]*2
     styleForPlot = [":","-"]*2
-    alphaForPlot = [0.4,1.0]*2
+    alphaForPlot = [0.5,1.0]*2
     
     # Flow labels
     flowStr = [str(int(flowRate[0]))+ " cm$^3$ min$^{-1}$",
@@ -2967,13 +2966,12 @@ def plotForArticle_figureFt(gitCommitID, currentDT,
                  "$y^\mathregular{in}$ = " + str(initMoleFrac[0,1])]
     
     # Custom Legend Lines
-    custom_lines = [Line2D([0], [0], linestyle=':', lw=1, dash_capstyle = 'round', color = 'k'),
-                    Line2D([0], [0], linestyle='-', lw=1, dash_capstyle = 'round', color = 'k')]
+    custom_lines = [Line2D([0], [0], linestyle=':', lw=1, dash_capstyle = 'round', alpha = alphaForPlot[0], color = 'k'),
+                    Line2D([0], [0], linestyle='-', lw=1, dash_capstyle = 'round', alpha = alphaForPlot[1], color = 'k')]
     
     
     # Loop over all materials
-    for pp in range(len(zlcFileNameALL)):
-        fig = figure(figsize=(6.5,5))   
+    for pp in range(len(zlcFileNameALL)): 
         zlcFileName = zlcFileNameALL[pp]
         objectiveFunction = np.zeros([len(zlcFileName)])
         # Loop over all available ZLC files for a given material
@@ -3095,7 +3093,7 @@ def plotForArticle_figureFt(gitCommitID, currentDT,
     #  Save the figure
     if saveFlag:
         # FileName: figureFt_<currentDateTime>_<GitCommitID_Current>_<GitCommitID_Data>
-        saveFileName = "figureFt" + currentDT + "_" + gitCommitID + saveFileExtension
+        saveFileName = "figureFt_" + currentDT + "_" + gitCommitID + saveFileExtension
         savePath = os.path.join('..','simulationFigures','experimentManuscript',saveFileName)
         # Check if inputResources directory exists or not. If not, create the folder
         if not os.path.exists(os.path.join('..','simulationFigures','experimentManuscript')):
