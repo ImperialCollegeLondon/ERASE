@@ -218,13 +218,13 @@ def plotForArticle_figureMat(gitCommitID, currentDT,
                    linestyle = ':', linewidth = 0.75, color = '#7d8597')
         
         # Set background color for micropore region
-        ax.axvspan(0,2, facecolor='#F3CA40', alpha=0.3)
+        ax.axvspan(0,2, facecolor='#EEE0CB', alpha=0.3)
         ax.text(0.13, 1.5, "micro", fontsize=8, color = 'k')
         # Set background color for mesopore region
-        ax.axvspan(2, 50, facecolor='#F2A541', alpha=0.3)
+        ax.axvspan(2, 50, facecolor='#BAA898', alpha=0.3)
         ax.text(2.8, 1.5, "meso", fontsize=8, color = 'k')
         # Set background color for macropore region
-        ax.axvspan(50, 1e6, facecolor='#F08A4B', alpha=0.3)
+        ax.axvspan(50, 1e6, facecolor='#848586', alpha=0.3)
         ax.text(2e3, 1.5, "macro", fontsize=8, color = 'k')
         
         # Plot N2 sorption
