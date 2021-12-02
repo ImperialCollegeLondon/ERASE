@@ -2244,7 +2244,7 @@ def plotForArticle_figureRawTex(gitCommitID, currentDT,
         for ll in range(3):
         
             # Plot N2 77 K isotherm data
-            ax3.plot(QCALL[:,0+2*ll],
+            ax3.semilogx(QCALL[:,0+2*ll],
                     QCALL[:,1+2*ll],
                     linewidth = 0.5,
                     linestyle = ':',
@@ -2255,13 +2255,14 @@ def plotForArticle_figureRawTex(gitCommitID, currentDT,
         # Text labels
         ax3.set(xlabel='$P/P_0$ [-]', 
         ylabel='$q^*_{\mathrm{N}_2}$ [cm$^{3}$(STP) g$^{-1}$]',
-        xlim = [0,1], ylim = [0, 600])
+        xlim = [1e-7,1], 
+        ylim = [0, 600])
         # ax3.text(70, 1.3, "(c)", fontsize=8,)
         ax3.legend(loc='upper right', handletextpad=0.2)
 
-        ax3.locator_params(axis="x", nbins=4)            
+        # ax3.locator_params(axis="x", nbins=4)            
         ax3.locator_params(axis="y", nbins=4)
-        ax3.text(0.05, 550, "(a)", fontsize=8,)
+        ax3.text(2e-7, 550, "(a)", fontsize=8,)
  
     #  Save the figure
     if saveFlag:
