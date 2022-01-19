@@ -60,7 +60,7 @@ git clone https://github.com/ImperialCollegeLondon/ERASE.git
 * Dr. Ashwin Kumar Rajagopalan
 * Mr. Hassan Azzan
 
-### LICENSE
+## LICENSE
 ERASE
 Copyright (C) 2022  Ashwin Kumar Rajagopalan
 
