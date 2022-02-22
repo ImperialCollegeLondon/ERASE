@@ -12,6 +12,7 @@
 # Plots for the experiment manuscript
 #
 # Last modified:
+# - 2022-02-22, AK: Minor fix for plots
 # - 2021-11-16, AK: Add Ft plot and minor fixes
 # - 2021-10-27, AK: Add plots for sensitivity analysis
 # - 2021-10-15, AK: Add plots for SI
@@ -486,9 +487,9 @@ def plotForArticle_figureDV(gitCommitID, currentDT,
                 ax1.locator_params(axis="x", nbins=5)
                 ax1.legend(handletextpad=0.0,loc='center right')
                 ax1.text(7, 1.3, "(a)", fontsize=8,)
-                ax1.text(12.7, 0.64, "MS", fontsize=8, fontweight = 'bold',
+                ax1.text(8.9, 0.64, "Segment II", fontsize=8, fontweight = 'bold',
                         backgroundcolor = 'w', color = '#e71d36')
-                ax1.text(7.2, 0.385, "$V^\mathrm{MS}$ = 0.02 cm$^3$", fontsize=8, 
+                ax1.text(7.2, 0.385, "$V^\mathrm{SII}$ = 0.02 cm$^3$", fontsize=8, 
                         backgroundcolor = 'w', color = '#7d8597')
                 ax1.grid(which='minor', linestyle=':')
             elif kk == 1:
@@ -502,9 +503,9 @@ def plotForArticle_figureDV(gitCommitID, currentDT,
                 ax2.locator_params(axis="x", nbins=5)
                 ax2.legend(handletextpad=0.0,loc='center right')
                 ax2.text(70, 1.3, "(b)", fontsize=8,)
-                ax2.text(80, 0.64, "Setup w/ Ball", fontsize=8,  fontweight = 'bold',
+                ax2.text(57, 0.64, "Segment I w/ Ball", fontsize=8,  fontweight = 'bold',
                         backgroundcolor = 'w', color = '#e71d36')
-                ax2.text(78, 0.385, "$V^\mathrm{S}$ = 3.76 cm$^3$", fontsize=8, 
+                ax2.text(75, 0.385, "$V^\mathrm{SI}$ = 3.76 cm$^3$", fontsize=8, 
                         backgroundcolor = 'w', color = '#7d8597')
                 ax2.grid(which='minor', linestyle=':')
             elif kk == 2:
@@ -518,9 +519,9 @@ def plotForArticle_figureDV(gitCommitID, currentDT,
                 ax3.locator_params(axis="x", nbins=5)
                 ax3.legend(handletextpad=0.0,loc='center right')
                 ax3.text(70, 1.3, "(c)", fontsize=8,)
-                ax3.text(74, 0.64, "Setup w/o Ball", fontsize=8,  fontweight = 'bold',
+                ax3.text(51, 0.64, "Segment I w/o Ball", fontsize=8,  fontweight = 'bold',
                         backgroundcolor = 'w', color = '#e71d36')
-                ax3.text(78, 0.385, "$V^\mathrm{S}$ = 3.93 cm$^3$", fontsize=8, 
+                ax3.text(75, 0.385, "$V^\mathrm{SI}$ = 3.93 cm$^3$", fontsize=8, 
                         backgroundcolor = 'w', color = '#7d8597')
                 ax3.grid(which='minor', linestyle=':')
 
@@ -3068,6 +3069,7 @@ def plotForArticle_figureFt(gitCommitID, currentDT,
                     if ii == 1:
                         ax1.text(30, 0.03, flowStr[ii], fontsize=8, color=colorsForPlot[ii])
                     ax1.text(28, 1.3, "AC", fontsize=8, fontweight = 'bold',color = 'k')
+                    ax1.grid(which='minor', linestyle=':')
                 # Boron Nitride
                 if pp == 1:
                     # Ft - Log scale        
@@ -3083,7 +3085,8 @@ def plotForArticle_figureFt(gitCommitID, currentDT,
                         ax2.text(5, 0.2, flowStr[ii], fontsize=8, color=colorsForPlot[ii])
                     if ii == 1:
                         ax2.text(22, 0.03, flowStr[ii], fontsize=8, color=colorsForPlot[ii])
-                ax2.text(28, 1.3, "BN", fontsize=8, fontweight = 'bold',color = 'k')
+                    ax2.text(28, 1.3, "BN", fontsize=8, fontweight = 'bold',color = 'k')
+                    ax2.grid(which='minor', linestyle=':')
                 # Zeolite 13X
                 if pp == 2:
                     # Ft - Log scale        
@@ -3100,6 +3103,7 @@ def plotForArticle_figureFt(gitCommitID, currentDT,
                     if ii == 1:
                         ax3.text(65, 0.03, flowStr[ii], fontsize=8, color=colorsForPlot[ii])
                     ax3.text(67, 1.3, "13X", fontsize=8, fontweight = 'bold',color = 'k')
+                    ax3.grid(which='minor', linestyle=':')
                     
     #  Save the figure
     if saveFlag:
