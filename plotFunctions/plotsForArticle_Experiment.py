@@ -489,7 +489,7 @@ def plotForArticle_figureDV(gitCommitID, currentDT,
                 ax1.text(7, 1.3, "(a)", fontsize=8,)
                 ax1.text(8.9, 0.64, "Segment II", fontsize=8, fontweight = 'bold',
                         backgroundcolor = 'w', color = '#e71d36')
-                ax1.text(7.2, 0.385, "$V^\mathrm{SII}$ = 0.02 cm$^3$", fontsize=8, 
+                ax1.text(7.2, 0.385, "$V^\mathrm{S_{II}}$ = 0.02 cm$^3$", fontsize=8, 
                         backgroundcolor = 'w', color = '#7d8597')
                 ax1.grid(which='minor', linestyle=':')
             elif kk == 1:
@@ -505,7 +505,7 @@ def plotForArticle_figureDV(gitCommitID, currentDT,
                 ax2.text(70, 1.3, "(b)", fontsize=8,)
                 ax2.text(57, 0.64, "Segment I w/ Ball", fontsize=8,  fontweight = 'bold',
                         backgroundcolor = 'w', color = '#e71d36')
-                ax2.text(75, 0.385, "$V^\mathrm{SI}$ = 3.76 cm$^3$", fontsize=8, 
+                ax2.text(75, 0.385, "$V^\mathrm{S_{I}}$ = 3.76 cm$^3$", fontsize=8, 
                         backgroundcolor = 'w', color = '#7d8597')
                 ax2.grid(which='minor', linestyle=':')
             elif kk == 2:
@@ -521,7 +521,7 @@ def plotForArticle_figureDV(gitCommitID, currentDT,
                 ax3.text(70, 1.3, "(c)", fontsize=8,)
                 ax3.text(51, 0.64, "Segment I w/o Ball", fontsize=8,  fontweight = 'bold',
                         backgroundcolor = 'w', color = '#e71d36')
-                ax3.text(75, 0.385, "$V^\mathrm{SI}$ = 3.93 cm$^3$", fontsize=8, 
+                ax3.text(75, 0.385, "$V^\mathrm{S_{I}}$ = 3.93 cm$^3$", fontsize=8, 
                         backgroundcolor = 'w', color = '#7d8597')
                 ax3.grid(which='minor', linestyle=':')
 
