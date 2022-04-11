@@ -3193,6 +3193,7 @@ def plotForArticle_figureZLCFitALL(gitCommitID, currentDT,
     from simulateCombinedModel import simulateCombinedModel
     from deadVolumeWrapper import deadVolumeWrapper
     from extractDeadVolume import filesToProcess # File processing script
+    from matplotlib.lines import Line2D
     plt.style.use('doubleColumn2Row.mplstyle') # Custom matplotlib style file
 
     # Get the commit ID of the current repository
@@ -3464,11 +3465,21 @@ def plotForArticle_figureZLCFitALL(gitCommitID, currentDT,
     plt.figtext(-0.02, 0.83, "AC", fontsize=8, fontweight = 'bold',color = '#4895EF')
     plt.figtext(-0.02, 0.51, "BN", fontsize=8, fontweight = 'bold',color = '#4895EF')
     plt.figtext(-0.02, 0.19, "13X", fontsize=8, fontweight = 'bold',color = '#4895EF')
-        
+    
+    # Dead Volume
+    tempLabel = ['306 K','325 K', '345 K']
+
+    # Custom Legend Lines
+    custom_lines = [Line2D([0], [0], linestyle='-', lw=1, color = '#ffba08'),
+                    Line2D([0], [0], linestyle='-', lw=1, color = '#d00000'),
+                    Line2D([0], [0], linestyle='-', lw=1, color = '#03071e'),]
+    
+    fig.legend(custom_lines,tempLabel,bbox_to_anchor=(0.04,0.95,0.675,0.1), 
+                   ncol=3, borderaxespad=0)   
     #  Save the figure
     if saveFlag:
         # FileName: figureZLCALL_<currentDateTime>_<GitCommitID_Current>_<GitCommitID_Data>
-        saveFileName = "figureZLCFitALL_" + materialText[pp] + "_" + currentDT + "_" + gitCommitID + saveFileExtension
+        saveFileName = "figureZLCFitALL_" + currentDT + "_" + gitCommitID + saveFileExtension
         savePath = os.path.join('..','simulationFigures','experimentManuscript',saveFileName)
         # Check if inputResources directory exists or not. If not, create the folder
         if not os.path.exists(os.path.join('..','simulationFigures','experimentManuscript')):
