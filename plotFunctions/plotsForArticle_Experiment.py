@@ -977,7 +977,7 @@ def plotForArticle_figureComp(gitCommitID, currentDT,
         # Check if inputResources directory exists or not. If not, create the folder
         if not os.path.exists(os.path.join('..','simulationFigures','experimentManuscript')):
             os.mkdir(os.path.join('..','simulationFigures','experimentManuscript'))
-        plt.savefig (savePath)
+        plt.savefig (savePath,bbox_inches='tight')
  
     plt.show()
     
@@ -3208,16 +3208,11 @@ def plotForArticle_figureZLCFitALL(gitCommitID, currentDT,
     
     # X limits for the different materials
     XLIM_L = [[0, 200],[0, 150],[0, 600]]
-    XLIM_H = [[0, 100],[0, 60],[0, 200]]
+    XLIM_H = [[0, 60],[0, 40],[0, 150]]
     
     # Label positions for the different materials
     panelLabel_L = [170, 150/200*170, 600/200*170]
-    panelLabel_H = [170/2, 60/100*170/2, 200/100*170/2]
-    materialLabel_L = [182, 150/200*182, 600/200*180]
-    materialLabel_H = [182/2, 60/100*182/2, 200/100*180/2]
-    flowLabel_L = [250]
-    flowLabel_H = [250/2]
-    materialText = ["AC", "BN", "13X"]
+    panelLabel_H = [60/200*170, 60/200*40/60*170, 60/200*150/60*170]
 
     # Parameter estimate files
                         # Activated Carbon Experiments
