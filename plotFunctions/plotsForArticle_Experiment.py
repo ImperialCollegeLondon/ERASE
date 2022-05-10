@@ -3760,7 +3760,7 @@ def plotForArticle_figureZLCSimFitALL(gitCommitID, currentDT,
     #  Save the figure
     if saveFlag:
         # FileName: figureZLCSimFit_<currentDateTime>_<GitCommitID_Current>_<GitCommitID_Data>
-        saveFileName = "figureZLCSimFit_" + materialText[pp] + "_" + currentDT + "_" + gitCommitID + saveFileExtension
+        saveFileName = "figureZLCSimFitALL_" + currentDT + "_" + gitCommitID + saveFileExtension
         savePath = os.path.join('..','simulationFigures','experimentManuscript',saveFileName)
         # Check if inputResources directory exists or not. If not, create the folder
         if not os.path.exists(os.path.join('..','simulationFigures','experimentManuscript')):
