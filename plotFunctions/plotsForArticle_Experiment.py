@@ -3765,7 +3765,7 @@ def plotForArticle_figureZLCSimFitALL(gitCommitID, currentDT,
         # Check if inputResources directory exists or not. If not, create the folder
         if not os.path.exists(os.path.join('..','simulationFigures','experimentManuscript')):
             os.mkdir(os.path.join('..','simulationFigures','experimentManuscript'))
-        plt.savefig (savePath)
+        plt.savefig (savePath,bbox_inches='tight')
         
     plt.show()
     
