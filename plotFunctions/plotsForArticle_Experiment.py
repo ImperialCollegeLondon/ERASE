@@ -2775,7 +2775,7 @@ def plotForArticle_figureSensitivity(gitCommitID, currentDT,
             ax3.set(xlabel = '$P$ [bar]', 
                     xlim = [0,1], ylim = [0, 3])
             ax3.text(0.04, 2.75, "(c)", fontsize=8,)
-            ax3.text(0.56, 0.15, "Dead Volume", fontsize=8, fontweight = 'bold',color = 'k')
+            ax3.text(0.53, 0.15, "Blank Volume", fontsize=8, fontweight = 'bold',color = 'k')
             ax3.locator_params(axis="x", nbins=4)
             ax3.locator_params(axis="y", nbins=4)
             ax3.legend(custom_linesDV, deadLabel, loc = 'upper right')
