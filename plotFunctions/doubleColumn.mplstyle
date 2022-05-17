@@ -2,23 +2,24 @@
 # https://matplotlib.org/3.3.2/tutorials/introductory/customizing.html
 
 ## Figure property
-figure.figsize : 7, 3 # width, height in inches
+figure.figsize : 7, 2.5 # width, height in inches
 figure.dpi : 600 # dpi
 figure.autolayout : true # for labels not being cut out
 
 ## Axes
-axes.titlesize : 10
-axes.labelsize : 10
+axes.titlesize : 8
+axes.labelsize : 8
 axes.formatter.limits : -5, 3
 
 ## Grid
 axes.grid : true
-grid.color : cccccc
-grid.linewidth : 0.5
+grid.color : e0e0e0
+grid.linewidth : 0.25
+axes.grid.which : both
 
 ## Lines & Scatter
-lines.linewidth : 1.5
-lines.markersize : 4
+lines.linewidth : 1
+lines.markersize : 2
 scatter.marker: o
 
 ## Ticks
@@ -34,7 +35,7 @@ font.size : 10
 
 ## Legends
 legend.frameon : true
-legend.fontsize : 10
+legend.fontsize : 8
 legend.edgecolor : 1 
 legend.framealpha : 0.6 
 

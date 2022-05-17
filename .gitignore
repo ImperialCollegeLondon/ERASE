@@ -17,6 +17,7 @@ __pycache__/
 #*.bib
 *.xlsx
 *.txt
+*.zip
 
 # Python related outputs
 *.npy
@@ -24,6 +25,9 @@ __pycache__/
 
 # C extensions
 *.so
+
+# MATLAB extensions
+*.mat
 
 # Distribution / packaging
 .Python

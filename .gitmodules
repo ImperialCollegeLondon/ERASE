@@ -1,0 +1,3 @@
+[submodule "IsothermFittingTool"]
+	path = IsothermFittingTool
+	url = https://github.com/ImperialCollegeLondon/IsothermFittingTool.git
