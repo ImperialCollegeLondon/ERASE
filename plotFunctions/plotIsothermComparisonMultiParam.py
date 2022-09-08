@@ -106,11 +106,15 @@ x_VOL = [4.65e-1, 1.02e-5 , 2.51e4, 6.51, 3.51e-7, 2.57e4] # (Hassan, QC)
                 # 'zlcParameters_20211012_2024_c8173b1.npz']
 
 # Activated Carbon Simulations (Main)
-zlcFileName = ['zlcParameters_20210823_1104_03c82f4.npz',
-                'zlcParameters_20210824_0000_03c82f4.npz',
-                'zlcParameters_20210824_1227_03c82f4.npz',
-                'zlcParameters_20210825_0017_03c82f4.npz',
-                'zlcParameters_20210825_1151_03c82f4.npz']
+zlcFileName = ['zlcParameters_20220428_1624_e81a19e.npz',
+               'zlcParameters_20220430_0508_e81a19e.npz',
+               'zlcParameters_20220501_1942_e81a19e.npz',
+               'zlcParameters_20220429_0445_e81a19e.npz',
+               'zlcParameters_20220430_1806_e81a19e.npz',
+               'zlcParameters_20220502_0753_e81a19e.npz',
+               'zlcParameters_20220429_1657_e81a19e.npz',
+               'zlcParameters_20220501_0653_e81a19e.npz',
+               'zlcParameters_20220502_2004_e81a19e.npz',]
 
 # Activated Carbon Simulations (Effect of porosity)
 # 0.90
