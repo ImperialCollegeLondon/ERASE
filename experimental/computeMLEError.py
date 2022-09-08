@@ -64,7 +64,8 @@ def computeMLEError(moleFracExp,moleFracSim,**kwargs):
         numPointsConc = np.zeros([2])
         numPointsConc[0] = len(moleFracExp[0:lastIndThreshold]) # Low composition
         numPointsConc[1] = len(moleFracExp[lastIndThreshold:-1]) # High composition            
-        downsampleConc = numPointsConc/np.min(numPointsConc) # Downsampled intervals
+        downsampleConc = numPointsConc/np.min(numPointsConc) # Downsampled intervals     
+        # downsampleConc = numPointsConc/numPointsConc # Downsampled intervals     
         
         # Compute error (accounting for downsampling)
         # Lower concentrations

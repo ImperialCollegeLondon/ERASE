@@ -52,6 +52,8 @@ def extractDeadVolume(**kwargs):
     from numpy import savez
     import multiprocessing # For parallel processing
     import socket
+    from smt.sampling_methods import LHS
+
     
     # Change path directory
     # Assumes either running from ERASE or from experimental. Either ways
@@ -95,11 +97,14 @@ def extractDeadVolume(**kwargs):
     
     # MS dead volume model
     msDeadVolumeFile = [] # DO NOT CHANGE (initialization)
-    flagMSDeadVolume = True # It should be the opposite of flagMSfit (if used)
+    if "DA" not in fileName[0]:
+        flagMSDeadVolume = True # It should be the opposite of flagMSfit (if used)
+    else:
+        flagMSDeadVolume = False
     # If MS dead volume used separately, use the file defined here with ms 
     # parameters
     if flagMSDeadVolume:
-        msDeadVolumeFile = 'deadVolumeCharacteristics_20210612_2100_8313a04.npz'
+        msDeadVolumeFile = 'deadVolumeCharacteristics_20210810_1323_eddec53.npz'
 
     # Downsample the data at different compositions (this is done on 
     # normalized data)
@@ -124,15 +129,20 @@ def extractDeadVolume(**kwargs):
         optBounds = np.array(([np.finfo(float).eps,10], [np.finfo(float).eps,2*np.finfo(float).eps],
                               [np.finfo(float).eps,2*np.finfo(float).eps], [1,30], 
                               [np.finfo(float).eps,2*np.finfo(float).eps]))
+        lhsPopulation = LHS(xlimits=optBounds)
+        start_population = lhsPopulation(400)
+        start_population[:,3] = np.round(start_population[:,3])
     # When the actual dead volume is used, diffusive volume allowed to change 
     else:                   
         optBounds = np.array(([np.finfo(float).eps,10], [np.finfo(float).eps,10],
                               [np.finfo(float).eps,10], [1,30], [np.finfo(float).eps,0.05]))
-                             
+        lhsPopulation = LHS(xlimits=optBounds)
+        start_population = lhsPopulation(400)    
+        start_population[:,3] = np.round(start_population[:,3])                 
     optType=np.array(['real','real','real','int','real'])
     # Algorithm parameters for GA
     algorithm_param = {'max_num_iteration':30,
-                       'population_size':200,
+                       'population_size':400,
                        'mutation_probability':0.25,
                        'crossover_probability': 0.55,
                        'parents_portion': 0.15,
@@ -150,7 +160,7 @@ def extractDeadVolume(**kwargs):
     # Call the GA optimizer using multiple cores
     model.run(set_function=ga.set_function_multiprocess(deadVolObjectiveFunction,
                                                          n_jobs = num_cores),
-              no_plot = True)
+              no_plot = True, start_generation= (start_population, None))
     # Repeat the optimization with the last generation repeated numOptRepeat
     # times (for better accuracy)
     for ii in range(numOptRepeat):
@@ -219,7 +229,8 @@ def deadVolObjectiveFunction(x):
         
     # Downsample intervals
     downsampleInt = numPointsExp/np.min(numPointsExp)
-        
+    # downsampleInt = numPointsExp/numPointsExp
+    
     # Initialize error for objective function
     computedError = 0 # Total error
     moleFracExpALL = np.array([])
@@ -252,7 +263,8 @@ def deadVolObjectiveFunction(x):
         expVolume = max([expVolume, np.trapz(moleFracExp,np.multiply(flowRateDV, timeElapsedExp))])
 
         # Call the deadVolume Wrapper function to obtain the outlet mole fraction
-        moleFracSim = deadVolumeWrapper(timeInt, flowRateDV, x, flagMSDeadVolume, msDeadVolumeFile)
+        moleFracSim = deadVolumeWrapper(timeInt, flowRateDV, x, flagMSDeadVolume, msDeadVolumeFile,
+                                        initMoleFrac = moleFracExp[0])
         
         # Stack mole fraction from experiments and simulation for error 
         # computation
@@ -266,8 +278,8 @@ def deadVolObjectiveFunction(x):
     # Penalize if the total volume of the system is greater than experiemntal 
     # volume
     penaltyObj = 0
-    if sum(x[0:3])>1.5*expVolume:
-        penaltyObj = 10000
+    # if sum(x[0:3])>1.5*expVolume:
+    #     penaltyObj = 10000
     # Compute the sum of the error for the difference between exp. and sim. and
     # add a penalty if needed (using MLE)
     computedError = computeMLEError(moleFracExpALL,moleFracSimALL,

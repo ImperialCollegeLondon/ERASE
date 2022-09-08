@@ -54,7 +54,7 @@ saveFlag = False
 saveFileExtension = ".png"
 
 # File with parameter estimates
-fileParameter = 'zlcParameters_20211012_1247_c8173b1.npz'
+fileParameter = 'zlcParameters_20220510_0309_e81a19e.npz'
 
 # Flag to plot dead volume results
 # Dead volume files have a certain name, use that to find what to plot
@@ -80,10 +80,10 @@ if flagDeadVolume:
     # Plot colors
     colorsForPlot = ["#FE7F2D","#B56938","#6C5342","#233D4D"]
     # File name of the experiments
-    rawFileName = ['ZLC_DeadVolume_Exp23A_Output.mat',
-                   'ZLC_DeadVolume_Exp23B_Output.mat',
-                   'ZLC_DeadVolume_Exp23C_Output.mat',
-                   'ZLC_DeadVolume_Exp23D_Output.mat',]
+    rawFileName = ['ZLC_DeadVolume_Exp26A_Output.mat',
+                   'ZLC_DeadVolume_Exp26B_Output.mat',
+                   'ZLC_DeadVolume_Exp26C_Output.mat',
+                   'ZLC_DeadVolume_Exp26D_Output.mat',]
 
     # Dead volume parameter model path
     parameterPath = os.path.join('..','simulationResults',fileParameter)
@@ -96,7 +96,7 @@ if flagDeadVolume:
     fileNameList = load(parameterPath, allow_pickle=True)["fileName"]
     modelOutputTemp = load(parameterPath, allow_pickle=True)["modelOutput"]
     x = modelOutputTemp[()]["variable"]
-
+    # x =  [ 1.72487266,  1.21200746,  1.00394413, 14,          0.0165476 ]
     # This was added on 12.06 (not back compatible for error computation)
     downsampleData = load(parameterPath)["downsampleFlag"]
 
@@ -266,31 +266,31 @@ else:
     from simulateCombinedModel import simulateCombinedModel
 
     # File name of the experiments
-    rawFileName = ['ZLC_ActivatedCarbon_Exp72A_Output.mat',
-                    'ZLC_ActivatedCarbon_Exp74A_Output.mat',
-                    'ZLC_ActivatedCarbon_Exp76A_Output.mat',
-                    'ZLC_ActivatedCarbon_Exp72B_Output.mat',
-                    'ZLC_ActivatedCarbon_Exp74B_Output.mat',
-                    'ZLC_ActivatedCarbon_Exp76B_Output.mat',
-                    'ZLC_ActivatedCarbon_Exp73A_Output.mat',
-                    'ZLC_ActivatedCarbon_Exp75A_Output.mat',
-                    'ZLC_ActivatedCarbon_Exp77A_Output.mat',
-                    'ZLC_ActivatedCarbon_Exp73B_Output.mat',
-                    'ZLC_ActivatedCarbon_Exp75B_Output.mat',
-                    'ZLC_ActivatedCarbon_Exp77B_Output.mat',]
+    # rawFileName = ['ZLC_ActivatedCarbon_Exp72A_Output.mat',
+    #                 'ZLC_ActivatedCarbon_Exp74A_Output.mat',
+    #                 'ZLC_ActivatedCarbon_Exp76A_Output.mat',
+    #                 'ZLC_ActivatedCarbon_Exp72B_Output.mat',
+    #                 'ZLC_ActivatedCarbon_Exp74B_Output.mat',
+    #                 'ZLC_ActivatedCarbon_Exp76B_Output.mat',
+    #                 'ZLC_ActivatedCarbon_Exp73A_Output.mat',
+    #                 'ZLC_ActivatedCarbon_Exp75A_Output.mat',
+    #                 'ZLC_ActivatedCarbon_Exp77A_Output.mat',
+    #                 'ZLC_ActivatedCarbon_Exp73B_Output.mat',
+    #                 'ZLC_ActivatedCarbon_Exp75B_Output.mat',
+    #                 'ZLC_ActivatedCarbon_Exp77B_Output.mat',]
     
-    # rawFileName = ['ZLC_ActivatedCarbon_Sim01A_Output.mat',
-    #                 'ZLC_ActivatedCarbon_Sim03A_Output.mat',
-    #                 'ZLC_ActivatedCarbon_Sim05A_Output.mat',
-    #                 'ZLC_ActivatedCarbon_Sim01B_Output.mat',
-    #                 'ZLC_ActivatedCarbon_Sim03B_Output.mat',
-    #                 'ZLC_ActivatedCarbon_Sim05B_Output.mat',
-    #                 'ZLC_ActivatedCarbon_Sim02A_Output.mat',
-    #                 'ZLC_ActivatedCarbon_Sim04A_Output.mat',
-    #                 'ZLC_ActivatedCarbon_Sim06A_Output.mat',
-    #                 'ZLC_ActivatedCarbon_Sim02B_Output.mat',
-    #                 'ZLC_ActivatedCarbon_Sim04B_Output.mat',
-    #                 'ZLC_ActivatedCarbon_Sim06B_Output.mat',]
+    rawFileName = ['ZLC_ActivatedCarbon_Sim01A_Output.mat',
+                    'ZLC_ActivatedCarbon_Sim03A_Output.mat',
+                    'ZLC_ActivatedCarbon_Sim05A_Output.mat',
+                    'ZLC_ActivatedCarbon_Sim01B_Output.mat',
+                    'ZLC_ActivatedCarbon_Sim03B_Output.mat',
+                    'ZLC_ActivatedCarbon_Sim05B_Output.mat',
+                    'ZLC_ActivatedCarbon_Sim02A_Output.mat',
+                    'ZLC_ActivatedCarbon_Sim04A_Output.mat',
+                    'ZLC_ActivatedCarbon_Sim06A_Output.mat',
+                    'ZLC_ActivatedCarbon_Sim02B_Output.mat',
+                    'ZLC_ActivatedCarbon_Sim04B_Output.mat',
+                    'ZLC_ActivatedCarbon_Sim06B_Output.mat',]
 
     # rawFileName =  ['ZLC_BoronNitride_Exp34A_Output.mat',
     #             'ZLC_BoronNitride_Exp36A_Output.mat',
@@ -335,8 +335,8 @@ else:
     parameterPath = os.path.join('..','simulationResults',fileParameter)
     
     # Temperature (for each experiment)
-    temperatureExp = [344.69, 325.39, 306.15]*4 # AC Experiments
-    # temperatureExp = [308.15, 328.15, 348.15]*4 # AC Simulations
+    # temperatureExp = [344.69, 325.39, 306.15]*4 # AC Experiments
+    temperatureExp = [308.15, 328.15, 348.15]*4 # AC Simulations
     
     # temperatureExp = [344.6, 325.49, 306.17,]*4 # BN (2 pellets) Experiments
     # temperatureExp = [308.15, 328.15, 348.15]*4 # BN (2 pellets) Simulations

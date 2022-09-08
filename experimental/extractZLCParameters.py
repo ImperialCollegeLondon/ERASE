@@ -47,6 +47,7 @@ def extractZLCParameters(**kwargs):
     from geneticalgorithm2 import geneticalgorithm2 as ga # GA
     from extractDeadVolume import filesToProcess # File processing script
     from sensitivityAnalysis import sensitivityAnalysis
+    from smt.sampling_methods import LHS
     import auxiliaryFunctions
     import os
     from numpy import savez
@@ -97,8 +98,21 @@ def extractZLCParameters(**kwargs):
     else:
         temperature = [306.47,317.18,339.14]
     
+    # Parameters for genetic algorithm
+    if 'algorithm_param' in kwargs:
+        algorithm_param = kwargs["algorithm_param"]
+    else:        
+        algorithm_param = {'max_num_iteration':30,
+                           'population_size':400,
+                           'mutation_probability':0.25,
+                           'crossover_probability': 0.55,
+                           'parents_portion': 0.15,
+                           'elit_ratio': 0.01,
+                           'max_iteration_without_improv':None}
+
+    
     # Dead volume model
-    deadVolumeFile = 'deadVolumeCharacteristics_20210613_0847_8313a04.npz'
+    deadVolumeFile = 'deadVolumeCharacteristics_20220726_0235_e81a19e.npz'
 
     # Isotherm model (if fitting only kinetic constant)
     isothermFile = 'zlcParameters_20210525_1610_a079f4a.npz'
@@ -106,14 +120,27 @@ def extractZLCParameters(**kwargs):
     # Adsorbent properties
     # Adsorbent density [kg/m3]
     # This has to be the skeletal density
-    adsorbentDensity = 2000 # Activated carbon skeletal density [kg/m3]
+    # adsorbentDensity = 1680 # Activated carbon skeletal density [kg/m3]
+    # adsorbentDensity = 4100 # Zeolite 13X H 
+    adsorbentDensity = 1250 # BNFASp skeletal density [kg/m3]
+    # adsorbentDensity = 2320 # BNpFAS skeletal density [kg/m3]
+
+    
     # Particle porosity
-    particleEpsilon = 0.61
+    # particleEpsilon = 0.61 # AC
+    # particleEpsilon = 0.79 # Zeolite 13X H
+    particleEpsilon = 0.64 # BNFASp
+    # particleEpsilon = 0.67 # BNpFAS
     # Particle mass [g]
-    massSorbent = 0.0625
+    # massSorbent = 0.0625  # AC
+    # massSorbent = 0.0594 # Zeolite 13X H
+    # massSorbent = 0.069  # BNFASp
+    massSorbent = 0.1  # BNFASp
+
+    # massSorbent = 0.1295  # BNpFAS
 
     # Downsample the data at different compositions (this is done on 
-    # normalized data)
+    # normalized data) [High and low comp]
     downsampleData = True
     
     # Confidence interval for the sensitivity analysis
@@ -138,6 +165,8 @@ def extractZLCParameters(**kwargs):
         isoRef = [10, 1e-5, 40e3, 1000, 1000] # Reference for parameters
         isothermFile = [] # Isotherm file is empty as it is fit
         paramIso = [] # Isotherm parameters is empty as it is fit
+        lhsPopulation = LHS(xlimits=optBounds)
+        start_population = lhsPopulation(400)
 
     # Dual-site Langmuir
     elif modelType == 'DSL':
@@ -150,6 +179,8 @@ def extractZLCParameters(**kwargs):
         isoRef = [10, 1e-5, 40e3, 10, 1e-5, 40e3, 1000, 1000] # Reference for the parameters
         isothermFile = [] # Isotherm file is empty as it is fit
         paramIso = [] # Isotherm parameters is empty as it is fit
+        lhsPopulation = LHS(xlimits=optBounds)
+        start_population = lhsPopulation(400)
 
     # Kinetic constants only
     # Note: This might be buggy for simulations performed before 20.08.21
@@ -166,19 +197,13 @@ def extractZLCParameters(**kwargs):
         parameterRefTemp = load(isothermDir+isothermFile, allow_pickle=True)["parameterReference"]
         # Get the isotherm parameters
         paramIso = np.multiply(modelNonDim,parameterRefTemp)
+        lhsPopulation = LHS(xlimits=optBounds)
+        start_population = lhsPopulation(400)
+    
 
     # Initialize the parameters used for ZLC fitting process
     fittingParameters(True,temperature,deadVolumeFile,adsorbentDensity,particleEpsilon,
                       massSorbent,isoRef,downsampleData,paramIso)
-
-    # Algorithm parameters for GA
-    algorithm_param = {'max_num_iteration':15,
-                       'population_size':400,
-                       'mutation_probability':0.25,
-                       'crossover_probability': 0.55,
-                       'parents_portion': 0.15,
-                       'elit_ratio': 0.01,
-                       'max_iteration_without_improv':None}
     
     # Minimize an objective function to compute the equilibrium and kinetic 
     # parameters from ZLC experiments
@@ -191,7 +216,7 @@ def extractZLCParameters(**kwargs):
     # Call the GA optimizer using multiple cores
     model.run(set_function=ga.set_function_multiprocess(ZLCObjectiveFunction,
                                                          n_jobs = num_cores),
-              no_plot = True)
+              no_plot = True, start_generation= (start_population, None))
     # Repeat the optimization with the last generation repeated numOptRepeat
     # times (for better accuracy)
     for ii in range(numOptRepeat):
@@ -274,6 +299,7 @@ def ZLCObjectiveFunction(x):
         
     # Downsample intervals
     downsampleInt = numPointsExp/np.min(numPointsExp)
+    # downsampleInt = numPointsExp/numPointsExp
     
     # Initialize error for objective function
     computedError = 0
