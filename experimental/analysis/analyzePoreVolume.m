@@ -24,11 +24,11 @@
 
 %%% USER INPUT %%%
 % File name to be used for analysis/plotting
-rawDataFileName = '13X_H_50nm_poreVolume';
+rawDataFileName = 'MonoZIF-67_8mL_PoreVol';
 
 % Name of files from QC and MIP (only for reference purposes)
-poreVolume.rawFiles.quantachromeFileName = '13X_H_N2_77K_2021_07_16 (DFT method  Pore Size Distribution)';
-poreVolume.rawFiles.mercuryIntrusionFileName = '13X_H';
+poreVolume.rawFiles.quantachromeFileName = '';
+poreVolume.rawFiles.mercuryIntrusionFileName = '';
 %%%%%%
 %%%%%%
 
@@ -86,11 +86,22 @@ if ~isfield(poreVolume,'properties')
 end
 
 % Plot incremental pore volume data
-figure('Units','inch','Position',[2 2 5 5])
+figure('Units','inch','Position',[2 2 10 5])
+subplot(1,2,1)
 semilogx(poreVolume.interp.QC(:,1),poreVolume.interp.QC(:,3),'or:');
 hold on
 semilogx(poreVolume.interp.MIP(:,1),poreVolume.interp.MIP(:,3),'xk:');
 xlim([0,max(poreVolume.interp.MIP(:,1))]); ylim([0,max([max(poreVolume.interp.MIP(:,3)) max(poreVolume.interp.QC(:,3))])]);
+legend('QC', 'MIP','Location','northeast');
+xlabel('{\it{D}} [nm]'); ylabel('{\it{dV}} [mL/g]');
+set(gca,'FontSize',14)
+box on;grid on;
+% Plot cumulative pore volume data
+subplot(1,2,2)
+semilogx(poreVolume.interp.QC(:,1),poreVolume.interp.QC(:,2),'or:');
+hold on
+semilogx(poreVolume.interp.MIP(:,1),max(poreVolume.interp.QC(:,2))+poreVolume.interp.MIP(:,2),'xk:');
+xlim([0,max(poreVolume.interp.MIP(:,1))]); ylim([0,max(poreVolume.interp.QC(:,2)+poreVolume.interp.MIP(:,2))]);
 legend('QC', 'MIP','Location','northeast');
 xlabel('{\it{D}} [nm]'); ylabel('{\it{dV}} [mL/g]');
 set(gca,'FontSize',14)
