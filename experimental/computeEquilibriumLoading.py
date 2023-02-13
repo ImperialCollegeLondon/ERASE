@@ -54,6 +54,9 @@ def computeEquilibriumLoading(**kwargs):
         # If model has six parameters - DSL
         elif len(isothermModel) == 6:
             modelType = 'DSL'
+        # If model has four parameters - SSS
+        elif len(isothermModel) == 4:
+            modelType = 'SSS'
     else:
         # Default isotherm model is DSL and uses CO2 isotherm on AC8
         # Reference: 10.1007/s10450-020-00268-7
@@ -68,7 +71,8 @@ def computeEquilibriumLoading(**kwargs):
         equilibriumLoading = simulateSSL(*inputParameters)
     elif modelType == 'DSL':
         equilibriumLoading = simulateDSL(*inputParameters)
-   
+    elif modelType == 'SSS':
+        equilibriumLoading = simulateSSS(*inputParameters)
     # Return the equilibrium loading
     return equilibriumLoading
     
@@ -131,6 +135,32 @@ def simulateDSL(*inputParameters):
     
     # Compute the equilibrium loading
     equilibriumLoading = isoNumerator_1/isoDenominator_1 + isoNumerator_2/isoDenominator_2
+
+    # Return the loading
+    return equilibriumLoading
+
+def simulateSSS(*inputParameters):
+    import numpy as np
+    # import pdb
+    # Gas constant
+    Rg = 8.314; # [J/mol K]
+    
+    # Unpack the tuple with the inputs for the isotherm model
+    pressureTotal,temperature,moleFrac,isothermModel = inputParameters
+    
+    # Compute the concentration at input pressure, temperature and mole fraction
+    localConc = pressureTotal*moleFrac/(Rg*temperature)
+    
+    # Compute the adsorption affinity 
+    isoAffinity = isothermModel[1]*np.exp(isothermModel[2]/(Rg*temperature))
+    
+    # Compute the numerator and denominator of a pure single site Langmuir
+    isoNumerator = isothermModel[0]*(isoAffinity*localConc)**isothermModel[3]
+    isoDenominator = 1 + (isoAffinity*localConc)**isothermModel[3]
+    
+    # Compute the equilibrium loading
+    equilibriumLoading = isoNumerator/isoDenominator
+    # pdb.set_trace()
 
     # Return the loading
     return equilibriumLoading

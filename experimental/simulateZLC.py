@@ -33,10 +33,11 @@
 
 def simulateZLC(**kwargs):
     import numpy as np
-    from scipy.integrate import solve_ivp
+    from scipy.integrate import odeint, solve_ivp
     from computeEquilibriumLoading import computeEquilibriumLoading
     import auxiliaryFunctions
     import os
+    import pdb
     
     # Move to top level folder (to avoid path issues)
     os.chdir("..")
@@ -163,25 +164,43 @@ def simulateZLC(**kwargs):
     initialConditions = np.zeros([2])
     initialConditions[0] = initMoleFrac[0] # Gas mole fraction
     initialConditions[1] = equilibriumLoading # Initial Loading
+    
+    # pdb.set_trace()
+    
+    ##########################################################################
+    # outputSol = solve_ivp(solveSorptionEquation, timeInt, initialConditions, 
+    #                       method='Radau', t_eval = t_eval,
+    #                       rtol = 1e-8, args = inputParameters)
+    # # Presure vector in output
+    # pressureVec =  pressureTotal * np.ones(len(outputSol.t)) # Constant pressure
 
-    outputSol = solve_ivp(solveSorptionEquation, timeInt, initialConditions, 
-                          method='Radau', t_eval = t_eval,
-                          rtol = 1e-8, args = inputParameters)
+    # # Compute the outlet flow rate
+    # sum_dqdt = np.gradient(outputSol.y[1,:],
+    #                     outputSol.t) # Compute gradient of loading
+    # flowOut = flowIn - ((volSorbent*(8.314*temperature)/pressureTotal)*(sum_dqdt))
+    
+    # # Parse out the output matrix and add flow rate
+    # resultMat = np.row_stack((outputSol.y,pressureVec,flowOut))
+
+    # # Parse out the time
+    # timeSim = outputSol.t
+    ##########################################################################
+    tVals = t_eval
+    outputSol = odeint(solveSorptionEquation, initialConditions, tVals, inputParameters,tfirst=True, h0 = 0.01)
     
     # Presure vector in output
-    pressureVec =  pressureTotal * np.ones(len(outputSol.t)) # Constant pressure
+    pressureVec =  pressureTotal * np.ones(len(outputSol)) # Constant pressure
 
     # Compute the outlet flow rate
-    sum_dqdt = np.gradient(outputSol.y[1,:],
-                       outputSol.t) # Compute gradient of loading
+    sum_dqdt = np.gradient(outputSol[:,1],
+                       tVals) # Compute gradient of loading
     flowOut = flowIn - ((volSorbent*(8.314*temperature)/pressureTotal)*(sum_dqdt))
     
     # Parse out the output matrix and add flow rate
-    resultMat = np.row_stack((outputSol.y,pressureVec,flowOut))
+    resultMat = np.row_stack((np.transpose(outputSol),pressureVec,flowOut))
 
     # Parse out the time
-    timeSim = outputSol.t
-    
+    timeSim = tVals
     # Call the plotting function
     if plotFlag:
         plotFullModelResult(timeSim, resultMat, inputParameters,
@@ -198,7 +217,7 @@ def simulateZLC(**kwargs):
 def solveSorptionEquation(t, f, *inputParameters):  
     import numpy as np
     from computeEquilibriumLoading import computeEquilibriumLoading
-    
+    import pdb
     # Gas constant
     Rg = 8.314; # [J/mol K]
 
@@ -259,7 +278,8 @@ def solveSorptionEquation(t, f, *inputParameters):
     term2 = ((flowIn*feedMoleFrac - flowOut*f[0])
              - (volSorbent*(Rg*temperature)/pressureTotal)*df[1])
     df[0] = term1*term2
-    
+    # pdb.set_trace()
+
     # Return the derivatives for the solver
     return df
 
