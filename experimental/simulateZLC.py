@@ -33,7 +33,7 @@
 
 def simulateZLC(**kwargs):
     import numpy as np
-    from scipy.integrate import odeint, solve_ivp
+    from scipy.integrate import odeint, solve_ivp, ode
     from computeEquilibriumLoading import computeEquilibriumLoading
     import auxiliaryFunctions
     import os
@@ -168,39 +168,49 @@ def simulateZLC(**kwargs):
     # pdb.set_trace()
     
     ##########################################################################
-    # outputSol = solve_ivp(solveSorptionEquation, timeInt, initialConditions, 
-    #                       method='Radau', t_eval = t_eval,
-    #                       rtol = 1e-8, args = inputParameters)
-    # # Presure vector in output
-    # pressureVec =  pressureTotal * np.ones(len(outputSol.t)) # Constant pressure
-
-    # # Compute the outlet flow rate
-    # sum_dqdt = np.gradient(outputSol.y[1,:],
-    #                     outputSol.t) # Compute gradient of loading
-    # flowOut = flowIn - ((volSorbent*(8.314*temperature)/pressureTotal)*(sum_dqdt))
-    
-    # # Parse out the output matrix and add flow rate
-    # resultMat = np.row_stack((outputSol.y,pressureVec,flowOut))
-
-    # # Parse out the time
-    # timeSim = outputSol.t
-    ##########################################################################
-    tVals = t_eval
-    outputSol = odeint(solveSorptionEquation, initialConditions, tVals, inputParameters,tfirst=True, h0 = 0.01)
-    
+    outputSol = solve_ivp(solveSorptionEquation, timeInt, initialConditions, 
+                          method='Radau', t_eval = t_eval,
+                          rtol = 1e-8, args = inputParameters, first_step =0.0001, dense_output=True)
     # Presure vector in output
-    pressureVec =  pressureTotal * np.ones(len(outputSol)) # Constant pressure
+    pressureVec =  pressureTotal * np.ones(len(outputSol.t)) # Constant pressure
 
     # Compute the outlet flow rate
-    sum_dqdt = np.gradient(outputSol[:,1],
-                       tVals) # Compute gradient of loading
+    sum_dqdt = np.gradient(outputSol.y[1,:],
+                        outputSol.t) # Compute gradient of loading
     flowOut = flowIn - ((volSorbent*(8.314*temperature)/pressureTotal)*(sum_dqdt))
     
     # Parse out the output matrix and add flow rate
-    resultMat = np.row_stack((np.transpose(outputSol),pressureVec,flowOut))
+    resultMat = np.row_stack((outputSol.y,pressureVec,flowOut))
 
     # Parse out the time
-    timeSim = tVals
+    timeSim = outputSol.t
+    ##########################################################################
+    # ode15s = ode(solveSorptionEquation)
+    # ode15s.set_integrator('vode', method='bdf', order=15, nsteps=3000)
+    # ode15s.set_initial_value(initialConditions, 0)
+    # ode15s.set_f_params(*adsorbentDensity, isothermModel, rateConstant_1, rateConstant_2,
+    #                    flowIn, feedMoleFrac, initMoleFrac, pressureTotal, 
+    #                    temperature, volSorbent, volGas)
+    # pdb.set_trace()
+    # ode15s.integrate(timeInt[-1])
+    # tVals =  np.arange(timeInt[0],timeInt[-1],0.01)
+    # pdb.set_trace()
+    # tVals = t_eval
+    # outputSol = odeint(solveSorptionEquation, initialConditions, tVals, inputParameters,tfirst=True, h0 = 0.01)
+    
+    # # Presure vector in output
+    # pressureVec =  pressureTotal * np.ones(len(outputSol)) # Constant pressure
+
+    # # Compute the outlet flow rate
+    # sum_dqdt = np.gradient(outputSol[:,1],
+    #                    tVals) # Compute gradient of loading
+    # flowOut = flowIn - ((volSorbent*(8.314*temperature)/pressureTotal)*(sum_dqdt))
+    
+    # # Parse out the output matrix and add flow rate
+    # resultMat = np.row_stack((np.transpose(outputSol),pressureVec,flowOut))
+
+    # # Parse out the time
+    # timeSim = tVals
     # Call the plotting function
     if plotFlag:
         plotFullModelResult(timeSim, resultMat, inputParameters,
@@ -226,6 +236,8 @@ def solveSorptionEquation(t, f, *inputParameters):
 
     # Initialize the derivatives to zero
     df = np.zeros([2])
+    if f[0] < 0:
+        f[0] = 0
     
     # Compute the loading [mol/m3] @ f[0]
     equilibriumLoading  = computeEquilibriumLoading(pressureTotal=pressureTotal,
@@ -236,7 +248,7 @@ def solveSorptionEquation(t, f, *inputParameters):
     # Partial pressure of the gas
     partialPressure = f[0]*pressureTotal
     # delta pressure to compute gradient
-    delP = 1e-3
+    delP = 10
     # Mole fraction (up)
     moleFractionUp = (partialPressure + delP)/pressureTotal
     # Compute the loading [mol/m3] @ moleFractionUp
@@ -247,20 +259,24 @@ def solveSorptionEquation(t, f, *inputParameters):
     
     # Compute the gradient (delq*/dc)
     dqbydc = (equilibriumLoadingUp-equilibriumLoading)/(delP/(Rg*temperature)) # [-]
-    
+    dellogc = np.log(partialPressure+delP)-np.log((partialPressure))
+    dlnqbydlnc = (np.log(equilibriumLoadingUp)-np.log(equilibriumLoading))/dellogc
     # Rate constant 1 (analogous to micropore resistance)
-    k1 = rateConstant_1
-    
+    # k1 = rateConstant_1
+    k1 = rateConstant_1/dlnqbydlnc
+
     # Rate constant 2 (analogous to macropore resistance)
-    k2 = rateConstant_2/dqbydc
+    # k2 = rateConstant_2/dqbydc
+    epsilonp = volGas/(volGas+volSorbent)
+    k2 = rateConstant_2/(1+(1/epsilonp)*dqbydc)
     
     # Overall rate constant
     # The following conditions are done for purely numerical reasons
     # If pure (analogous) macropore
-    if k1<1e-12:
+    if k1<1e-9:
         rateConstant = k2
     # If pure (analogous) micropore
-    elif k2<1e-12:
+    elif k2<1e-9:
         rateConstant = k1
     # If both resistances are present
     else:

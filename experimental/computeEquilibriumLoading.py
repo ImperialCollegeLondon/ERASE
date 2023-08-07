@@ -26,7 +26,8 @@
 
 def computeEquilibriumLoading(**kwargs):
     import numpy as np
-    
+    import warnings
+    warnings.filterwarnings("ignore")
     # Total pressure of the gas [Pa]
     if 'pressureTotal' in kwargs:
         pressureTotal = np.array(kwargs["pressureTotal"])
@@ -65,14 +66,17 @@ def computeEquilibriumLoading(**kwargs):
 
     # Prepare the input parameters for the model
     inputParameters = (pressureTotal,temperature,moleFrac,isothermModel)
-
-    # Call the function of the relevant model type
-    if modelType == 'SSL':
-        equilibriumLoading = simulateSSL(*inputParameters)
-    elif modelType == 'DSL':
-        equilibriumLoading = simulateDSL(*inputParameters)
-    elif modelType == 'SSS':
-        equilibriumLoading = simulateSSS(*inputParameters)
+    
+    try:
+        # Call the function of the relevant model type
+        if modelType == 'SSL':
+            equilibriumLoading = simulateSSL(*inputParameters)
+        elif modelType == 'DSL':
+            equilibriumLoading = simulateDSL(*inputParameters)
+        elif modelType == 'SSS':
+            equilibriumLoading = simulateSSS(*inputParameters)
+    except:
+        equilibriumLoading = 0
     # Return the equilibrium loading
     return equilibriumLoading
     
@@ -147,7 +151,8 @@ def simulateSSS(*inputParameters):
     
     # Unpack the tuple with the inputs for the isotherm model
     pressureTotal,temperature,moleFrac,isothermModel = inputParameters
-    
+    if moleFrac < 0:
+        moleFrac = 0
     # Compute the concentration at input pressure, temperature and mole fraction
     localConc = pressureTotal*moleFrac/(Rg*temperature)
     

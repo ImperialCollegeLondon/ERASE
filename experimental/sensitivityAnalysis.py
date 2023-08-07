@@ -176,6 +176,8 @@ def computeObjectiveFunction(mainDir, zlcParameterPath, pOpt, pRef):
     from simulateCombinedModel import simulateCombinedModel
     from computeMLEError import computeMLEError
     from extractDeadVolume import filesToProcess # File processing script
+    from scipy.io import loadmat
+    import os
     # Parse out the experimental file names and temperatures
     rawFileName = load(zlcParameterPath)["fileName"]
     temperatureExp = load(zlcParameterPath)["temperature"]
@@ -197,9 +199,19 @@ def computeObjectiveFunction(mainDir, zlcParameterPath, pOpt, pRef):
     # Volume of gas chamber (dead volume) [m3]
     volGas = volSorbent/(1-particleEpsilon)*particleEpsilon
     # Dead volume model
-    deadVolumeFile = str(load(zlcParameterPath)["deadVolumeFile"])
+    deadVolumeFile = load(zlcParameterPath)["deadVolumeFile"]
+    isothermDataFile = str(load(zlcParameterPath)["isothermDataFile"])
     # Get the parameter values (in actual units)
     xOpt = np.multiply(pOpt,pRef)
+    isothermDir = '..' + os.path.sep + 'isothermFittingData/'
+    modelOutputTemp = loadmat(isothermDir+isothermDataFile)["isothermData"]       
+    # Convert the nDarray to list
+    nDArrayToList = np.ndarray.tolist(modelOutputTemp)
+    # Unpack another time (due to the structure of loadmat)
+    tempListData = nDArrayToList[0][0]
+    # Get the necessary variables
+    isothermAll = tempListData[4]
+    isothermTemp = isothermAll[:,0]
     
     # Compute the downsample intervals for the experiments
     # This is only to make sure that all experiments get equal weights
@@ -230,14 +242,32 @@ def computeObjectiveFunction(mainDir, zlcParameterPath, pOpt, pRef):
         timeElapsedExp = timeElapsedExpTemp[::int(np.round(downsampleInt[ii]))]
         moleFracExp = moleFracExpTemp[::int(np.round(downsampleInt[ii]))]
         flowRateExp = flowRateTemp[::int(np.round(downsampleInt[ii]))]
-                
+        
+        if moleFracExp[0] > 0.5:
+            deadVolumeFlow = deadVolumeFile[1]
+        else:
+            deadVolumeFlow = deadVolumeFile[0]
+        if len(deadVolumeFlow[0]) == 1: # 1 DV for 1 DV file
+            deadVolumeFileTemp = str(deadVolumeFlow[0])
+        else:
+            if np.absolute(flowRateExp[-1] - 1) > 0.2: # for lowflowrate experiments!
+                deadVolumeFileTemp =  str(deadVolumeFlow[0][0])
+            else:
+                deadVolumeFileTemp =  str(deadVolumeFlow[0][1])
+        
         # Integration and ode evaluation time (check simulateZLC/simulateDeadVolume)
         timeInt = timeElapsedExp
     
         # Parse out the xOpt to the isotherm model and kinetic parameters
-        isothermModel = xOpt[0:-2]
-        rateConstant_1 = xOpt[-2]
-        rateConstant_2 = xOpt[-1]
+        # isothermModel = xOpt[0:-2]
+        if len(xOpt) == 2:
+            isothermModel = isothermTemp[np.where(isothermTemp!=0)]        
+            rateConstant_1 = xOpt[-2]
+            rateConstant_2 = xOpt[-1]
+        else:
+            isothermModel = xOpt[0:-2]
+            rateConstant_1 = xOpt[-2]
+            rateConstant_2 = xOpt[-1]
                 
         # Compute the model response using the optimized parameters
         _ , moleFracSim , resultMat = simulateCombinedModel(timeInt = timeInt,
@@ -247,7 +277,7 @@ def computeObjectiveFunction(mainDir, zlcParameterPath, pOpt, pRef):
                                                     isothermModel = isothermModel,
                                                     rateConstant_1 = rateConstant_1,
                                                     rateConstant_2 = rateConstant_2,
-                                                    deadVolumeFile = deadVolumeFile,
+                                                    deadVolumeFile = str(deadVolumeFileTemp),
                                                     volSorbent = volSorbent,
                                                     volGas = volGas,
                                                     temperature = temperatureExp[ii])

@@ -38,8 +38,9 @@
 
 def simulateDeadVolume(**kwargs):
     import numpy as np
-    from scipy.integrate import solve_ivp
+    from scipy.integrate import odeint, solve_ivp
     import os
+    import pdb
     
     # Move to top level folder (to avoid path issues)
     os.chdir("..")
@@ -122,6 +123,8 @@ def simulateDeadVolume(**kwargs):
     # The first element is the inlet composition and the rest is the dead 
     # volume
     initialConditions = np.ones([numTanksTotal])*initMoleFrac
+    # pdb.set_trace()
+    ##########################################################################
     # Solve the system of equations
     outputSol = solve_ivp(solveTanksInSeries, timeInt, initialConditions, 
                           method='Radau', t_eval = t_eval,
@@ -143,7 +146,27 @@ def simulateDeadVolume(**kwargs):
     flowRate_M = flowRate - flowRate_2D
     moleFracOut = np.divide(np.multiply(flowRate_M,moleFracMix)
                     + np.multiply(flowRate_2D,moleFracDiff),flowRate)
+    ##########################################################################
+    # # Solve the system of equations
+    # outputSol = odeint(solveTanksInSeries, initialConditions, t_eval,
+    #                       inputParameters, tfirst=True, h0 = 0.0001,hmax = 0.001)
+    
+    # # Parse out the time
+    # timeSim = t_eval
+    
+    # # Inlet concentration
+    # moleFracIn = np.ones((len(t_eval),1))*feedMoleFrac
 
+    # # Mole fraction at the outlet
+    # # Mixing volume
+    # moleFracMix = outputSol[numTanks_1,1]
+    # # Diffusive volume
+    # moleFracDiff = outputSol[-1,1]
+
+    # # Composition after mixing
+    # flowRate_M = flowRate - flowRate_2D
+    # moleFracOut = np.divide(np.multiply(flowRate_M,moleFracMix)
+    #                 + np.multiply(flowRate_2D,moleFracDiff),flowRate)
     # Plot the dead volume response
     if plotFlag:
         plotOutletConcentration(timeSim,moleFracIn,moleFracOut)

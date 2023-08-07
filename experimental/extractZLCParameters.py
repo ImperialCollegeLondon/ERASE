@@ -54,6 +54,7 @@ def extractZLCParameters(**kwargs):
     from numpy import load
     import multiprocessing # For parallel processing
     import socket
+    from scipy.io import loadmat
     
     # Change path directory
     # Assumes either running from ERASE or from experimental. Either ways
@@ -68,7 +69,7 @@ def extractZLCParameters(**kwargs):
     currentDT = auxiliaryFunctions.getCurrentDateTime()
     
     # Find out the total number of cores available for parallel processing
-    num_cores = multiprocessing.cpu_count()
+    num_cores = 32
 
     #####################################
     ###### USER DEFINED PROPERTIES ######
@@ -109,39 +110,56 @@ def extractZLCParameters(**kwargs):
                            'parents_portion': 0.15,
                            'elit_ratio': 0.01,
                            'max_iteration_without_improv':None}
-
-    
+        
+    # Sorbent Skeletal Density [kg/m3] (for each experiment)
+    if 'adsorbentDensity' in kwargs:
+        adsorbentDensity = kwargs["adsorbentDensity"]
+    else:
+        adsorbentDensity = 2000
+        
+    # Particle porosity [-] (for each experiment)
+    if 'particleEpsilon' in kwargs:
+        particleEpsilon = kwargs["particleEpsilon"]
+    else:
+        particleEpsilon = 0.7   
+        
+    # Sorbent Mass [g] (for each experiment)
+    if 'massSorbent' in kwargs:
+        massSorbent = kwargs["massSorbent"]
+    else:
+        massSorbent = 0.05
+        
     # Dead volume model
-    deadVolumeFile = 'deadVolumeCharacteristics_20220726_0235_e81a19e.npz'
-
+    if 'deadVolumeFile' in kwargs:
+        deadVolumeFile = kwargs["deadVolumeFile"]
+    else:
+        deadVolumeFile = [[['deadVolumeCharacteristics_20230321_1048_59cc206.npz', # 50A
+                            'deadVolumeCharacteristics_20230321_1238_59cc206.npz']], # 51A
+                          [['deadVolumeCharacteristics_20230321_1137_59cc206.npz', # 50B
+                            'deadVolumeCharacteristics_20230321_1252_59cc206.npz']]] # 51B
+        
     # Isotherm model (if fitting only kinetic constant)
-    isothermFile = 'zlcParameters_20210525_1610_a079f4a.npz'
-
-    # Adsorbent properties
-    # Adsorbent density [kg/m3]
-    # This has to be the skeletal density
-    # adsorbentDensity = 1680 # Activated carbon skeletal density [kg/m3]
-    # adsorbentDensity = 4100 # Zeolite 13X H 
-    adsorbentDensity = 1250 # BNFASp skeletal density [kg/m3]
-    # adsorbentDensity = 2320 # BNpFAS skeletal density [kg/m3]
-
-    
-    # Particle porosity
-    # particleEpsilon = 0.61 # AC
-    # particleEpsilon = 0.79 # Zeolite 13X H
-    particleEpsilon = 0.64 # BNFASp
-    # particleEpsilon = 0.67 # BNpFAS
-    # Particle mass [g]
-    # massSorbent = 0.0625  # AC
-    # massSorbent = 0.0594 # Zeolite 13X H
-    # massSorbent = 0.069  # BNFASp
-    massSorbent = 0.1  # BNFASp
-
-    # massSorbent = 0.1295  # BNpFAS
-
+    if 'isothermDataFile' in kwargs:
+        isothermDataFile = kwargs["isothermDataFile"]
+    else:
+        isothermDataFile = 'ZYH_DSL_QC_070523.mat'  
+        
     # Downsample the data at different compositions (this is done on 
     # normalized data) [High and low comp]
-    downsampleData = True
+    if 'downsampleData' in kwargs:
+        downsampleData = kwargs["downsampleData"]
+    else:
+        downsampleData = 'downsampleData.mat'    
+        
+    # Downsample the for each exp to have the same number of points
+    if 'downsampleExp' in kwargs:
+        downsampleExp = kwargs["downsampleExp"]
+    else:
+        downsampleExp = 'downsampleExp.mat'
+        
+    # Dummt file as placeholder
+    isothermFile = 'zlcParameters_20210525_1610_a079f4a.npz'
+
     
     # Confidence interval for the sensitivity analysis
     alpha = 0.95
@@ -157,7 +175,7 @@ def extractZLCParameters(**kwargs):
     # (16.06.21: Arrhenius constant and activation energy)
     # Single-site Langmuir
     if modelType == 'SSL':
-        optBounds = np.array(([np.finfo(float).eps,1], [np.finfo(float).eps,1],
+        optBounds = np.array(([0.01,1], [np.finfo(float).eps,1],
                               [np.finfo(float).eps,1], [np.finfo(float).eps,1],
                               [np.finfo(float).eps,1]))
         optType=np.array(['real','real','real','real','real'])
@@ -170,13 +188,26 @@ def extractZLCParameters(**kwargs):
 
     # Dual-site Langmuir
     elif modelType == 'DSL':
-        optBounds = np.array(([np.finfo(float).eps,1], [np.finfo(float).eps,1],
-                              [np.finfo(float).eps,1], [np.finfo(float).eps,1],
+        optBounds = np.array(([0.01,1], [np.finfo(float).eps,1],
+                              [np.finfo(float).eps,1], [0.01,1],
                               [np.finfo(float).eps,1], [np.finfo(float).eps,1],
                               [np.finfo(float).eps,1], [np.finfo(float).eps,1]))
         optType=np.array(['real','real','real','real','real','real','real','real'])
         problemDimension = len(optType)
-        isoRef = [10, 1e-5, 40e3, 10, 1e-5, 40e3, 1000, 1000] # Reference for the parameters
+        isoRef = [10, 1e-5, 40e3, 10, 1e-5, 40e3, 1000, 1000] # Reference for the parameters 
+        isothermFile = [] # Isotherm file is empty as it is fit
+        paramIso = [] # Isotherm parameters is empty as it is fit
+        lhsPopulation = LHS(xlimits=optBounds)
+        start_population = lhsPopulation(400)
+        
+    # Single-site Sips
+    elif modelType == 'SSS':
+        optBounds = np.array(([np.finfo(float).eps,1], [np.finfo(float).eps,1],
+                              [np.finfo(float).eps,1], [np.finfo(float).eps,1],
+                              [np.finfo(float).eps,1], [np.finfo(float).eps,1]))
+        optType=np.array(['real','real','real','real','real','real'])
+        problemDimension = len(optType)
+        isoRef = [10, 1e-5, 40e3, 2,  1000, 1000] # Reference for the parameters
         isothermFile = [] # Isotherm file is empty as it is fit
         paramIso = [] # Isotherm parameters is empty as it is fit
         lhsPopulation = LHS(xlimits=optBounds)
@@ -191,19 +222,32 @@ def extractZLCParameters(**kwargs):
         problemDimension = len(optType)
         isoRef = [1000, 1000] # Reference for the parameter (has to be a list)
         # File with parameter estimates for isotherm (ZLC)
-        isothermDir = '..' + os.path.sep + 'simulationResults/'
-        modelOutputTemp = load(isothermDir+isothermFile, allow_pickle=True)["modelOutput"]
-        modelNonDim = modelOutputTemp[()]["variable"]
-        parameterRefTemp = load(isothermDir+isothermFile, allow_pickle=True)["parameterReference"]
+        isothermDir = '..' + os.path.sep + 'isothermFittingData/'
+        modelOutputTemp = loadmat(isothermDir+isothermDataFile)["isothermData"]       
+        # Convert the nDarray to list
+        nDArrayToList = np.ndarray.tolist(modelOutputTemp)
+        # Unpack another time (due to the structure of loadmat)
+        tempListData = nDArrayToList[0][0]
+        # Get the necessary variables
+        isothermAll = tempListData[4]
+        isothermTemp = isothermAll[:,0]
+        if len(isothermTemp) == 6:
+            idx = [0, 2, 4, 1, 3, 5]
+            isothermTemp = isothermTemp[idx]
+        paramIso = isothermTemp[np.where(isothermTemp!=0)]
+        paramIso = np.append(paramIso,[0,0])
+        # modelNonDim = modelOutputTemp[()]["variable"]
+        # parameterRefTemp = load(isothermDir+isothermFile, allow_pickle=True)["parameterReference"]
         # Get the isotherm parameters
-        paramIso = np.multiply(modelNonDim,parameterRefTemp)
+        # paramIso = np.multiply(modelNonDim,parameterRefTemp)
         lhsPopulation = LHS(xlimits=optBounds)
         start_population = lhsPopulation(400)
+    
     
 
     # Initialize the parameters used for ZLC fitting process
     fittingParameters(True,temperature,deadVolumeFile,adsorbentDensity,particleEpsilon,
-                      massSorbent,isoRef,downsampleData,paramIso)
+                      massSorbent,isoRef,downsampleData,paramIso,downsampleExp)
     
     # Minimize an objective function to compute the equilibrium and kinetic 
     # parameters from ZLC experiments
@@ -242,12 +286,15 @@ def extractZLCParameters(**kwargs):
            fileName = fileName, # Names of file used for fitting
            temperature = temperature, # Temperature [K]
            deadVolumeFile = deadVolumeFile, # Dead volume file used for parameter estimation
+           isothermDataFile = isothermDataFile, # isotherm data file from matlab
            isothermFile = isothermFile, # Isotherm parameters file, if only kinetics estimated
            adsorbentDensity = adsorbentDensity, # Adsorbent density [kg/m3]
            particleEpsilon = particleEpsilon, # Particle voidage [-]
            massSorbent = massSorbent, # Mass of sorbent [g]
+           paramIso = paramIso, # isotherm parameters used for fitting if fitting for kinetics only
            parameterReference = isoRef, # Parameter references [-]
-           downsampleFlag = downsampleData, # Flag for downsampling data [-]
+           downsampleFlag = downsampleData, # Flag for downsampling data by conc [-]
+           downsampleExp = downsampleExp, # Flag for downsampling data by number of points [-]
            hostName = socket.gethostname()) # Hostname of the computer
     
     # Remove all the .npy files genereated from the .mat
@@ -274,7 +321,7 @@ def ZLCObjectiveFunction(x):
     from computeMLEError import computeMLEError
 
     # Get the zlc parameters needed for the solver
-    temperature, deadVolumeFile, adsorbentDensity, particleEpsilon, massSorbent, isoRef, downsampleData, paramIso = fittingParameters(False,[],[],[],[],[],[],[],[])
+    temperature, deadVolumeFile, adsorbentDensity, particleEpsilon, massSorbent, isoRef, downsampleData, paramIso, downsampleExp = fittingParameters(False,[],[],[],[],[],[],[],[])
 
     # Volume of sorbent material [m3]
     volSorbent = (massSorbent/1000)/adsorbentDensity
@@ -298,8 +345,10 @@ def ZLCObjectiveFunction(x):
         numPointsExp[ii] = len(timeElapsedExp)
         
     # Downsample intervals
-    downsampleInt = numPointsExp/np.min(numPointsExp)
-    # downsampleInt = numPointsExp/numPointsExp
+    if downsampleExp:
+        downsampleInt = numPointsExp/np.min(numPointsExp)
+    else:
+        downsampleInt = numPointsExp/numPointsExp
     
     # Initialize error for objective function
     computedError = 0
@@ -317,7 +366,18 @@ def ZLCObjectiveFunction(x):
         timeElapsedExp = timeElapsedExpTemp[::int(np.round(downsampleInt[ii]))]
         moleFracExp = moleFracExpTemp[::int(np.round(downsampleInt[ii]))]
         flowRateExp = flowRateTemp[::int(np.round(downsampleInt[ii]))] # [cc/s]
-                
+            
+        if moleFracExp[0] > 0.5:
+            deadVolumeFlow = deadVolumeFile[1]
+        else:
+            deadVolumeFlow = deadVolumeFile[0]
+        if len(deadVolumeFlow[0]) == 1: # 1 DV for 1 DV file
+            deadVolumeFileTemp = str(deadVolumeFlow[0])
+        else:
+            if np.absolute(flowRateExp[-1] - 1) > 0.2: # for lowflowrate experiments!
+                deadVolumeFileTemp =  str(deadVolumeFlow[0][0])
+            else:
+                deadVolumeFileTemp =  str(deadVolumeFlow[0][1])
         # Integration and ode evaluation time (check simulateZLC/simulateDeadVolume)
         timeInt = timeElapsedExp
 
@@ -328,9 +388,9 @@ def ZLCObjectiveFunction(x):
                                                     temperature = temperature[ii], # Temperature [K]
                                                     timeInt = timeInt,
                                                     initMoleFrac = [moleFracExp[0]], # Initial mole fraction assumed to be the first experimental point
-                                                    flowIn = np.mean(flowRateExp[-1:-10:-1]*1e-6), # Flow rate [m3/s] for ZLC considered to be the mean of last 10 points (equilibrium)
+                                                    flowIn = np.mean(flowRateExp[-1:-2:-1]*1e-6), # Flow rate [m3/s] for ZLC considered to be the mean of last 10 points (equilibrium)
                                                     expFlag = True,
-                                                    deadVolumeFile = str(deadVolumeFile),
+                                                    deadVolumeFile = str(deadVolumeFileTemp),
                                                     volSorbent = volSorbent,
                                                     volGas = volGas,
                                                     adsorbentDensity = adsorbentDensity)
@@ -382,5 +442,6 @@ def fittingParameters(initFlag,temperature,deadVolumeFile,adsorbentDensity,
         massSorbent = load (dummyFileName)["massSorbent"]
         isoRef = load (dummyFileName)["isoRef"]
         downsampleData = load (dummyFileName)["downsampleData"]
-        paramIso = load (dummyFileName)["paramIso"]
-        return temperature, deadVolumeFile, adsorbentDensity, particleEpsilon, massSorbent, isoRef, downsampleData, paramIso
+        paramIso = load (dummyFileName)["paramIso"]        
+        downsampleExp = load (dummyFileName)["downsampleExp"]
+        return temperature, deadVolumeFile, adsorbentDensity, particleEpsilon, massSorbent, isoRef, downsampleData, paramIso, downsampleExp

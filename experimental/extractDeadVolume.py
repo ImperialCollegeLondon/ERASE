@@ -229,7 +229,7 @@ def deadVolObjectiveFunction(x):
         
     # Downsample intervals
     downsampleInt = numPointsExp/np.min(numPointsExp)
-    # downsampleInt = numPointsExp/numPointsExp
+    downsampleInt = numPointsExp/numPointsExp
     
     # Initialize error for objective function
     computedError = 0 # Total error
@@ -254,7 +254,7 @@ def deadVolObjectiveFunction(x):
         else:
              # Flow rate for dead volume considered the mean of last 10 points 
              # (to avoid delay issues)
-            flowRateDV = np.mean(flowRateExp[-1:-10:-1])
+            flowRateDV = np.mean(flowRateExp[-1:-3:-1])
         
         # Integration and ode evaluation time (check simulateDeadVolume)
         timeInt = timeElapsedExp
