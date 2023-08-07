@@ -23,9 +23,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%% USER INPUT %%%
-clear
 % File name to be used for analysis/plotting
-rawDataFileName = 'ZYTMA_ZLC_HA';
+rawDataFileName = 'MonoZIF-67_8mL_PoreVol';
 
 % Name of files from QC and MIP (only for reference purposes)
 poreVolume.rawFiles.quantachromeFileName = '';
@@ -67,7 +66,7 @@ if ~isfield(poreVolume,'properties')
     interpQC = exp(1).^(linspace(log(min(poreVolume.QC(:,1))),log(max(poreVolume.QC(:,1))),200));
     poreVolume.interp.QC(:,1) = interpQC';
     % interpolate cumulative pore volume
-    poreVolume.interp.QC(:,2) = interp1(poreVolume.QC(:,1),poreVolume.QC(:,2),interpQC','spline');
+    poreVolume.interp.QC(:,2) = interp1(poreVolume.QC(:,1),poreVolume.QC(:,2),interpQC');
     % Compute incremental pore volume
     poreVolume.interp.QC(:,3) = [poreVolume.interp.QC(1,2);  diff(poreVolume.interp.QC(:,2))];
     % MIP

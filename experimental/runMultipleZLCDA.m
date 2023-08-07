@@ -22,15 +22,14 @@
 % Output arguments:
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function runMultipleZLC
+function runMultipleZLCDA
     run('C:\Users\ha3215\Documents\ERASE\setPathERASE.m')
-    cd('C:\Users\ha3215\Documents\ERASE\experimental')
     % Series name for the experiments
-    expSeries = {'ZLC_ZYTMA_Exp11',...
-                 'ZLC_ZYTMA_Exp12'};
+    expSeries = {'ZLC_13X_DA_Exp11',...
+                 'ZLC_13X_DA_Exp12'};
     % Maximum time of the experiment
-    maxTime = [800, 800;...
-               250, 250];
+    maxTime = [2000,2000;...
+               600,600];
     % Sampling time for the device
     expInfo.samplingTime = 1;
     % Intervals for collecting MFC data
@@ -40,25 +39,22 @@ function runMultipleZLC
     % Define gas for MFC1
     expInfo.gasName_MFC1 = 'He';
     % Define gas for MFC2
-    expInfo.gasName_MFC2 = 'CO2';
+    expInfo.gasName_MFC2 = 'He';
     % Experimental Temperature [degC]
     expInfo.Temperature = 35;
     % Total flow rate
-    expTotalFlowRate = [10, 10;...
-                        60, 60];
-
 %     expTotalFlowRate = [10, 10;...
-%                         15, 15;...
-%                         30, 30;...
 %                         60, 60];
+
+    expTotalFlowRate = [15, 15;...
+                        60, 60];
     % Fraction CO2
-    fracCO2 = [1/8, 16;...
+%     fracCO2 = [1/8, 16;...
+%                1/8, 2.66];
+
+    fracCO2 = [1/8, 10.66;...
                1/8, 2.66];
 
-%     fracCO2 = [1/8, 16;...
-%                1/8, 10.66;...
-%                1/8, 5.33;...
-%                1/8, 2.66];
     % Define set point for MFC1
     % Round the flow rate to the nearest first decimal (as this is the
     % resolution of the meter)    
@@ -68,15 +64,15 @@ function runMultipleZLC
     % resolution of the meter)    
     MFC2_SP = round(fracCO2.*expTotalFlowRate,1);
     % Start delay (used for adsorbent equilibration)
-%     equilibrationTime = repmat([960, 960],[length(expSeries),1]); % [s] 
-    equilibrationTime = [1500, 1500;
-                         1500, 1500];
+%     equilibrationTime = repmat([900, 900],[length(expSeries),1]); % [s] 
+    equilibrationTime = [300,600;...
+                         500,500];
     % Flag for meter calibration
     expInfo.calibrateMeters = false;    
     % Mixtures Flag - When a T junction instead of 6 way valve used
     expInfo.runMixtures = true;
     % pause for temp equilibration
-    pause(800)
+%     pause(2400)
     % Loop through all setpoints to calibrate the meters
     for jj=1:size(MFC1_SP,1) 
         for ii=1:size(MFC1_SP,2)
@@ -85,19 +81,19 @@ function runMultipleZLC
             % If MFC2SP > 180 ccm break and move to the next operating
             % condition
             if MFC2_SP(jj,ii) >= 180
-                break;
+%                 break;
             end
             % Experiment name
             expInfo.expName = [expSeries{jj},char(64+ii)];
             expInfo.equilibrationTime = equilibrationTime(jj,ii);
+            expInfo.maxTime = maxTime(jj,ii);
             expInfo.MFC1_SP = MFC1_SP(jj,ii);
             expInfo.MFC2_SP = MFC2_SP(jj,ii);
-            expInfo.maxTime = maxTime(jj,ii);
             % Run the setup for different calibrations
             runZLC(expInfo)
             % Wait for 1 min before starting the next experiment
             pause(60)
         end
     end
-    defineSetPtManual(10,0)
+    defineSetPtManualDilute(0,0)
 end

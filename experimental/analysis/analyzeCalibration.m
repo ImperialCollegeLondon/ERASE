@@ -14,8 +14,8 @@
 %
 % Last modified:
 % - 2021-05-10, AK: Remove single gas calibration
-% - 2021-04-27, AK: Change the calibration model to linear interpolation 
-% - 2021-04-23, AK: Change the calibration model to Fourier series based 
+% - 2021-04-27, AK: Change the calibration model to linear interpolation
+% - 2021-04-23, AK: Change the calibration model to Fourier series based
 % - 2021-04-21, AK: Change the calibration equation to mole fraction like
 % - 2021-04-19, AK: Change MFC and MFM calibration (for mixtures)
 % - 2021-04-08, AK: Add ratio of gas for calibration
@@ -59,7 +59,7 @@ if ~isempty(parametersFlow)
     volFlow_UMFM = [UMFM.volFlow]; % Flow rate for UMFM [ccm]
     % Find indices corresponding to pure gases
     indexPureHe = find(setPt_MFC2 == 0); % Find pure He index
-    indexPureCO2 = find(setPt_MFC1 == 0); % Find pure CO2 index   
+    indexPureCO2 = find(setPt_MFC1 == 0); % Find pure CO2 index
     % Parse the flow rate from the MFC, MFM, and UMFM for pure gas
     % MFC
     volFlow_MFC1_PureHe = volFlow_MFC1(indexPureHe);
@@ -70,7 +70,7 @@ if ~isempty(parametersFlow)
     % Calibrate the MFC
     calibrationFlow.MFC_He = volFlow_MFC1_PureHe'\volFlow_UMFM_PureHe'; % MFC 1
     calibrationFlow.MFC_CO2 = volFlow_MFC2_PureCO2'\volFlow_UMFM_PureCO2'; % MFC 2
-    
+
     % Compute the mole fraction of CO2 using flow data
     moleFracCO2 = (calibrationFlow.MFC_CO2*volFlow_MFC2)./...
         (calibrationFlow.MFC_CO2*volFlow_MFC2 + calibrationFlow.MFC_He*volFlow_MFC1);
@@ -81,10 +81,10 @@ if ~isempty(parametersFlow)
     % the MFM
     modelFlow = fit([moleFracCO2(indNoNan)',volFlow_MFM(indNoNan)'],volFlow_UMFM(indNoNan)','poly23');
     calibrationFlow.MFM = modelFlow;
-    
+
     % Also save the raw data into the calibration file
     calibrationFlow.rawData = flowData;
-    
+
     % Save the calibration data into a .mat file
     % Check if calibration data folder exists
     if exist(['..',filesep,'experimentalData',filesep,...
@@ -101,7 +101,7 @@ if ~isempty(parametersFlow)
             'calibrationData',filesep,parametersFlow,'_Model'],'calibrationFlow',...
             'gitCommitID');
     end
-    
+
     % Plot the raw and the calibrated data (for pure gases at MFC)
     figure
     MFC1Set = 0:80;
@@ -113,7 +113,7 @@ if ~isempty(parametersFlow)
     ylim([0 1.1*max(volFlow_UMFM_PureHe)]);
     box on; grid on;
     xlabel('He MFC Flow Rate [ccm]')
-    ylabel('He Actual Flow Rate [ccm]')    
+    ylabel('He Actual Flow Rate [ccm]')
     subplot(1,2,2)
     hold on
     scatter(volFlow_MFC2_PureCO2,volFlow_UMFM_PureCO2,'or')
@@ -122,10 +122,10 @@ if ~isempty(parametersFlow)
     ylim([0 1.1*max(volFlow_UMFM_PureCO2)]);
     box on; grid on;
     xlabel('CO2 MFC Flow Rate [ccm]')
-    ylabel('CO2 Actual Flow Rate [ccm]')    
+    ylabel('CO2 Actual Flow Rate [ccm]')
 
     % Plot the raw and the calibrated data (for mixtures at MFM)
-    figure 
+    figure
     x = 0:0.1:1; % Mole fraction
     y = 0:1:150; % Total flow rate
     [X,Y] = meshgrid(x,y); % Create a grid for the flow model
@@ -154,8 +154,12 @@ if ~isempty(parametersMS)
     numDataPoints = length(reconciledData.flow(:,1));
     % Total number of points per set point
     numPointsSetPt = expInfo.maxTime/expInfo.samplingTime;
-    % Number of repetitions per set point (assuming repmat in calibrateMS)
-    numRepetitions = floor((numDataPoints/numPointsSetPt)/length(setPtMFC));
+    if isempty(strfind(parametersMS.MS,'DA'))
+        % Number of repetitions per set point (assuming repmat in calibrateMS)
+        numRepetitions = floor((numDataPoints/numPointsSetPt)/length(setPtMFC));
+    else
+        numRepetitions = 1;
+    end
     % Remove the 5 min idle time between repetitions
     % For two repetitions
     if numRepetitions == 2
@@ -164,17 +168,22 @@ if ~isempty(parametersMS)
         reconciledData.flow(indRepFirst:indRepLast,:) = [];
         reconciledData.MS(indRepFirst:indRepLast,:) = [];
         reconciledData.moleFrac(indRepFirst:indRepLast,:) = [];
-    % For one repetition
+        % For one repetition
     elseif numRepetitions == 1
-            % Do nothing %
+        % Do nothing %
     else
         error('Currently more than two repetitions are not supported by analyzeCalibration.m');
     end
     % Find indices that corresponds to a given set point
     indList = ones(numRepetitions*length(setPtMFC),2);
     % Loop over all the set points
-    for kk = 1:numRepetitions
-        for ii=1:length(setPtMFC)
+    if isempty(strfind(parametersMS.MS,'DA'))
+        rangeVals = length(setPtMFC);
+    else
+        rangeVals = numDataPoints/numPointsSetPt;
+    end
+    for kk = 1:round(numRepetitions)
+        for ii=1:rangeVals
             % Indices for a given set point accounting for set point and
             % number of repetitions
             initInd = length(setPtMFC)*numPointsSetPt*(kk-1) + (ii-1)*numPointsSetPt + 1;
@@ -183,17 +192,24 @@ if ~isempty(parametersMS)
             % for each set point
             indMean = (finalInd-parametersMS.numMean+1):finalInd;
             % MS Signal mean
-            meanHeSignal((kk-1)*length(setPtMFC)+ii) = mean(reconciledData.MS(indMean,2)); % He
+            if isempty(strfind(parametersMS.MS,'DA'))
+                meanHeSignal((kk-1)*length(setPtMFC)+ii) = mean(reconciledData.MS(indMean,2)); % He
+            end
             meanCO2Signal((kk-1)*length(setPtMFC)+ii) = mean(reconciledData.MS(indMean,3)); % CO2
             % Mole fraction mean
-            meanMoleFrac(((kk-1)*length(setPtMFC)+ii),1) = mean(reconciledData.moleFrac(indMean,1)); % He
+            if isempty(strfind(parametersMS.MS,'DA'))
+                meanMoleFrac(((kk-1)*length(setPtMFC)+ii),1) = mean(reconciledData.moleFrac(indMean,1)); % He
+            end
             meanMoleFrac(((kk-1)*length(setPtMFC)+ii),2) = mean(reconciledData.moleFrac(indMean,2)); % CO2
         end
     end
     % Use a linear interpolation to fit the calibration data of the signal
     % ratio w.r.t He composition
-    calibrationMS.ratioHeCO2 = fit((meanHeSignal./(meanCO2Signal+meanHeSignal))',meanMoleFrac(:,1),'linearinterp');
-    
+    if isempty(strfind(parametersMS.MS,'DA'))
+        calibrationMS.ratioHeCO2 = fit((meanHeSignal./(meanCO2Signal+meanHeSignal))',meanMoleFrac(:,1),'linearinterp');
+    else
+        calibrationMS.ratioHeCO2 = fit(meanCO2Signal',meanMoleFrac(:,2),'linearinterp');
+    end
     % Save the calibration data into a .mat file
     % Check if calibration data folder exists
     if exist(['..',filesep,'experimentalData',filesep,...
@@ -210,17 +226,28 @@ if ~isempty(parametersMS)
             'calibrationData',filesep,parametersMS.flow,'_Model'],'calibrationMS',...
             'gitCommitID','parametersMS');
     end
-    
+
     % Plot the raw and the calibrated data
     figure(1)
-    plot(meanHeSignal./(meanHeSignal+meanCO2Signal),meanMoleFrac(:,1),'or') % Experimental
-    hold on
-    plot(0:0.001:1,calibrationMS.ratioHeCO2(0:0.001:1),'b')
-    xlim([0 1]);
-    ylim([0 1]);
-    box on; grid on;
-    xlabel('Helium Signal/(CO2 Signal+Helium Signal) [-]')
-    ylabel('Helium mole frac [-]')
-    set(gca,'FontSize',8)
-end
+    if isempty(strfind(parametersMS.MS,'DA'))
+        plot(meanHeSignal./(meanHeSignal+meanCO2Signal),meanMoleFrac(:,1),'or') % Experimental
+        hold on
+        plot(0:0.001:1,calibrationMS.ratioHeCO2(0:0.001:1),'b')
+        xlim([0 1]);
+        ylim([0 1]);
+        box on; grid on;
+        xlabel('Helium Signal/(CO2 Signal+Helium Signal) [-]')
+        ylabel('Helium mole frac [-]')
+        set(gca,'FontSize',8)
+    else
+        plot(meanCO2Signal,meanMoleFrac(:,2),'or') % Experimental
+        hold on
+        plot(0:1e-5:2e-2,calibrationMS.ratioHeCO2(0:1e-5:2e-2),'b')
+        xlim([0 2e-2]);
+        ylim([0 2e-2]);
+        box on; grid on;
+        xlabel('CO_{2} Measured mole frac [-]')
+        ylabel('CO_{2} Feed mole frac[-]')
+        set(gca,'FontSize',8)
+    end
 end

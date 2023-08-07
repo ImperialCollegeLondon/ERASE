@@ -4,24 +4,23 @@
 % Multifunctional Nanomaterials Laboratory
 %
 % Project:  ERASE
-% Year:     2021
+% Year:     2022
 % MATLAB:   R2020a
 % Authors:  Ashwin Kumar Rajagopalan (AK)
+%           Hassan Azzan (HA)
 %
 % Purpose: 
-% Calibrates the mass specfor different set point values
+% Calibrates the dilute analyser for different set point values
 %
 % Last modified:
-% - 2021-04-30, AK: Add flow rate sweep
-% - 2021-04-15, AK: Modify function for mixture experiments
-% - 2021-03-16, AK: Initial creation
+% - 2022-05-04, AK: Initial creation
 %
 % Input arguments:
 %
 % Output arguments:
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function calibrateMS(varargin)
+function calibrateDA(varargin)
     % Sampling time for the device
     expInfo.samplingTime = 1;
     % Define gas for MFM
@@ -29,7 +28,7 @@ function calibrateMS(varargin)
     % Define gas for MFC1
     expInfo.gasName_MFC1 = 'He';
     % Define gas for MFC2
-    expInfo.gasName_MFC2 = 'CO2';
+    expInfo.gasName_MFC2 = 'He';
     % Define set point for MFC2
     % Round the flow rate to the nearest first decimal (as this is the
     % resolution of the meter)
@@ -43,7 +42,7 @@ function calibrateMS(varargin)
     % resolution of the meter)    
     MFC1_SP = round(max(MFC2_SP)-MFC2_SP,1);
     % Experiment name
-    expInfo.expName = ['ZLCCalibrateMS','_',...
+    expInfo.expName = ['ZLCCalibrateDA','_',...
         datestr(datetime('now'),'yyyymmdd'),'_',num2str(max(MFC2_SP)),'ccm'];
     % Start delay
     expInfo.equilibrationTime = 5; % [s]
@@ -60,10 +59,10 @@ function calibrateMS(varargin)
         if ii == find(MFC1_SP == 0,1,'last')
             % Maximum time of the experiment
             % Change the max time to 10 min
-            expInfo.maxTime = 250;
+            expInfo.maxTime = 300;
         else
             % Else use 5 min
-            expInfo.maxTime = 250;
+            expInfo.maxTime = 300;
         end
         % Run the setup for different calibrations
         runZLC(expInfo)

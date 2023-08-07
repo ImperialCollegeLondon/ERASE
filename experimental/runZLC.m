@@ -42,11 +42,11 @@ function runZLC(varargin)
         currentDateTime = datestr(now,'yyyymmdd_HHMMSS');
         disp([currentDateTime,'-> Default experimental settings are used!!'])
         % Experiment name
-        expInfo.expName = 'ZLC';
+        expInfo.expName = 'ZLC_DeadVolume_Exp37D';
         % Maximum time of the experiment
-        expInfo.maxTime = 300;
+        expInfo.maxTime = 150;
         % Sampling time for the device
-        expInfo.samplingTime = 2;
+        expInfo.samplingTime = 1;
         % Intervals for collecting MFC data
         expInfo.MFCInterval = 10;
         % Define gas for MFM
@@ -56,11 +56,11 @@ function runZLC(varargin)
         % Define gas for MFC2
         expInfo.gasName_MFC2 = 'CO2';
         % Define set point for MFC1
-        expInfo.MFC1_SP = 15.0;
+        expInfo.MFC1_SP = 60.0;
         % Define gas for MFC2
-        expInfo.MFC2_SP = 15.0;
+        expInfo.MFC2_SP = 60.0;
         % Adsorbemt equilibration time (start delay for the timer)
-        expInfo.equilibrationTime = 5; % [s]
+        expInfo.equilibrationTime = 1; % [s]
         % Calibrate meters flag
         expInfo.calibrateMeters = false;
         % Mixtures Flag - When a T junction instead of 6 way valve used
@@ -192,7 +192,7 @@ function initializeTimerDevice(~, thisEvent, expInfo, serialObj)
         end
     end
     % Pause for 20 s and check if there is enough gas flow
-    pause(20)
+    pause(10)
     % MFC1
     outputMFC1 = controlAuxiliaryEquipments(serialObj.MFC1, serialObj.cmdPollData,1);
     outputMFC1Temp = strsplit(outputMFC1,' '); % Split the output string
