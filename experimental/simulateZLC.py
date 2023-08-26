@@ -62,7 +62,13 @@ def simulateZLC(**kwargs):
         rateConstant_2 = np.array(kwargs["rateConstant_2"])
     else:
         rateConstant_2 = np.array([0])
-
+        
+    # Kinetic rate constant 3 [/s]
+    if 'rateConstant_3' in kwargs:
+        rateConstant_3 = np.array(kwargs["rateConstant_3"])
+    else:
+        rateConstant_3 = np.array([0])
+        
     # Feed flow rate [m3/s]
     if 'flowIn' in kwargs:
         flowIn = np.array(kwargs["flowIn"])
@@ -145,6 +151,12 @@ def simulateZLC(**kwargs):
     else:
         temperature = np.array([298.15]);
         
+    # Flag to check model fitting type
+    if 'modelType' in kwargs:
+        modelType = kwargs["modelType"]
+    else:
+        modelType = 'Kinetic'
+        
     # Compute the initial sensor loading [mol/m3] @ initMoleFrac
     equilibriumLoading  = computeEquilibriumLoading(pressureTotal=pressureTotal,
                                                     temperature=temperature,
@@ -152,9 +164,9 @@ def simulateZLC(**kwargs):
                                                     isothermModel=isothermModel)*adsorbentDensity # [mol/m3]
     
     # Prepare tuple of input parameters for the ode solver
-    inputParameters = (adsorbentDensity, isothermModel, rateConstant_1, rateConstant_2,
+    inputParameters = (adsorbentDensity, isothermModel, rateConstant_1, rateConstant_2, rateConstant_3,
                        flowIn, feedMoleFrac, initMoleFrac, pressureTotal, 
-                       temperature, volSorbent, volGas)
+                       temperature, volSorbent, volGas, modelType)
             
     # Solve the system of ordinary differential equations
     # Stiff solver used for the problem: BDF or Radau
@@ -218,7 +230,7 @@ def simulateZLC(**kwargs):
     
     # Move to local folder (to avoid path issues)
     os.chdir("experimental")
-    
+    # pdb.set_trace()
     # Return time and the output matrix
     return timeSim, resultMat, inputParameters
 
@@ -232,7 +244,7 @@ def solveSorptionEquation(t, f, *inputParameters):
     Rg = 8.314; # [J/mol K]
 
     # Unpack the tuple of input parameters used to solve equations
-    adsorbentDensity, isothermModel, rateConstant_1, rateConstant_2, flowIn, feedMoleFrac, _ , pressureTotal, temperature, volSorbent, volGas = inputParameters
+    adsorbentDensity, isothermModel, rateConstant_1, rateConstant_2, rateConstant_3, flowIn, feedMoleFrac, _ , pressureTotal, temperature, volSorbent, volGas, modelType = inputParameters
 
     # Initialize the derivatives to zero
     df = np.zeros([2])
@@ -244,7 +256,6 @@ def solveSorptionEquation(t, f, *inputParameters):
                                                     temperature=temperature,
                                                     moleFrac=f[0],
                                                     isothermModel=isothermModel)*adsorbentDensity # [mol/m3]
-    
     # Partial pressure of the gas
     partialPressure = f[0]*pressureTotal
     # delta pressure to compute gradient
@@ -256,32 +267,84 @@ def solveSorptionEquation(t, f, *inputParameters):
                                                     temperature=temperature,
                                                     moleFrac=moleFractionUp,
                                                     isothermModel=isothermModel)*adsorbentDensity # [mol/m3]
+
     
     # Compute the gradient (delq*/dc)
     dqbydc = (equilibriumLoadingUp-equilibriumLoading)/(delP/(Rg*temperature)) # [-]
     dellogc = np.log(partialPressure+delP)-np.log((partialPressure))
     dlnqbydlnc = (np.log(equilibriumLoadingUp)-np.log(equilibriumLoading))/dellogc
-    # Rate constant 1 (analogous to micropore resistance)
-    # k1 = rateConstant_1
-    k1 = rateConstant_1/dlnqbydlnc
-
-    # Rate constant 2 (analogous to macropore resistance)
-    # k2 = rateConstant_2/dqbydc
     epsilonp = volGas/(volGas+volSorbent)
-    k2 = rateConstant_2/(1+(1/epsilonp)*dqbydc)
     
-    # Overall rate constant
-    # The following conditions are done for purely numerical reasons
-    # If pure (analogous) macropore
-    if k1<1e-9:
-        rateConstant = k2
-    # If pure (analogous) micropore
-    elif k2<1e-9:
-        rateConstant = k1
-    # If both resistances are present
-    else:
-        rateConstant = 1/(1/k1 + 1/k2)
+    if modelType == 'KineticOld':
+    # Rate constant 1 (analogous to micropore resistance)
+        k1 = rateConstant_1
     
+        # Rate constant 2 (analogous to macropore resistance)
+        k2 = rateConstant_2/dqbydc
+        
+        # Overall rate constant
+        # The following conditions are done for purely numerical reasons
+        # If pure (analogous) macropore
+        if k1<1e-9:
+            rateConstant = k2
+        # If pure (analogous) micropore
+        elif k2<1e-9:
+            rateConstant = k1
+        # If both resistances are present
+        else:
+            rateConstant = 1/(1/k1 + 1/k2)
+            
+    if modelType == 'Kinetic':
+    # Rate constant 1 (analogous to micropore resistance)
+        k1 = rateConstant_1/dlnqbydlnc
+    
+        # Rate constant 2 (analogous to macropore resistance)
+        k2 = rateConstant_2/(1+(1/epsilonp)*dqbydc)
+        
+        # Overall rate constant
+        # The following conditions are done for purely numerical reasons
+        # If pure (analogous) macropore
+        if k1<1e-9:
+            rateConstant = k2
+        # If pure (analogous) micropore
+        elif k2<1e-9:
+            rateConstant = k1
+        # If both resistances are present
+        else:
+            rateConstant = 1/(1/k1 + 1/k2)
+            
+    elif modelType == 'KineticMacro':
+        k1 = rateConstant_1/(1+(1/epsilonp)*dqbydc)*np.power(temperature,0.5)
+        k2 = rateConstant_2/(1+(1/epsilonp)*dqbydc)*np.power(temperature,1.5)/partialPressure
+        if k1<1e-9:
+            rateConstant = k2
+        # If pure (analogous) micropore
+        elif k2<1e-9:
+            rateConstant = k1
+        # If both resistances are present
+        else:
+            rateConstant = 1/(1/k1 + 1/k2)
+            
+    elif modelType == 'KineticSB':
+        rateConstant = rateConstant_1*np.exp(-rateConstant_2*1000/(Rg*temperature))/dlnqbydlnc
+        if rateConstant<1e-8:
+            rateConstant = 1e-8
+    elif modelType == 'KineticSBMacro':
+        k1 = rateConstant_1*np.exp(-rateConstant_2*1000/(Rg*temperature))/dlnqbydlnc
+        # Rate constant 2 (analogous to macropore resistance)
+        k2 = rateConstant_3/(1+(1/epsilonp)*dqbydc)
+        
+        # Overall rate constant
+        # The following conditions are done for purely numerical reasons
+        # If pure (analogous) macropore
+        if k1<1e-9:
+            rateConstant = k2
+        # If pure (analogous) micropore
+        elif k2<1e-9:
+            rateConstant = k1
+        # If both resistances are present
+        else:
+            rateConstant = 1/(1/k1 + 1/k2)
     # Linear driving force model (derivative of solid phase loadings)
     df[1] = rateConstant*(equilibriumLoading-f[1])
 

@@ -68,7 +68,13 @@ def simulateCombinedModel(**kwargs):
         rateConstant_2 = np.array(kwargs["rateConstant_2"])
     else:
         rateConstant_2 = np.array([0])
-
+        
+    # Kinetic rate constant 3 [/s]
+    if 'rateConstant_3' in kwargs:
+        rateConstant_3 = np.array(kwargs["rateConstant_3"])
+    else:
+        rateConstant_3 = np.array([0])
+        
     # Temperature of the gas [K]
     if 'temperature' in kwargs:
         temperature = np.array(kwargs["temperature"]);
@@ -105,6 +111,12 @@ def simulateCombinedModel(**kwargs):
     else:
         volGas = 6.81e-8
         
+    # Feed Mole Fraction [-]
+    if 'feedMoleFrac' in kwargs:
+        feedMoleFrac = np.array(kwargs["feedMoleFrac"])
+    else:
+        feedMoleFrac = np.array([0.])
+        
     # Adsorbent density [kg/m3]
     # This has to be the skeletal density
     if 'adsorbentDensity' in kwargs:
@@ -123,19 +135,27 @@ def simulateCombinedModel(**kwargs):
         expFlag = kwargs["expFlag"]
     else:
         expFlag = False
-
+        
+    # Flag to check model fitting type
+    if 'modelType' in kwargs:
+        modelType = kwargs["modelType"]
+    else:
+        modelType = 'Kinetic'
     # Call the simulateZLC function to simulate the sorption in a given sorbent
     timeZLC, resultMat, _ = simulateZLC(isothermModel = isothermModel,
                                         rateConstant_1 = rateConstant_1,
                                         rateConstant_2 = rateConstant_2,
+                                        rateConstant_3 = rateConstant_3,
                                         temperature = temperature,
                                         flowIn = flowIn,
+                                        feedMoleFrac = feedMoleFrac,
                                         initMoleFrac = initMoleFrac,
                                         timeInt = timeInt,
                                         expFlag=expFlag,
                                         volSorbent = volSorbent,
                                         volGas = volGas,
-                                        adsorbentDensity = adsorbentDensity)
+                                        adsorbentDensity = adsorbentDensity,
+                                        modelType = modelType)
     
     # Parse out the mole fraction out from ZLC
     moleFracZLC = resultMat[0,:]
