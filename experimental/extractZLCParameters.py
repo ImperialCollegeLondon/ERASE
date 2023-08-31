@@ -69,7 +69,7 @@ def extractZLCParameters(**kwargs):
     currentDT = auxiliaryFunctions.getCurrentDateTime()
     
     # Find out the total number of cores available for parallel processing
-    num_cores = multiprocessing.cpu_count()
+    num_cores = 32
 
     #####################################
     ###### USER DEFINED PROPERTIES ######
@@ -301,7 +301,7 @@ def extractZLCParameters(**kwargs):
         start_population = lhsPopulation(400)
   
     elif modelType == 'KineticSBMacro':
-        optBounds = np.array(([np.finfo(float).eps,10], [np.finfo(float).eps,0.05], [np.finfo(float).eps,0.1]))
+        optBounds = np.array(([np.finfo(float).eps,10], [np.finfo(float).eps,0.05], [np.finfo(float).eps,1]))
         optType=np.array(['real','real','real'])
         problemDimension = len(optType)
         isoRef = [1000, 1000, 1000] # Reference for the parameter (has to be a list)
@@ -379,7 +379,8 @@ def extractZLCParameters(**kwargs):
            parameterReference = isoRef, # Parameter references [-]
            downsampleFlag = downsampleData, # Flag for downsampling data by conc [-]
            downsampleExp = downsampleExp, # Flag for downsampling data by number of points [-]
-           hostName = socket.gethostname()) # Hostname of the computer
+           hostName = socket.gethostname(),
+           modelType = modelType) # Hostname of the computer
     
     # Remove all the .npy files genereated from the .mat
     # Load the names of the file to be used for estimating ZLC parameters
