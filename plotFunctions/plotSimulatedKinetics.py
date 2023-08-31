@@ -92,8 +92,8 @@ downsampleData = True
 ##############
 
 modelType = 'KineticSBMacro'
-modelType = 'KineticOld'
-modelType = 'Kinetic'
+# modelType = 'KineticOld'
+# modelType = 'Kinetic'
 
 isothermModels = [[995*3/4,0.0001/np.exp(2.9e4/(Rg*298.15)),2.9e4,0,0,0],
                   [8.9*3/4,0.02/np.exp(4.6e4/(Rg*298.15)),4.6e4,0,0,0],

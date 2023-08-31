@@ -185,11 +185,14 @@ def simulateZLC(**kwargs):
                           rtol = 1e-8, args = inputParameters, first_step =0.0001, dense_output=True)
     # Presure vector in output
     pressureVec =  pressureTotal * np.ones(len(outputSol.t)) # Constant pressure
-
+    # pdb.set_trace()
     # Compute the outlet flow rate
+    # if outputSol.y[1,:].size != 0:
     sum_dqdt = np.gradient(outputSol.y[1,:],
                         outputSol.t) # Compute gradient of loading
     flowOut = flowIn - ((volSorbent*(8.314*temperature)/pressureTotal)*(sum_dqdt))
+    # else:
+    #     flowOut = flowIn
     
     # Parse out the output matrix and add flow rate
     resultMat = np.row_stack((outputSol.y,pressureVec,flowOut))
@@ -329,6 +332,8 @@ def solveSorptionEquation(t, f, *inputParameters):
         rateConstant = rateConstant_1*np.exp(-rateConstant_2*1000/(Rg*temperature))/dlnqbydlnc
         if rateConstant<1e-8:
             rateConstant = 1e-8
+            
+            
     elif modelType == 'KineticSBMacro':
         k1 = rateConstant_1*np.exp(-rateConstant_2*1000/(Rg*temperature))/dlnqbydlnc
         # Rate constant 2 (analogous to macropore resistance)
@@ -345,6 +350,10 @@ def solveSorptionEquation(t, f, *inputParameters):
         # If both resistances are present
         else:
             rateConstant = 1/(1/k1 + 1/k2)
+    
+        if rateConstant<1e-8:
+            rateConstant = 1e-8
+            
     # Linear driving force model (derivative of solid phase loadings)
     df[1] = rateConstant*(equilibriumLoading-f[1])
 

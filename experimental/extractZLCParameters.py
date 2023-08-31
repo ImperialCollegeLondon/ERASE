@@ -69,7 +69,7 @@ def extractZLCParameters(**kwargs):
     currentDT = auxiliaryFunctions.getCurrentDateTime()
     
     # Find out the total number of cores available for parallel processing
-    num_cores = 32
+    num_cores = multiprocessing.cpu_count()
 
     #####################################
     ###### USER DEFINED PROPERTIES ######
@@ -301,7 +301,7 @@ def extractZLCParameters(**kwargs):
         start_population = lhsPopulation(400)
   
     elif modelType == 'KineticSBMacro':
-        optBounds = np.array(([np.finfo(float).eps,10], [np.finfo(float).eps,1], [np.finfo(float).eps,1]))
+        optBounds = np.array(([np.finfo(float).eps,10], [np.finfo(float).eps,0.05], [np.finfo(float).eps,0.1]))
         optType=np.array(['real','real','real'])
         problemDimension = len(optType)
         isoRef = [1000, 1000, 1000] # Reference for the parameter (has to be a list)
@@ -403,7 +403,7 @@ def ZLCObjectiveFunction(x):
     from extractDeadVolume import filesToProcess # File processing script
     from simulateCombinedModel import simulateCombinedModel
     from computeMLEError import computeMLEError
-
+    import pdb 
     # Get the zlc parameters needed for the solver
     temperature, deadVolumeFile, adsorbentDensity, particleEpsilon, massSorbent, isoRef, downsampleData, paramIso, downsampleExp, modelType = fittingParameters(False,[],[],[],[],[],[],[],[],[],[])
 
@@ -437,6 +437,7 @@ def ZLCObjectiveFunction(x):
     else:
         downsampleInt = numPointsExp/numPointsExp
     
+    # pdb.set_trace()
     # Initialize error for objective function
     computedError = 0
     moleFracExpALL = np.array([])

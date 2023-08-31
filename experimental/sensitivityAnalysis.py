@@ -189,6 +189,7 @@ def computeObjectiveFunction(mainDir, zlcParameterPath, pOpt, pRef):
     
     # Obtain the downsampling conditions
     downsampleData = load(zlcParameterPath)["downsampleFlag"]
+    modelType = str(load(zlcParameterPath)["modelType"])
     
     # Adsorbent density, mass of sorbent and particle epsilon
     adsorbentDensity = load(zlcParameterPath)["adsorbentDensity"]
@@ -206,13 +207,14 @@ def computeObjectiveFunction(mainDir, zlcParameterPath, pOpt, pRef):
     isothermDir = '..' + os.path.sep + 'isothermFittingData/'
     modelOutputTemp = loadmat(isothermDir+isothermDataFile)["isothermData"]       
     # Convert the nDarray to list
-    nDArrayToList = np.ndarray.tolist(modelOutputTemp)
-    # Unpack another time (due to the structure of loadmat)
+    nDArrayToList = np.ndarray.tolist(modelOutputTemp)  
     tempListData = nDArrayToList[0][0]
     # Get the necessary variables
     isothermAll = tempListData[4]
     isothermTemp = isothermAll[:,0]
-    
+    if len(isothermTemp) == 6:
+        idx = [0, 2, 4, 1, 3, 5]
+        isothermTemp = isothermTemp[idx]
     # Compute the downsample intervals for the experiments
     # This is only to make sure that all experiments get equal weights
     numPointsExp = np.zeros(len(fileName))
@@ -264,10 +266,17 @@ def computeObjectiveFunction(mainDir, zlcParameterPath, pOpt, pRef):
             isothermModel = isothermTemp[np.where(isothermTemp!=0)]        
             rateConstant_1 = xOpt[-2]
             rateConstant_2 = xOpt[-1]
+            rateConstant_3 = 0
+        elif len(xOpt) == 3:
+            isothermModel = isothermTemp[np.where(isothermTemp!=0)]        
+            rateConstant_1 = xOpt[-3]
+            rateConstant_2 = xOpt[-2]
+            rateConstant_3 = xOpt[-1]
         else:
             isothermModel = xOpt[0:-2]
             rateConstant_1 = xOpt[-2]
             rateConstant_2 = xOpt[-1]
+            rateConstant_3 = 0
                 
         # Compute the model response using the optimized parameters
         _ , moleFracSim , resultMat = simulateCombinedModel(timeInt = timeInt,
@@ -277,10 +286,12 @@ def computeObjectiveFunction(mainDir, zlcParameterPath, pOpt, pRef):
                                                     isothermModel = isothermModel,
                                                     rateConstant_1 = rateConstant_1,
                                                     rateConstant_2 = rateConstant_2,
+                                                    rateConstant_3 = rateConstant_3,
                                                     deadVolumeFile = str(deadVolumeFileTemp),
                                                     volSorbent = volSorbent,
                                                     volGas = volGas,
-                                                    temperature = temperatureExp[ii])
+                                                    temperature = temperatureExp[ii],
+                                                    modelType = modelType)
        
         # Stack mole fraction from experiments and simulation for error 
         # computation
