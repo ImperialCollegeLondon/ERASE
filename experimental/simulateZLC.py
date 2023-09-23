@@ -332,12 +332,12 @@ def solveSorptionEquation(t, f, *inputParameters):
         rateConstant = rateConstant_1*np.exp(-rateConstant_2*1000/(Rg*temperature))/dlnqbydlnc
         if rateConstant<1e-8:
             rateConstant = 1e-8
-            
-            
+
     elif modelType == 'KineticSBMacro':
         k1 = rateConstant_1*np.exp(-rateConstant_2*1000/(Rg*temperature))/dlnqbydlnc
         # Rate constant 2 (analogous to macropore resistance)
-        k2 = rateConstant_3/(1+(1/epsilonp)*dqbydc)
+        k2 = rateConstant_3*np.power(temperature,0.5)/(1+(1/epsilonp)*dqbydc)
+        # k2 = rateConstant_3/(1+(1/epsilonp)*dqbydc)
         
         # Overall rate constant
         # The following conditions are done for purely numerical reasons
@@ -352,7 +352,7 @@ def solveSorptionEquation(t, f, *inputParameters):
             rateConstant = 1/(1/k1 + 1/k2)
     
         if rateConstant<1e-8:
-            rateConstant = 1e-8
+            rateConstant = 1e-8    
             
     # Linear driving force model (derivative of solid phase loadings)
     df[1] = rateConstant*(equilibriumLoading-f[1])

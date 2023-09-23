@@ -286,7 +286,7 @@ for jj in range(len(isothermModels)):
                     
             if flagDesorption:
                 initMoleFrac = [moleFracExp[0]]
-                feedMoleFrac = [0]
+                feedMoleFrac = [0.1]
             else:
                 initMoleFrac = [1e-7]
                 feedMoleFrac = [1]
@@ -356,18 +356,24 @@ for jj in range(len(isothermModels)):
             # y - Linear scale
             legendStr = legendLines[ii]
             # plt.subplot(3,3,jj+4) .semilogy(timeElapsedExp,resultMat[0,:],
-            plt.subplot(4,3,jj+7) .semilogy(timeElapsedExp,moleFracSim,
-                     color=colorsForPlot[ii],label=legendStr,alpha = 1, linestyle = linestyle) # Simulation response    
-            # if ii==len(fileName)-1:
-            plt.subplot(4,3,jj+7) .plot(timeElapsedExp,moleFracDV,
-                          color='#118ab2',alpha=0.2,
-                          linestyle = '-') # Dead volume simulation response    
-            
             if flagDesorption:
+                plt.subplot(4,3,jj+7) .semilogy(timeElapsedExp,moleFracSim,
+                     color=colorsForPlot[ii],label=legendStr,alpha = 1, linestyle = linestyle) # Simulation response    
+                    # if ii==len(fileName)-1:
+                plt.subplot(4,3,jj+7) .plot(timeElapsedExp,moleFracDV,
+                    color='#118ab2',alpha=0.2,
+                    linestyle = '-') # Dead volume simulation response    
                 plt.subplot(4,3,jj+7) .set(xlabel='$t$ [s]', 
                         ylabel='$y$ [-]', 
                         xlim = [0,2000], ylim =  [1e-6, 1])  
+                        # xlim = [0,700], ylim =  [1e-2, 1])  
             else:
+                plt.subplot(4,3,jj+7) .semilogy(timeElapsedExp,moleFracSim,
+                     color=colorsForPlot[ii],label=legendStr,alpha = 1, linestyle = linestyle) # Simulation response    
+                    # if ii==len(fileName)-1:
+                plt.subplot(4,3,jj+7) .plot(timeElapsedExp,moleFracDV,
+                    color='#118ab2',alpha=0.2,
+                    linestyle = '-') # Dead volume simulation response    
                 plt.subplot(4,3,jj+7) .set(xlabel='$t$ [s]', 
                         ylabel='$y$ [-]', 
                         xlim = [0,200], ylim =  [1e-6, 1]) 
@@ -377,7 +383,7 @@ for jj in range(len(isothermModels)):
             
             # fract loading
             plt.subplot(4,3,jj+10) .plot(timeElapsedExp,fractionalLoading,
-                     color=colorsForPlot[ii],alpha = 1, linestyle = linestyle) # Simulation response    
+                     color=colorsForPlot[ii],alpha = 1, linestyle = linestyle) # Simulation response               
      
             if flagDesorption:
                 plt.subplot(4,3,jj+10) .set(xlabel='$t$ [s]', 

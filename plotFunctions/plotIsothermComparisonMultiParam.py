@@ -97,9 +97,9 @@ x_VOL =  [4.3418e-01, 1.0555e-06 , 3.2322e+04, 6.6351e+00, 2.0803e-07, 2.6108e+0
 # x_VOL =  [20, 2.0760e-08, 2.7017e+04, 6.6713e-01] # ZYH SSS 1 bara
 # 
 # ZYNa Isotherm parameters
-# x_VOL =  [6.4975e+00, 3.5355e-07, 3.1108e+04, 9.0420e-01, 5.1101e-05, 2.3491e+04] # ZYNa DSL 1 bara new
+x_VOL =  [6.4975e+00, 3.5355e-07, 3.1108e+04, 9.0420e-01, 5.1101e-05, 2.3491e+04] # ZYNa DSL 1 bara new
 # ZYTMA VOL
-x_VOL = [5.1394e+00, 2.7760e-07, 2.8886e+04, 2.6934e+00, 1.2966e-06, 2.9451e+04] # ZYTMA DSL 1 bara new
+# x_VOL = [5.1394e+00, 2.7760e-07, 2.8886e+04, 2.6934e+00, 1.2966e-06, 2.9451e+04] # ZYTMA DSL 1 bara new
 
 # ZYNa Isotherm parameters
 # x_VOL =  [6.1805e+00, 3.5221e-07, 3.1113e+04, 8.6948e-01, 4.9984e-05, 2.3522e+04] # ZYNa DSL 1 bara
@@ -360,22 +360,25 @@ for kk in range(len(zlcFileName)):
     # x_ZLC[-2:] = [4.53948237e-01, 5.83281350e+01] # ZYNa
     # x_ZLC[0:6] =  [4.3363e-01, 9.9690e-07 , 3.2471e+04, 6.6293e+00, 2.0871e-07, 2.6103e+04]# MCB30 SSS
     
-    x_ZLC[0:6] = [4.3418e-01, 1.0555e-06 , 3.2322e+04, 6.6351e+00, 2.0803e-07, 2.6108e+04] # ZYH DSL 1 bara new
-    # x_ZLC[0:6] = [6.4975e+00, 3.5355e-07, 3.1108e+04, 9.0420e-01, 5.1101e-05, 2.3491e+04] # ZYNa DSL 1 bara new
+    # x_ZLC[0:6] = [4.3418e-01, 1.0555e-06 , 3.2322e+04, 6.6351e+00, 2.0803e-07, 2.6108e+04] # ZYH DSL 1 bara new
+    x_ZLC[0:6] = [6.4975e+00, 3.5355e-07, 3.1108e+04, 9.0420e-01, 5.1101e-05, 2.3491e+04] # ZYNa DSL 1 bara new
     x_ZLC[0:6] = [5.1394e+00, 2.7760e-07, 2.8886e+04, 2.6934e+00, 1.2966e-06, 2.9451e+04] # ZYTMA DSL 1 bara new
 
-    x_ZLC[-2:]=[0.00023648*1000, 0.01511548*1000] # ZYH high comp new kin
-
-    # x_ZLC[-2:] =  [3.99343320e-02, 1.36497587e02] # ZYNa high comp 
-    # x_ZLC[-2:] =  [3.38847213e-05*1000, 9.04205715e-02*1000] # ZYNa high comp new kin
+    # x_ZLC[-3:] = [1.41299542e+02*1e3, 3.62091593e-02*1e3, 9.18446265e-01*1e3] # SBmacro run 1 best ZYH
+    # x_ZLC[-3:] = [8.50392278e+03, 3.19273655e+01,  9.99707560e+02] # SBmacro run 1 best ZYNa
+    
+    # x_ZLC[-3:] = [1.48859751e+05, 3.63321115e+01, 8.06733749e+02] # SBmacro run 1 best ZYH
+    # x_ZLC[-3:] = [8503.92277915,   31.92736554,  999.70755954] # SBmacro run 1 best ZYNa
+    # x_ZLC[-3:] = [1.49471854e+05, 3.83405715e+01, 9.95895797e+02] # SBmacro run 1 best ZYTMA
     
     # x_ZLC[-2:] =  [0.00012277*1000, 0.02934571*1000] # ZYTMA high comp OPT
-    x_ZLC[-2:]= [6.70694855e-02, 5.49592656e01] # ZYTMA high comp new kin
+    # x_ZLC[-2:]= [6.70694855e-02, 5.49592656e01] # ZYTMA high comp new kin
     
     x_ZLC[0:6] = [9.7667e-01, 1.0749e-05, 2.4312e+04, 3.4760e+00, 2.2254e-07, 2.7095e+04]  # CMS3K DSL 1 bara new
-    x_ZLC[-3:] = [0.17716856*1e3, 0.02432568*1e3, 0] # SB run 1 best Helium
-    x_ZLC[-3:] =  [0.2125*1e3, 0.0246389*1e3, 0] # SB run 1 best Ar
-    # x_ZLC[-2:] =  [0.075, 50]
+    # x_ZLC[-3:] = [0.17716856*1e3, 0.02432568*1e3, 0] # SB run 1 best Helium
+    # x_ZLC[-3:] =  [0.2125*1e3, 0.0246389*1e3, 0] # SB run 1 best Ar
+    x_ZLC[-3:] =  [2.62506226e+03, 3.10025426e+01,0] # CMS He
+    # x_ZLC[-3:] =  [0.25*1e3, 0.0250343*1e3,0] # CMS Ar
     # x_ZLC = [1.99884760e+00, 5.09782880e-06, 2.56242136e+04, 4.25897730e+00,
        # 4.79913000e-08, 3.51551792e+04, 5.97832810e+02, 2.98296200e+01]
     print(x_ZLC)
@@ -568,7 +571,7 @@ for jj in range(len(temperature)):
 
 ax1.set(xlabel='$P$ [bar]', 
 ylabel='$k$ [s$^\mathregular{-1}$]',
-xlim = [0,1], ylim = [0, 0.05]) 
+xlim = [0,1], ylim = [0, 0.2]) 
 ax1.locator_params(axis="x", nbins=4)
 ax1.locator_params(axis="y", nbins=5)
 ax1.legend()   

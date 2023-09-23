@@ -82,8 +82,32 @@ fileParameter = 'zlcParameters_20230330_1528_59cc206.npz' # ZZYNa ALL FLOW KIN O
 # fileParameter = 'deadVolumeCharacteristics_20230220_1752_7e5a5aa.npz'
 # fileParameter = 'deadVolumeCharacteristics_20230220_1954_7e5a5aa.npz'
 # fileParameter = 'deadVolumeCharacteristics_20230309_1626_7e5a5aa.npz' 
-# fileParameter = 'deadVolumeCharacteristics_20230321_1040_59cc206.npz'
+# fileParameter = 'deadVolumeCharacteristics_20230821_1834_b571c46.npz'
 # fileParameter = 'deadVolumeCharacteristicY:/ha3215/home/ERASE/simulationResults/deadVolumeCharacteristics_20230821_1639_b571c46.npzs_20230321_1137_59cc206.npz'
+    # deadVolumeFile = [[['deadVolumeCharacteristics_20230821_1803_b571c46.npz', #lowflow
+    #                     'deadVolumeCharacteristics_20230821_1849_b571c46.npz']],
+    #                   [['deadVolumeCharacteristics_20230821_1813_b571c46.npz', #lowflow
+    #                     'deadVolumeCharacteristics_20230821_1909_b571c46.npz']]] #highflow CMS Ar
+    
+    
+fileParameter = 'zlcParameters_ZYH_20230908_1249_b571c46.npz' # ZYH ALL FLOW SBMACRO
+# fileParameter = 'zlcParameters_ZYNa_20230909_0021_b571c46.npz' # ZYNa ALL FLOW SBMACRO
+# fileParameter = 'zlcParameters_ZYTMA_20230910_0442_b571c46.npz' # ZYTMA ALL FLOW SBMACRO
+# fileParameter = 'zlcParameters_CMS3KAr_20230911_0436_b571c46.npz' # CMS Ar ALL FLOW SBMACRO
+# fileParameter = 'zlcParameters_CMS3K_20230913_0550_b571c46.npz' # CMS He ALL FLOW SBMACRO
+# fileParameter = 'zlcParameters_Zeolite13X_20230913_0352_b571c46.npz' # 13X ALL FLOW SBMACRO
+# fileParameter = 'zlcParameters_CMS3KAr_20230917_0304_b571c46.npz' # CMS Ar ALL FLOW SBMACRO
+# fileParameter = 'zlcParameters_CMS3K_20230916_0105_b571c46.npz' # CMS He ALL FLOW SBMACRO
+
+fileParameter = 'zlcParameters_ZYH_20230914_0359_b571c46.npz' # ZYH ALL FLOW SBMACRO
+# fileParameter = 'zlcParameters_ZYNa_20230914_1950_b571c46.npz' # ZYNa ALL FLOW SBMACRO
+# fileParameter = 'zlcParameters_ZYTMA_20230915_1651_b571c46.npz' # ZYTMA ALL FLOW SBMACRO
+# fileParameter = 'zlcParameters_Zeolite13X_20230918_0651_b571c46.npz' # 13X ALL FLOW SBMACRO
+# fileParameter = 'zlcParameters_ActivatedCarbon_20230918_1543_b571c46.npz' # AC ALL FLOW SBMACRO
+# fileParameter = 'zlcParameters_CMS3K_20230919_1800_b571c46.npz' # CMS He ALL FLOW SBMACRO high comp
+# fileParameter = 'zlcParameters_CMS3KAr_20230920_0458_b571c46.npz' # CMS Ar ALL FLOW SBMACRO high comp
+# fileParameter = 'zlcParameters_ActivatedCarbon_20230921_0603_b571c46.npz' # AC ALL FLOW SBMACRO high comp
+
 
 # Flag to plot dead volume results
 # Dead volume files have a certain name, use that to find what to plot
@@ -103,6 +127,8 @@ pressureTotal = np.array([1.e5]);
 
 # Plot colors
 colorsForPlot = ["#faa307","#d00000","#03071e"]*4
+# colorsForPlot =['r','g','b']*4
+
 markerForPlot = ["o"]*20
 
 if flagDeadVolume:
@@ -152,6 +178,7 @@ if flagDeadVolume:
     #             'ZLC_EmptyAr_Exp01B_Output.mat',
     #             'ZLC_EmptyAr_Exp02A_Output.mat',
     #             'ZLC_EmptyAr_Exp02B_Output.mat',]
+    rawFileName = ['ZLC_EmptyAr_Exp01B_Output.mat',]
     # Dead volume parameter model path
     parameterPath = os.path.join('..','simulationResults',fileParameter)
    
@@ -268,12 +295,12 @@ if flagDeadVolume:
             # Log scale
             ax2.scatter(timeElapsedExp,moleFracExp,
                           marker = markerForPlot[ii],
-                          color='none', edgecolors = colorsForPlot[ii],alpha=0.1,label=str(round(flowRateExp[-1],2))+" ccs", s =20, linewidth = 1, linestyle = '-') # Experimental response
+                          color='none', edgecolors = colorsForPlot[ii],alpha=0.05,label=str(round(flowRateExp[-1],2))+" ccs", s =20, linewidth = 1, linestyle = '-') # Experimental response
             if simulateModel:
                 ax2.semilogy(timeElapsedExp,moleFracSim,
                               color=colorsForPlot[ii], linewidth = 1) # Simulation response
             ax2.set(xlabel='$t$ [s]', 
-                    xlim = [0,180], ylim = [1e-2, 1])   
+                    xlim = [0,200], ylim = [1e-2, 1])   
             ax2.locator_params(axis="x", nbins=5)
 
             
@@ -523,13 +550,18 @@ else:
     #         'ZLC_ZYH_Exp12B_Output.mat',
     #         'ZLC_ZYH_Exp14B_Output.mat',]
     
-    rawFileName  = ['ZLC_ZYH_Exp09B_Output.mat',
-            'ZLC_ZYH_Exp11B_Output.mat',
-            'ZLC_ZYH_Exp13B_Output.mat',
-            'ZLC_ZYH_Exp10B_Output.mat',
-            'ZLC_ZYH_Exp12B_Output.mat',
-            'ZLC_ZYH_Exp14B_Output.mat',]
-    
+    # rawFileName  = ['ZLC_ZYH_Exp09B_Output.mat',
+    #         'ZLC_ZYH_Exp11B_Output.mat',
+    #         'ZLC_ZYH_Exp13B_Output.mat',
+    #         'ZLC_ZYH_Exp10B_Output.mat',
+    #         'ZLC_ZYH_Exp12B_Output.mat',
+    #         'ZLC_ZYH_Exp14B_Output.mat',]
+    # rawFileName  = ['ZLC_ZYH_Exp09A_Output.mat',
+    #         'ZLC_ZYH_Exp11A_Output.mat',
+    #         'ZLC_ZYH_Exp13A_Output.mat',
+    #         'ZLC_ZYH_Exp10A_Output.mat',
+    #         'ZLC_ZYH_Exp12A_Output.mat',
+    #         'ZLC_ZYH_Exp14A_Output.mat',]
     # rawFileName  = ['ZLC_ZYH_Exp09B_Output.mat',
     #         'ZLC_ZYH_Exp11B_Output.mat',
     #         'ZLC_ZYH_Exp13B_Output.mat',]
@@ -551,26 +583,26 @@ else:
     #         'ZLC_ZYH_Exp11B_Output.mat',
     #         'ZLC_ZYH_Exp13B_Output.mat',]
       
-    # rawFileName = ['ZLC_ZYNa_Exp05A_Output.mat',
-    #         'ZLC_ZYNa_Exp03A_Output.mat',
-    #         'ZLC_ZYNa_Exp09A_Output.mat',
-    #         'ZLC_ZYNa_Exp05B_Output.mat',
-    #         'ZLC_ZYNa_Exp03B_Output.mat',
-    #         'ZLC_ZYNa_Exp09B_Output.mat',
-    #         'ZLC_ZYNa_Exp06A_Output.mat',
-    #         'ZLC_ZYNa_Exp04A_Output.mat',
-    #         'ZLC_ZYNa_Exp10A_Output.mat',
-    #         'ZLC_ZYNa_Exp06B_Output.mat',
-    #         'ZLC_ZYNa_Exp04B_Output.mat',
-    #         'ZLC_ZYNa_Exp10B_Output.mat',]  
-    
-    rawFileName = ['ZLC_ZYNa_Exp05B_Output.mat',
+    rawFileName = ['ZLC_ZYNa_Exp05A_Output.mat',
+            'ZLC_ZYNa_Exp03A_Output.mat',
+            'ZLC_ZYNa_Exp09A_Output.mat',
+            'ZLC_ZYNa_Exp05B_Output.mat',
             'ZLC_ZYNa_Exp03B_Output.mat',
             'ZLC_ZYNa_Exp09B_Output.mat',
+            'ZLC_ZYNa_Exp06A_Output.mat',
+            'ZLC_ZYNa_Exp04A_Output.mat',
+            'ZLC_ZYNa_Exp10A_Output.mat',
             'ZLC_ZYNa_Exp06B_Output.mat',
             'ZLC_ZYNa_Exp04B_Output.mat',
-            'ZLC_ZYNa_Exp10B_Output.mat',] 
+            'ZLC_ZYNa_Exp10B_Output.mat',]  
+    
     # rawFileName = ['ZLC_ZYNa_Exp05B_Output.mat',
+    #         'ZLC_ZYNa_Exp03B_Output.mat',
+    #         'ZLC_ZYNa_Exp09B_Output.mat',
+    #         'ZLC_ZYNa_Exp06B_Output.mat',
+    #         'ZLC_ZYNa_Exp04B_Output.mat',
+    #         'ZLC_ZYNa_Exp10B_Output.mat',] 
+    # # rawFileName = ['ZLC_ZYNa_Exp05B_Output.mat',
     #         'ZLC_ZYNa_Exp03B_Output.mat',
     #         'ZLC_ZYNa_Exp09B_Output.mat',]
     # rawFileName = ['ZLC_ZYNa_Exp06B_Output.mat',
@@ -608,18 +640,18 @@ else:
     #         'ZLC_ZYTMA_Exp10B_Output.mat',
     #         'ZLC_ZYTMA_Exp12B_Output.mat',] 
     
-    # rawFileName = ['ZLC_ZYTMA_Exp01A_Output.mat',
-    #         'ZLC_ZYTMA_Exp03A_Output.mat',
-    #         'ZLC_ZYTMA_Exp05A_Output.mat',
-    #         'ZLC_ZYTMA_Exp01B_Output.mat',
-    #         'ZLC_ZYTMA_Exp03B_Output.mat',
-    #         'ZLC_ZYTMA_Exp05B_Output.mat',
-    #         'ZLC_ZYTMA_Exp02A_Output.mat',
-    #         'ZLC_ZYTMA_Exp04A_Output.mat',
-    #         'ZLC_ZYTMA_Exp06A_Output.mat',
-    #         'ZLC_ZYTMA_Exp02B_Output.mat',
-    #         'ZLC_ZYTMA_Exp04B_Output.mat',
-    #         'ZLC_ZYTMA_Exp06B_Output.mat',] 
+    rawFileName = ['ZLC_ZYTMA_Exp01A_Output.mat',
+            'ZLC_ZYTMA_Exp03A_Output.mat',
+            'ZLC_ZYTMA_Exp05A_Output.mat',
+            'ZLC_ZYTMA_Exp01B_Output.mat',
+            'ZLC_ZYTMA_Exp03B_Output.mat',
+            'ZLC_ZYTMA_Exp05B_Output.mat',
+            'ZLC_ZYTMA_Exp02A_Output.mat',
+            'ZLC_ZYTMA_Exp04A_Output.mat',
+            'ZLC_ZYTMA_Exp06A_Output.mat',
+            'ZLC_ZYTMA_Exp02B_Output.mat',
+            'ZLC_ZYTMA_Exp04B_Output.mat',
+            'ZLC_ZYTMA_Exp06B_Output.mat',] 
     
     # rawFileName = ['ZLC_ZYTMA_Exp01B_Output.mat',
     #         'ZLC_ZYTMA_Exp03B_Output.mat',
@@ -722,18 +754,18 @@ else:
     #         'ZLC_CMS3K_Exp17B_Output.mat',
     #         'ZLC_CMS3K_Exp15B_Output.mat',]
     
-    rawFileName = ['ZLC_CMS3KAr_Exp01A_Output.mat',
-            'ZLC_CMS3KAr_Exp03A_Output.mat',
-            'ZLC_CMS3KAr_Exp05A_Output.mat',
-            'ZLC_CMS3KAr_Exp02A_Output.mat',
-            'ZLC_CMS3KAr_Exp04A_Output.mat',
-            'ZLC_CMS3KAr_Exp06A_Output.mat',
-            'ZLC_CMS3KAr_Exp01B_Output.mat',
-            'ZLC_CMS3KAr_Exp03B_Output.mat',
-            'ZLC_CMS3KAr_Exp05B_Output.mat',
-            'ZLC_CMS3KAr_Exp02B_Output.mat',
-            'ZLC_CMS3KAr_Exp04B_Output.mat',
-            'ZLC_CMS3KAr_Exp06B_Output.mat',]
+    # rawFileName = ['ZLC_CMS3KAr_Exp01A_Output.mat',
+    #         'ZLC_CMS3KAr_Exp03A_Output.mat',
+    #         'ZLC_CMS3KAr_Exp05A_Output.mat',
+    #         'ZLC_CMS3KAr_Exp02A_Output.mat',
+    #         'ZLC_CMS3KAr_Exp04A_Output.mat',
+    #         'ZLC_CMS3KAr_Exp06A_Output.mat',
+    #         'ZLC_CMS3KAr_Exp01B_Output.mat',
+    #         'ZLC_CMS3KAr_Exp03B_Output.mat',
+    #         'ZLC_CMS3KAr_Exp05B_Output.mat',
+    #         'ZLC_CMS3KAr_Exp02B_Output.mat',
+    #         'ZLC_CMS3KAr_Exp04B_Output.mat',
+    #         'ZLC_CMS3KAr_Exp06B_Output.mat',]
     
     # rawFileName  = ['ZLC_CMS3K_Exp13A_Output.mat',
     #         'ZLC_CMS3K_Exp17A_Output.mat',
@@ -859,19 +891,21 @@ else:
     
     # Temperature (for each experiment)
     # temperatureExp = [344.69, 325.39, 306.15]*4 # AC Experiments
-    temperatureExp = [308.15, 328.15, 348.15]*4 # AC Simulations
+    # temperatureExp = [308.15, 328.15, 348.15]*4 # AC Simulations
     # temperatureExp = [344.6, 325.49, 306.17,]*4 # BN (2 pellets) Experiments
     # temperatureExp = [308.15, 328.15, 348.15]*4 # BN (2 pellets) Simulations 
-    temperatureExp = [ 303.15, 293.15, 283.15, ]*4 # ZIF8 
+    # temperatureExp = [ 303.15, 293.15, 283.15, ]*4 # ZIF8 
     # temperatureExp = [ 283.15, 293.15, 303.15,]*4 # BNFAS
     # temperatureExp = [ 363.15, 348.15, 333.15, 318.15, 303.15,]*2 # lewatit
-    temperatureExp = [ 288.15, 298.15, 308.15, ]*4 # ZY
+    # temperatureExp = [ 288.15, 298.15, 308.15, ]*4 # ZY
     # temperatureExp = [ 288.15 ]*4 # ZY 
     # temperatureExp = [312.15]*4 # ZY    temperatureExp = [ 288.15 ]*4 # ZY 
 
     # Legend flag
     useFlow = False
     
+    rawFileName = load(parameterPath)["fileName"]
+    temperatureExp = load(parameterPath)["temperature"]
     # Generate .npz file for python processing of the .mat file 
     filesToProcess(True,os.path.join('..','experimental','runData'),rawFileName,'ZLC')
     # Get the processed file names
@@ -880,6 +914,8 @@ else:
     adsorbentDensity = load(parameterPath)["adsorbentDensity"]
     particleEpsilon = load(parameterPath)["particleEpsilon"]
     massSorbent = load(parameterPath)["massSorbent"]
+    deadVolumeFile = load(parameterPath)["deadVolumeFile"]
+    
     ## Adsorbent properties
     # Adsorbent density [kg/m3]
     # This has to be the skeletal density
@@ -895,10 +931,10 @@ else:
     # adsorbentDensity = 1020 # ZYH
     # adsorbentDensity = 3200 # ZYNa
     # adsorbentDensity = 2890 # ZYTMA
-    adsorbentDensity = 2130 # ZYH MSB
-    adsorbentDensity = 2410 # ZYNa MSB
+    # adsorbentDensity = 2130 # ZYH MSB
+    # adsorbentDensity = 2410 # ZYNa MSB
     # adsorbentDensity = 2310 # ZYTMA MSB
-    adsorbentDensity = 1680 # CMS 3K
+    # adsorbentDensity = 1680 # CMS 3K
 
     # Particle porosity
     # particleEpsilon = 0.61 # AC
@@ -911,10 +947,10 @@ else:
     # particleEpsilon = 0.47 # ZIF-8 MT
     # particleEpsilon = 0.62 # ZIF-8 MCB20
     # particleEpsilon = 0.59 # ZIF-8 MCB30
-    particleEpsilon = 0.90 # ZYH
-    particleEpsilon = 0.76 # ZYNa
+    # particleEpsilon = 0.90 # ZYH
+    # particleEpsilon = 0.76 # ZYNa
     # particleEpsilon = 0.71 # ZYTMA
-    particleEpsilon = 0.61 # CMS 3K
+    # particleEpsilon = 0.61 # CMS 3K
 
     # Particle mass [g]
     # massSorbent = 0.0625  # AC
@@ -927,12 +963,13 @@ else:
     # massSorbent = 0.059 # ZIF-8 MT
     # massSorbent = 0.075 # ZIF-8 MCB20
     # massSorbent = 0.102 # ZIF-8 MCB30
-    massSorbent = 0.077 # ZYH real
+    # massSorbent = 0.086 # ZYH real
     # massSorbent = 0.085 # ZYH (v1)
-    massSorbent = 0.07 # ZYNa
+    # massSorbent = 0.07 # ZYNa
     # massSorbent = 0.065 # ZYTMA
-    massSorbent = 0.077 # CMS 3K
-    # massSorbent = 0.08 # CMS 3K
+    # massSorbent = 0.077 # CMS 3K
+    # massSorbent = 0.072 # CMS 3K
+    # massSorbent = 0.061 # CMS 3K
 
 
     # Volume of sorbent material [m3]
@@ -942,7 +979,7 @@ else:
     volGas = volSorbent/(1-particleEpsilon)*particleEpsilon
 
     # Dead volume model
-    deadVolumeFile = [load(parameterPath)["deadVolumeFile"]]
+    deadVolumeFile = load(parameterPath)["deadVolumeFile"]
     # deadVolumeFile = ['deadVolumeCharacteristics_20210810_1653_eddec53.npz'] # MS OLD
     # deadVolumeFile = ['deadVolumeCharacteristics_20220726_0235_e81a19e.npz'] # MS LV
     # deadVolumeFile = ['deadVolumeCharacteristics_20220714_2133_6072a85.npz'] # MS LV 2
@@ -950,22 +987,22 @@ else:
     # deadVolumeFile = ['deadVolumeCharacteristics_20220712_1444_e81a19e.npz'] # MS LV BEST
     
     # Dead volume model
-    deadVolumeFile = [[['deadVolumeCharacteristics_20230220_1813_7e5a5aa.npz', #lowflow
-                       'deadVolumeCharacteristics_20230220_1752_7e5a5aa.npz']],
-                      [['deadVolumeCharacteristics_20230220_1813_7e5a5aa.npz', #lowflow
-                       'deadVolumeCharacteristics_20230220_1752_7e5a5aa.npz']]] #highflow ZIF 8 OLD
+    # deadVolumeFile = [[['deadVolumeCharacteristics_20230220_1813_7e5a5aa.npz', #lowflow
+    #                    'deadVolumeCharacteristics_20230220_1752_7e5a5aa.npz']],
+    #                   [['deadVolumeCharacteristics_20230220_1813_7e5a5aa.npz', #lowflow
+    #                    'deadVolumeCharacteristics_20230220_1752_7e5a5aa.npz']]] #highflow ZIF 8 OLD
     
     # Dead volume model
-    deadVolumeFile = [[['deadVolumeCharacteristics_20230821_1646_b571c46.npz', #lowflow
-                        'deadVolumeCharacteristics_20230821_1724_b571c46.npz']],
-                      [['deadVolumeCharacteristics_20230821_1649_b571c46.npz', #lowflow
-                        'deadVolumeCharacteristics_20230821_1744_b571c46.npz']]] #highflow ZIF 8 NEW
+    # deadVolumeFile = [[['deadVolumeCharacteristics_20230821_1646_b571c46.npz', #lowflow
+    #                     'deadVolumeCharacteristics_20230821_1724_b571c46.npz']],
+    #                   [['deadVolumeCharacteristics_20230821_1649_b571c46.npz', #lowflow
+    #                     'deadVolumeCharacteristics_20230821_1744_b571c46.npz']]] #highflow ZIF 8 NEW
     
-    # Dead volume model
-    deadVolumeFile = [[['deadVolumeCharacteristics_20230821_1803_b571c46.npz', #lowflow
-                        'deadVolumeCharacteristics_20230821_1849_b571c46.npz']],
-                      [['deadVolumeCharacteristics_20230821_1813_b571c46.npz', #lowflow
-                        'deadVolumeCharacteristics_20230821_1909_b571c46.npz']]] #highflow CMS Ar
+    # # # Dead volume model
+    # deadVolumeFile = [[['deadVolumeCharacteristics_20230821_1803_b571c46.npz', #lowflow
+    #                     'deadVolumeCharacteristics_20230821_1849_b571c46.npz']],
+    #                   [['deadVolumeCharacteristics_20230821_1813_b571c46.npz', #lowflow
+    #                     'deadVolumeCharacteristics_20230821_1909_b571c46.npz']]] #highflow CMS Ar
     
     # Dead volume model
     # deadVolumeFile = [[['deadVolumeCharacteristics_20230821_1928_b571c46.npz', #lowflow
@@ -978,10 +1015,18 @@ else:
     #                   'deadVolumeCharacteristics_20230321_1245_59cc206.npz']], # 51A
     #                   [['deadVolumeCharacteristics_20230321_1137_59cc206.npz', # 50B
     #                   'deadVolumeCharacteristics_20230321_1252_59cc206.npz']]] # 51B ZEOLITE Y CMS
-
-    # deadVolumeFile = 'deadVolumeCharacteristics_20220823_1542_e81a19e.npz' # DA LV
+    
+    # deadVolumeFile = [[['deadVolumeCharacteristics_20230321_1036_59cc206.npz', # 50A
+    #                   'deadVolumeCharacteristics_20230321_1252_59cc206.npz']], # 51A
+    #                   [['deadVolumeCharacteristics_20230321_1137_59cc206.npz', # 50B
+    #                   'deadVolumeCharacteristics_20230321_1252_59cc206.npz']]] # 51B ZEOLITE Y CMS    
+    # deadVolumeFile = [[['deadVolumeCharacteristics_20220726_0235_e81a19e.npz', # 
+    #                 'deadVolumeCharacteristics_20220726_0235_e81a19e.npz']], # 
+    #               [['deadVolumeCharacteristics_20220726_0235_e81a19e.npz', # 
+    #                 'deadVolumeCharacteristics_20220726_0235_e81a19e.npz']]] # AC
     # Isotherm parameter reference
     parameterReference = load(parameterPath)["parameterReference"]
+    paramIso = load(parameterPath)["paramIso"]
     # parameterReference = [1000,1000]
     # Load the model
     modelOutputTemp = load(parameterPath, allow_pickle=True)["modelOutput"]
@@ -989,11 +1034,12 @@ else:
     # This was added on 12.06 (not back compatible for error computation)
     downsampleData = load(parameterPath)["downsampleFlag"]
     ##############
-    downsampleData = True
+    # downsampleData = True
     ##############
-    modelType = 'Kinetic'    
+    # modelType = 'Kinetic'    
     # modelType = 'KineticSB'
-    modelType = 'KineticSBMacro'
+    # modelType = 'KineticMacro'
+    modelType = load(parameterPath)["modelType"]
 
     print("Objective Function",round(modelOutputTemp[()]["function"],0))
 
@@ -1013,15 +1059,24 @@ else:
     ##############
     # Multiply the paremeters by the reference values
     x = np.multiply(modelNonDim,parameterReference)
-    x = np.zeros(6)
+    # x = np.zeros(6)
     x = np.zeros(8)
     x = np.zeros(9)
-
+    
+    if modelType == 'KineticSBMacro':
+        x[0:6] = paramIso[0:-3]
+        x[-3:] = np.multiply(modelNonDim,parameterReference)   
+    elif modelType == 'KineticMacro':
+        x[0:6] = paramIso[0:-3]
+        x[-3:] = np.multiply(modelNonDim,parameterReference)      
+    else:
+        x[0:6] = paramIso[0:-2]
+        x[-2:] = np.multiply(modelNonDim,parameterReference)    
     # x = np.zeros(5)
-    x[-2:] = np.multiply(modelNonDim,parameterReference)
+    
 
     # x[0:4] = [20, 5.51151743793683e-07, 19272.6327577962,1.12005137776376]# MT SSS  
-    x[-2:] = [0.2445, 983] # MT HIGH FLOW
+    # x[-2:] = [0.2445, 983] # MT HIGH FLOW
     # x[-2:] = [0.294, 23.9] # MT LOW FLOW   
     # x[-2:] = [90, 35] # MT ALL FLOW 
     # x[-2:] =   [0.58608418, 60,]
@@ -1032,59 +1087,36 @@ else:
     # x[-2:] = [0.0871, 990] # MCB30 SSS LOW FLOW
     # x[-2:] = [1.09207, 2.9566] # MCB30 SSS ALL FLOW
     
-    x[0:4] = [9.6369, 2.7438e-7, 2.1386e+04,0.9893]# MCB20 SSS
+    # x[0:4] = [9.6369, 2.7438e-7, 2.1386e+04,0.9893]# MCB20 SSS
     # x[-2:] = [0.333, 4.00] # MCB20 SSS HIGH FLOW
     # x[-2:] = [0.10933, 0.873] # MCB20 SSS LOW FLOW
     # x[-2:] = [0.22544, 1.2982] # MCB20 SSS ALL FLOW
-    x[-2:] = [382, 0.637] # MCB20 SSS ALL FLOW HIGH COMP ONLY 
+    # x[-2:] = [382, 0.637] # MCB20 SSS ALL FLOW HIGH COMP ONLY 
     # x[-2:] = [382, 0.637] # MCB20 SSS ALL FLOW HIGH COMP ONLY 
 
     # x[-2:] = [9.89720284e-02, 9.56339260e-01] # MCB20 SSS LOW FLOW
     # x[-2:] = [0.085, 9.56339260e-01] # MCB20 SSS LOW 
 
-    x[0:6] = [4.3418e-01, 1.0555e-06 , 3.2322e+04, 6.6351e+00, 2.0803e-07, 2.6108e+04] # ZYH DSL 1 bara new
-    x[0:6] = [6.4975e+00, 3.5355e-07, 3.1108e+04, 9.0420e-01, 5.1101e-05, 2.3491e+04] # ZYNa DSL 1 bara new
+    # x[0:6] = [4.3418e-01, 1.0555e-06 , 3.2322e+04, 6.6351e+00, 2.0803e-07, 2.6108e+04] # ZYH DSL 1 bara new
+    # x[0:6] = [6.4975e+00, 3.5355e-07, 3.1108e+04, 9.0420e-01, 5.1101e-05, 2.3491e+04] # ZYNa DSL 1 bara new
     # x[0:6] = [5.1394e+00, 2.7760e-07, 2.8886e+04, 2.6934e+00, 1.2966e-06, 2.9451e+04] # ZYTMA DSL 1 bara new
-    x[0:6] = [9.7667e-01, 1.0749e-05, 2.4312e+04, 3.4760e+00, 2.2254e-07, 2.7095e+04]  # CMS3K DSL 1 bara new
-    # x[-2:] = [6.40304, 4.899]# ZYH high comp OPT
-    # x[-2:] =  [0.00023156*1000, 0.00740232*1000,] # ZYH high comp new kin
-    # x[-2:] =  [0.00023648*1000, 0.01511548*1000] # ZYH high comp new kin
-    # x[-2:] =  [8.54019071e-05*1e3, 6.50634791e-02*1e3,] # ZYH high comp new kin BEST
-    # x[-2:] =  [6.21187476e-08*1e3, 6.76234970e-05*1e3,] # ZYH high comp macro only BEST
-    # x[-2:] =  [936.51982 ,998.75   ] # H high comp OPT
-    # x[-2:] = [0.86665253*1e3, 0.01188509*1e3,]
-    
-    # x[-2:] =  [3.99343320e-02, 1.36497587e02] # ZYNa high comp OPT
-    # x[-2:] =   [0.00023757*1e3, 0.04239219*1e3, ] # ZYNa high comp new kin
-    # x[-2:] =   [1.48608418e-05*1e3, 60*1e3,]
-    x[-3:] = [0.22e3, 5*4.2, 0] # SB
-    x[-3:] = [0.3e3, 5*4.2, 65] # SB
-    x[-3:] = [0.3e3, 5*4.2, 65] # SB
-
-
-    # x[-2:] =  [0.00012277*1000, 0.02934571*1000] # ZYTMA high comp OPT
-    # x[-2:] = [4.97808228e-05*1e3, 5.91434767e-02*1e3] # ZYTMA high comp new kin BEST
-    # x[-2:] = [6.70694855e-02, 7.49592656e01] # ZYTMA high comp new kin
-    # x[-2:] = [0.83052323*1e3, 0.03411006*1e3,]
-    # x[-2:] = [5e3, 7.25*4.2] # SB
-    # x[-2:] = [0.23e3, 6*4.2] # SB
-    # x[-3:] = [0.22e3, 5*4.2, 0] # SB
-    # x[-3:] = [0.3e3, 5*4.2, 40] # SB
-    # x[-3:] = [0.62e3, 4.8*4.2, 6] # SB
-
-    
-    
-    
-    
-    # x[-2:] =   [0.6e-3*15, 0,] # CMS3K 
+    # x[0:6] = [9.7667e-01, 1.0749e-05, 2.4312e+04, 3.4760e+00, 2.2254e-07, 2.7095e+04]  # CMS3K DSL 1 bara new
+# 
+    # x[-3:] = [0.07748405*1e3, 0.01526513*1e3, 0.07375*1e3 ] # SBmacro run 1 best ZYH
+     # x[-2:] =   [0.6e-3*15, 0,] # CMS3K 
     # x[-2:] = [0*1e3, 0.007188509*1e3,] # CMS3K 
-    x[-3:] = [0.17716856*1e3, 0.02432568*1e3, 0] # SB run 1 best Helium
+    # x[-3:] = [0.17716856*1e3, 0.02432568*1e3, 0] # SB run 1 best Helium
     # x[-3:] = [0.2125*1e3, 0.0246389*1e3, 0] # SB run 1 best Ar
 
-    # x[-3:] = [0.099189*1e3, 0.01862004*1e3, 0.00599846*1e3] # SBmacro run 1 best He
-    x[-3:] = [0.08274238*1e3, 0.02225413*1e3, 0.29344246*1e3] # SBmacro run 1 best Ar
-    
-    # Initialize loadings
+    # x[-3:] = [0.03530858*1e3, 0.01617368*1e3, 0.00605428*1e3] # SBmacro run 1 best He
+    # x[-3:] = [1.48859751e+02*1e3, 3.63321115e-02*1e3, 8.06733749e-01*1e3] # SBmacro run 1 best ZYH He
+    # x[-3:] = [150*1e3, 0.037*1e3, 0.2*1e3 ] # SBmacro run 1 best ZYH
+    # x[-3:] = [8.50392278e+03, 3.19273655e+01,  9.99707560e+02]
+    # x[-3:] = [150e+03, 3.79273655e+01,  9.99707560e+02]
+    # x[-3:] = [0.25*1e3, 0.0250343*1e3,  0]
+    # x[-3:] = [2.44436243e+05, 3.79187820e+01, 300.08352988e+01]
+    # x[-3:] = [2.49884380e+05, 3.96945399e+01,0]
+    # x[-2:] = [0.00152662*1000, 0.01235128*1000,]
     computedError = 0
     numPoints = 0
     moleFracExpALL = np.array([])
@@ -1093,7 +1125,8 @@ else:
     massBalanceEXP = np.zeros((len(fileName),3))
     massBalanceDV = np.zeros((len(fileName),3))
     
-    # Create the instance for the plots
+    # Create the instance for the plotsx
+    
     fig = plt.figure
     ax1 = plt.subplot(1,3,1)        
     ax2 = plt.subplot(1,3,2)
@@ -1141,6 +1174,11 @@ else:
                 rateConstant_1 = x[-3]
                 rateConstant_2 = x[-2]
                 rateConstant_3 = x[-1]     
+            elif modelType == 'KineticMacro':
+                isothermModel = x[0:-3]
+                rateConstant_1 = x[-3]
+                rateConstant_2 = x[-2]
+                rateConstant_3 = x[-1]  
             else:
                 isothermModel = x[0:-2]
                 rateConstant_1 = x[-2]
@@ -1205,7 +1243,7 @@ else:
         # y - Linear scale
         ax1.semilogy(timeElapsedExp,moleFracExp, markersize = 2,
                 marker = markerForPlot[ii],linewidth = 1.5,
-                color=colorsForPlot[ii],alpha=0.005) # Experimental response
+                      alpha=0.2,markeredgecolor=colorsForPlot[ii],markeredgewidth=0.1,markerfacecolor='none') # Experimental response
         if simulateModel:
             if useFlow:
                 legendStr = str(round(np.mean(flowRateExp),2))+" ccs"
@@ -1223,14 +1261,17 @@ else:
                 # xlim = [0,250], ylim = [1e-2, 1])    
                 # xlim = [0,400], ylim = [1e-2, 1])    
                 # xlim = [0,1000], ylim =  [1e-2, 1])   
-                xlim = [0,600], ylim =  [1e-2, 1])   
+                # xlim = [0,600], ylim =  [1e-2, 1])   
+                ylim =  [1e-2, 1])   
         ax1.locator_params(axis="x", nbins=4)
+        ax1.autoscale(enable=None, axis="x", tight=False)
+
         # ax1.legend()
 
         # Ft - Log scale        
         ax2.semilogy(np.multiply(flowRateExp,timeElapsedExp),moleFracExp,
                       marker = markerForPlot[ii],linewidth = 0,
-                      color=colorsForPlot[ii],alpha=0.01) # Experimental response
+                      alpha=0.4,markeredgecolor=colorsForPlot[ii],markeredgewidth=0.1,markerfacecolor='none') # Experimental response
         if simulateModel:
             ax2.semilogy(np.multiply(resultMat[3,:]*1e6,timeElapsedExp),moleFracSim,
                           color=colorsForPlot[ii],label=str(round(np.mean(resultMat[3,:]*1e6),2))+" ccs",
@@ -1240,24 +1281,26 @@ else:
                           linestyle = '-') # Dead volume simulation response  
         ax2.set(xlabel='$Ft$ [cc]', 
                 # xlim = [0,90], ylim = [1e-2, 1])   
-                # xlim = [0,60], ylim = [1e-2, 1])   
-                # xlim = [0,200], ylim = [1e-2, 1])   
-                xlim = [0,130], ylim = [1e-2, 1])   
+                # xlim = [0,50], ylim = [1e-2, 1])   
+                # xlim = [0,250], ylim = [1e-2, 1])   
+                # xlim = [0,130], ylim = [1e-2, 1])   
 
                 # xlim = [0,2000], ylim = [1e-4, 0.021])  
+                ylim =  [1e-2, 1])   
+        ax1.locator_params(axis="x", nbins=4)
 
         ax2.locator_params(axis="x", nbins=4)
         
         # Flow rates
         ax3.plot(timeElapsedExp,flowRateExp,
                 marker = markerForPlot[ii],linewidth = 0,
-                color=colorsForPlot[ii],alpha=0.01,label=str(round(np.mean(flowRateExp),2))+" ccs") # Experimental response
+                alpha=0.8,markeredgecolor=colorsForPlot[ii],markeredgewidth=0.1,markerfacecolor='none',label=str(round(np.mean(flowRateExp),2))+" ccs") # Experimental response
         if simulateModel:
             ax3.plot(timeElapsedExp,resultMat[3,:]*1e6,
                       color=colorsForPlot[ii]) # Simulation response    
         ax3.set(xlabel='$t$ [s]', 
                 ylabel='$F$ [ccs]',
-                xlim = [0,1000], ylim = [0, 3])
+                xlim = [0,100], ylim = [0, 3])
         ax3.locator_params(axis="x", nbins=4)
         ax3.locator_params(axis="y", nbins=4)
 
