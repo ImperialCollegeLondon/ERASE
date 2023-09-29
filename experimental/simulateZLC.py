@@ -261,6 +261,7 @@ def solveSorptionEquation(t, f, *inputParameters):
                                                     isothermModel=isothermModel)*adsorbentDensity # [mol/m3]
     # Partial pressure of the gas
     partialPressure = f[0]*pressureTotal
+    # partialPressure = 0.5*pressureTotal
     # delta pressure to compute gradient
     delP = 10
     # Mole fraction (up)

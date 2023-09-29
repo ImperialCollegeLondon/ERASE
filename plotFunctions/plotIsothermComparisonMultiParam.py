@@ -110,9 +110,21 @@ x_VOL =  [9.7667e-01, 1.0749e-05, 2.4312e+04, 3.4760e+00, 2.2254e-07, 2.7095e+04
 # ZIF8 MCB30 Isotherm parameters
 # x_VOL = [10,4.41e-8,2.57e4,0, 0, 0] # (Hassan, QC)
 
+# 13X Isotherm parameters (L pellet)
+x_VOL = [2.80321673e+00, 2.35760556e-08, 4.54444851e+04, 3.50928608e+00, 3.73556076e-10, 4.72948894e+04,]
 # ZLC Parameter estimates
 # New kinetic model
 # Both k1 and k2 present
+
+
+# fileParameter = 'zlcParameters_ZYH_20230914_0359_b571c46.npz' # ZYH ALL FLOW SBMACRO
+# fileParameter = 'zlcParameters_ZYNa_20230914_1950_b571c46.npz' # ZYNa ALL FLOW SBMACRO
+# fileParameter = 'zlcParameters_ZYTMA_20230915_1651_b571c46.npz' # ZYTMA ALL FLOW SBMACRO
+# fileParameter = 'zlcParameters_Zeolite13X_20230924_1314_b571c46.npz' # 13X ALL FLOW SBMACRO
+# fileParameter = 'zlcParameters_CMS3K_20230919_1800_b571c46.npz' # CMS He ALL FLOW SBMACRO high comp
+# fileParameter = 'zlcParameters_CMS3KAr_20230920_0458_b571c46.npz' # CMS Ar ALL FLOW SBMACRO high comp
+# fileParameter = 'zlcParameters_ActivatedCarbon_20230921_0603_b571c46.npz' # AC ALL FLOW SBMACRO high comp
+
 
 # Activated Carbon Experiments
 zlcFileName = ['zlcParameters_20210822_0926_c8173b1.npz',
@@ -121,7 +133,13 @@ zlcFileName = ['zlcParameters_20210822_0926_c8173b1.npz',
                 'zlcParameters_20210823_1007_c8173b1.npz',
                 'zlcParameters_20210823_1810_c8173b1.npz']
 
-zlcFileName = ['zlcParameters_20210822_0926_c8173b1.npz',]
+zlcFileName = ['zlcParameters_ZYH_20230914_0359_b571c46.npz',] 
+# zlcFileName = ['zlcParameters_ZYTMA_20230915_1651_b571c46.npz',] 
+# zlcFileName = ['zlcParameters_ZYNa_20230914_1950_b571c46.npz',] 
+# zlcFileName = ['zlcParameters_Zeolite13X_20230924_1314_b571c46.npz',] 
+# zlcFileName = ['zlcParameters_CMS3K_20230919_1800_b571c46.npz',] 
+# zlcFileName = ['zlcParameters_CMS3KAr_20230920_0458_b571c46.npz',] 
+# zlcFileName = ['zlcParameters_ActivatedCarbon_20230921_0603_b571c46.npz',] 
 
 # Activated Carbon Experiments - dqbydc = Henry's constant
 # zlcFileName = ['zlcParameters_20211002_0057_c8173b1.npz',
@@ -297,12 +315,18 @@ zlcFileName = ['zlcParameters_20210822_0926_c8173b1.npz',]
 #                 'zlcParameters_20230708_1450_b571c46.npz',]
 
 y = np.linspace(0,1.,1000)
+k1valsFull = np.zeros([len(zlcFileName),len(y),len(temperature)])
+k2valsFull = np.zeros([len(zlcFileName),len(y),len(temperature)])
 # Initialize isotherms 
+parameterPath = os.path.join('..','simulationResults',zlcFileName[0])
+temperatureExp = load(parameterPath)["temperature"]
+temperature = np.unique(temperatureExp)
 isoLoading_VOL = np.zeros([len(y),len(temperature)])
 isoLoading_ZLC = np.zeros([len(zlcFileName),len(y),len(temperature)])
 kineticConstant_ZLC = np.zeros([len(zlcFileName),len(y),len(temperature)])
 kineticConstant_Macro = np.zeros([len(zlcFileName),len(y),len(temperature)])
 objectiveFunction = np.zeros([len(zlcFileName)])
+Tvals = np.linspace(np.min(temperature),np.max(temperature),len(y))
 
 # Loop over all the mole fractions
 # Volumetric data
@@ -320,15 +344,18 @@ for kk in range(len(zlcFileName)):
     modelOutputTemp = load(parameterPath, allow_pickle=True)["modelOutput"]
     objectiveFunction[kk] = round(modelOutputTemp[()]["function"],0)
     modelNonDim = modelOutputTemp[()]["variable"] 
-    modelType = 'KineticSBMacro'
-
+    modelType = load(parameterPath)["modelType"]
+    paramIso = load(parameterPath)["paramIso"]
  #    modelNonDim = [0.19988476, 0.50978288 ,0.64060534, 0.42589773, 0.00479913 ,0.87887948,
  # 0.59783281, 0.02982962]
     # modelNonDim = [0.62367463, 0.03599396, 0.64567045, 0.28883399, 0.24600739, 0.03936779]
     # Multiply the paremeters by the reference values
-    x_ZLC = np.multiply(modelNonDim,parameterReference)
+    kineticConstants = np.multiply(modelNonDim,parameterReference)
     # x_ZLC = np.zeros(8)
-    x_ZLC = np.zeros(9)
+    if modelType == 'KineticSBMacro':
+        x_ZLC = np.zeros(9)
+    else:
+        x_ZLC = np.zeros(8)
     # x_ZLC = np.zeros(6)
     # x_ZLC[-2:] = np.multiply(modelNonDim,parameterReference)
     # x_ZLC[0:3] = [2.99999956e+01, 9.62292726e-08, 2.15988572e+04,]# MT
@@ -361,8 +388,8 @@ for kk in range(len(zlcFileName)):
     # x_ZLC[0:6] =  [4.3363e-01, 9.9690e-07 , 3.2471e+04, 6.6293e+00, 2.0871e-07, 2.6103e+04]# MCB30 SSS
     
     # x_ZLC[0:6] = [4.3418e-01, 1.0555e-06 , 3.2322e+04, 6.6351e+00, 2.0803e-07, 2.6108e+04] # ZYH DSL 1 bara new
-    x_ZLC[0:6] = [6.4975e+00, 3.5355e-07, 3.1108e+04, 9.0420e-01, 5.1101e-05, 2.3491e+04] # ZYNa DSL 1 bara new
-    x_ZLC[0:6] = [5.1394e+00, 2.7760e-07, 2.8886e+04, 2.6934e+00, 1.2966e-06, 2.9451e+04] # ZYTMA DSL 1 bara new
+    # x_ZLC[0:6] = [6.4975e+00, 3.5355e-07, 3.1108e+04, 9.0420e-01, 5.1101e-05, 2.3491e+04] # ZYNa DSL 1 bara new
+    # x_ZLC[0:6] = [5.1394e+00, 2.7760e-07, 2.8886e+04, 2.6934e+00, 1.2966e-06, 2.9451e+04] # ZYTMA DSL 1 bara new
 
     # x_ZLC[-3:] = [1.41299542e+02*1e3, 3.62091593e-02*1e3, 9.18446265e-01*1e3] # SBmacro run 1 best ZYH
     # x_ZLC[-3:] = [8.50392278e+03, 3.19273655e+01,  9.99707560e+02] # SBmacro run 1 best ZYNa
@@ -374,13 +401,14 @@ for kk in range(len(zlcFileName)):
     # x_ZLC[-2:] =  [0.00012277*1000, 0.02934571*1000] # ZYTMA high comp OPT
     # x_ZLC[-2:]= [6.70694855e-02, 5.49592656e01] # ZYTMA high comp new kin
     
-    x_ZLC[0:6] = [9.7667e-01, 1.0749e-05, 2.4312e+04, 3.4760e+00, 2.2254e-07, 2.7095e+04]  # CMS3K DSL 1 bara new
+    # x_ZLC[0:6] = [9.7667e-01, 1.0749e-05, 2.4312e+04, 3.4760e+00, 2.2254e-07, 2.7095e+04]  # CMS3K DSL 1 bara new
     # x_ZLC[-3:] = [0.17716856*1e3, 0.02432568*1e3, 0] # SB run 1 best Helium
     # x_ZLC[-3:] =  [0.2125*1e3, 0.0246389*1e3, 0] # SB run 1 best Ar
-    x_ZLC[-3:] =  [2.62506226e+03, 3.10025426e+01,0] # CMS He
+    # x_ZLC[-3:] =  [2.62506226e+03, 3.10025426e+01,0] # CMS He
     # x_ZLC[-3:] =  [0.25*1e3, 0.0250343*1e3,0] # CMS Ar
     # x_ZLC = [1.99884760e+00, 5.09782880e-06, 2.56242136e+04, 4.25897730e+00,
        # 4.79913000e-08, 3.51551792e+04, 5.97832810e+02, 2.98296200e+01]
+    # kineticConstants[-1] = 0
     print(x_ZLC)
 
     adsorbentDensity = load(parameterPath, allow_pickle=True)["adsorbentDensity"]
@@ -393,17 +421,23 @@ for kk in range(len(zlcFileName)):
     # Parse out the isotherm parameter
     # Parse out parameter values
     if modelType == 'KineticSBMacro':
-        isothermModel = x_ZLC[0:-3]
-        rateConstant_1 = x_ZLC[-3]
-        rateConstant_2 = x_ZLC[-2]
-        rateConstant_3 = x_ZLC[-1]     
+        isothermModel = paramIso[0:-3]
+        rateConstant_1 = kineticConstants[-3]
+        rateConstant_2 = kineticConstants[-2]
+        rateConstant_3 = kineticConstants[-1]  
+    elif modelType == 'KineticMacro':
+        isothermModel = paramIso[0:-3]
+        rateConstant_1 = kineticConstants[-3]
+        rateConstant_2 = kineticConstants[-2]
+        rateConstant_3 = kineticConstants[-1]  
     else:
-        isothermModel = x_ZLC[0:-2]
-        rateConstant_1 = x_ZLC[-2]
-        rateConstant_2 = x_ZLC[-1]
+        isothermModel = paramIso[0:-2]
+        rateConstant_1 = kineticConstants[-2]
+        rateConstant_2 = kineticConstants[-1]
         rateConstant_3 = 0     
 
     # rateConstant_2 = 0
+    
 
     for jj in range(len(temperature)):
         for ii in range(len(y)):
@@ -420,7 +454,7 @@ for kk in range(len(zlcFileName)):
             equilibriumLoadingUp  = computeEquilibriumLoading(temperature=temperature[jj],
                                                             moleFrac=moleFractionUp,
                                                             isothermModel=isothermModel) # [mol/kg]
-            isoLoading_ZLC[kk,ii,jj]
+            
             # Compute the gradient (delq*/dc)
             dqbydc = (equilibriumLoadingUp-isoLoading_ZLC[kk,ii,jj])/(delP/(Rg*temperature[jj])) # [-]
             dellogc = np.log(partialPressure+delP)-np.log((partialPressure))
@@ -430,23 +464,24 @@ for kk in range(len(zlcFileName)):
             # The following conditions are done for purely numerical reasons
             # If pure (analogous) macropore
             if modelType == 'KineticOld':
-               # Rate constant 1 (analogous to micropore resistance)
-                   k1 = rateConstant_1
-               
-                   # Rate constant 2 (analogous to macropore resistance)
-                   k2 = rateConstant_2/dqbydc
-                   
-                   # Overall rate constant
-                   # The following conditions are done for purely numerical reasons
-                   # If pure (analogous) macropore
-                   if k1<1e-9:
-                       rateConstant = k2
-                   # If pure (analogous) micropore
-                   elif k2<1e-9:
-                       rateConstant = k1
-                   # If both resistances are present
-                   else:
-                       rateConstant = 1/(1/k1 + 1/k2)
+            # Rate constant 1 (analogous to micropore resistance)
+                k1 = rateConstant_1
+            
+                # Rate constant 2 (analogous to macropore resistance)
+                k2 = rateConstant_2/dqbydc
+                
+                # Overall rate constant
+                # The following conditions are done for purely numerical reasons
+                # If pure (analogous) macropore
+                if k1<1e-9:
+                    rateConstant = k2
+                # If pure (analogous) micropore
+                elif k2<1e-9:
+                    rateConstant = k1
+                # If both resistances are present
+                else:
+                    rateConstant = 1/(1/k1 + 1/k2)
+                    
             if modelType == 'Kinetic':
             # Rate constant 1 (analogous to micropore resistance)
                 k1 = rateConstant_1/dlnqbydlnc
@@ -480,12 +515,16 @@ for kk in range(len(zlcFileName)):
                     
             elif modelType == 'KineticSB':
                 rateConstant = rateConstant_1*np.exp(-rateConstant_2*1000/(Rg*temperature[jj]))/dlnqbydlnc
+                k1 = rateConstant
+                k2 = 0
                 if rateConstant<1e-8:
                     rateConstant = 1e-8
+        
             elif modelType == 'KineticSBMacro':
                 k1 = rateConstant_1*np.exp(-rateConstant_2*1000/(Rg*temperature[jj]))/dlnqbydlnc
                 # Rate constant 2 (analogous to macropore resistance)
-                k2 = rateConstant_3/(1+(1/epsilonp)*dqbydc)
+                k2 = rateConstant_3*np.power(temperature[jj],0.5)/(1+(1/epsilonp)*dqbydc)
+                # k2 = rateConstant_3/(1+(1/epsilonp)*dqbydc)
                 
                 # Overall rate constant
                 # The following conditions are done for purely numerical reasons
@@ -498,6 +537,14 @@ for kk in range(len(zlcFileName)):
                 # If both resistances are present
                 else:
                     rateConstant = 1/(1/k1 + 1/k2)
+            
+                if rateConstant<1e-8:
+                    rateConstant = 1e-8   
+            k1valsFull[kk,ii,jj] =  k1
+            k2valsFull[kk,ii,jj] =  k2
+            
+            k1vals =  rateConstant_1*np.exp(-rateConstant_2*1000/(Rg*Tvals))
+            k2vals =  rateConstant_3*np.power(Tvals,0.5)
             
             # Rate constant (overall)
             kineticConstant_ZLC[kk,ii,jj] = rateConstant
@@ -518,13 +565,13 @@ plt.style.use('singleColumn.mplstyle') # Custom matplotlib style file
 fig = plt.figure
 ax1 = plt.subplot(1,1,1)        
 for jj in range(len(temperature)):
-    ax1.plot(y,isoLoading_VOL[:,jj],color='#'+colorForPlot[jj],label=str(temperature[jj])+' K') # Ronny's isotherm
+    # ax1.plot(y,isoLoading_VOL[:,jj],color='#'+colorForPlot[jj],label=str(temperature[jj])+' K') # Ronny's isotherm
     for kk in range(len(zlcFileName)):
-        ax1.plot(y,isoLoading_ZLC[kk,:,jj],color='#'+colorForPlot[jj],alpha=0.4) # ALL
+        ax1.plot(y,isoLoading_ZLC[kk,:,jj],color='#'+colorForPlot[jj],alpha=1) # ALL
 
 ax1.set(xlabel='$P$ [bar]', 
 ylabel='$q^*$ [mol kg$^\mathregular{-1}$]',
-xlim = [0,1], ylim = [0, 3]) 
+xlim = [0,1], ylim = [0, 6]) 
 ax1.locator_params(axis="x", nbins=4)
 ax1.locator_params(axis="y", nbins=4)
 ax1.legend()   
@@ -571,7 +618,62 @@ for jj in range(len(temperature)):
 
 ax1.set(xlabel='$P$ [bar]', 
 ylabel='$k$ [s$^\mathregular{-1}$]',
-xlim = [0,1], ylim = [0, 0.2]) 
+xlim = [0,1], ylim = [0, 1]) 
 ax1.locator_params(axis="x", nbins=4)
 ax1.locator_params(axis="y", nbins=5)
 ax1.legend()   
+plt.show()
+
+
+# Plot the Arrhenius plot for k1
+plt.style.use('singleColumn.mplstyle') # Custom matplotlib style file
+fig = plt.figure
+ax1 = plt.subplot(1,1,1)        
+
+ax1.plot(1/Tvals,np.log(k1vals),color='#'+colorForPlot[0],alpha=1) # Macropore resistance
+
+ax1.set(xlabel='$1/T$ [1/K]', 
+ylabel='$ln k_1$ [-]',
+xlim = [0.0025,0.004], ylim = [-7, 0]) 
+ax1.locator_params(axis="x", nbins=4)
+# ax1.locator_params(axis="y", nbins=5)
+# ax1.legend()
+plt.show()
+
+# Plot the Arrhenius plot for k1
+plt.style.use('singleColumn.mplstyle') # Custom matplotlib style file
+fig = plt.figure
+ax1 = plt.subplot(1,1,1)        
+
+ax1.plot(np.power(Tvals,0.5),k2vals,color='#'+colorForPlot[0],alpha=1) # Macropore resistance
+
+ax1.set(xlabel='$T^{0.5}$', 
+ylabel='$k_2$ [-]',
+xlim = [15,20], ylim = [0, 1.1*np.max(k2vals)]) 
+ax1.locator_params(axis="x", nbins=4)
+# ax1.locator_params(axis="y", nbins=5)
+# ax1.legend()
+plt.show()
+
+# Plot the ratio of kinetic constant as a function of mole fraction
+plt.style.use('singleColumn.mplstyle') # Custom matplotlib style file
+fig = plt.figure
+ax1 = plt.subplot(1,1,1)        
+for jj in range(len(temperature)):
+    for kk in range(len(zlcFileName)):
+        if kk == 0:
+            labelText = str(temperature[jj])+' K'
+        else:
+            labelText = ''
+        ax1.semilogy(y,k1valsFull[kk,:,jj]/k2valsFull[kk,:,jj],color='#'+colorForPlot[jj],alpha=1, lineStyle = '--') #
+        ax1.semilogy(y,k1valsFull[kk,:,jj],color='#'+colorForPlot[jj],alpha=0.5) # ALL
+        ax1.semilogy(y,k2valsFull[kk,:,jj],color='#'+colorForPlot[jj],alpha=0.5,
+                 label=labelText) # ALL
+
+ax1.set(xlabel='$P$ [bar]', 
+ylabel='$k_1/k_2$ [-]',
+xlim = [0,1],) 
+ax1.locator_params(axis="x", nbins=4)
+# ax1.locator_params(axis="y", nbins=5)
+ax1.legend()   
+plt.show()

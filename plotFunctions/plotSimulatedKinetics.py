@@ -101,8 +101,8 @@ isothermModels = [[995*3/4,0.0001/np.exp(2.9e4/(Rg*298.15)),2.9e4,0,0,0],
 
 if modelType == 'KineticSBMacro':
     KineticModels =[[0.021/np.exp(-2e4/(Rg*298.15)),2e1,0,],
-                [2*0.021/np.exp(-2e4/(Rg*298.15)),2e1,2*3,],
-                [0,0,3,]]
+                [0.021/np.exp(-2e4/(Rg*298.15)),2e1,6/(288**0.5),],
+                [0.021/np.exp(-2e4/(Rg*298.15)),2e1,6/(288**0.5),]]
 elif modelType == 'KineticMacro':
     KineticModels =[[0.21/np.power(298.15,0.5),0],
                 [0.21/np.power(298.15,0.5),0],
@@ -286,7 +286,7 @@ for jj in range(len(isothermModels)):
                     
             if flagDesorption:
                 initMoleFrac = [moleFracExp[0]]
-                feedMoleFrac = [0.1]
+                feedMoleFrac = [0.0]
             else:
                 initMoleFrac = [1e-7]
                 feedMoleFrac = [1]
@@ -365,8 +365,8 @@ for jj in range(len(isothermModels)):
                     linestyle = '-') # Dead volume simulation response    
                 plt.subplot(4,3,jj+7) .set(xlabel='$t$ [s]', 
                         ylabel='$y$ [-]', 
-                        xlim = [0,2000], ylim =  [1e-6, 1])  
-                        # xlim = [0,700], ylim =  [1e-2, 1])  
+                        # xlim = [0,2000], ylim =  [1e-6, 1])  
+                        xlim = [0,700], ylim =  [1e-2, 1])  
             else:
                 plt.subplot(4,3,jj+7) .semilogy(timeElapsedExp,moleFracSim,
                      color=colorsForPlot[ii],label=legendStr,alpha = 1, linestyle = linestyle) # Simulation response    
