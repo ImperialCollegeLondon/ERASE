@@ -58,6 +58,9 @@ def computeEquilibriumLoading(**kwargs):
         # If model has four parameters - SSS
         elif len(isothermModel) == 4:
             modelType = 'SSS'
+        # If model has four parameters - SSS
+        elif len(isothermModel) == 10:
+            modelType = 'TOTHCHEM'
     else:
         # Default isotherm model is DSL and uses CO2 isotherm on AC8
         # Reference: 10.1007/s10450-020-00268-7
@@ -75,6 +78,8 @@ def computeEquilibriumLoading(**kwargs):
             equilibriumLoading = simulateDSL(*inputParameters)
         elif modelType == 'SSS':
             equilibriumLoading = simulateSSS(*inputParameters)
+        elif modelType == 'TOTHCHEM':
+            equilibriumLoading = simulateTC(*inputParameters)
     except:
         equilibriumLoading = 0
     # Return the equilibrium loading
@@ -165,6 +170,50 @@ def simulateSSS(*inputParameters):
     
     # Compute the equilibrium loading
     equilibriumLoading = isoNumerator/isoDenominator
+    # pdb.set_trace()
+
+    # Return the loading
+    return equilibriumLoading
+
+def simulateTC(*inputParameters):
+    
+    import numpy as np
+    # import pdb
+    # Gas constant
+    Rg = 8.314; # [J/mol K]
+    
+    # Unpack the tuple with the inputs for the isotherm model
+    pressureTotal,temperature,moleFrac,isothermModel = inputParameters
+    if moleFrac < 0:
+        moleFrac = 0
+    # Compute the concentration at input pressure, temperature and mole fraction
+    localConc = pressureTotal*moleFrac/(Rg*temperature)
+    
+    # Compute TD Toth
+    # Compute the adsorption affinity 
+    isoAffinityPhysi = isothermModel[1]*np.exp(isothermModel[2]/(Rg*temperature))
+    
+    # Compute qsat and tau
+    qsatToth = isothermModel[0]*np.exp(isothermModel[5]*(1-temperature/298.15))
+    tauToth = isothermModel[3] + isothermModel[4]*(1-298.15/temperature)
+    
+    # Compute the numerator and denominator of a pure single site Langmuir
+    isoNumeratorPhysi = qsatToth*(isoAffinityPhysi*localConc)
+    isoDenominatorPhysi = (1 + (isoAffinityPhysi*localConc)**tauToth)**(1/tauToth)
+    
+    # Compute SSL
+    # Compute the adsorption affinity 
+    isoAffinityChem = isothermModel[7]*np.exp(isothermModel[8]/(Rg*temperature))
+  
+    # Compute the numerator and denominator of a pure single site Langmuir
+    isoNumeratorChem = isothermModel[6]*(isoAffinityChem*localConc)
+    isoDenominatorChem = 1 + (isoAffinityChem*localConc)
+    
+    # Compute Activation term
+    ActivationChem = np.exp(-isothermModel[9]/(Rg*temperature))
+    
+    # Compute the equilibrium loading
+    equilibriumLoading = isoNumeratorPhysi/isoDenominatorPhysi + ActivationChem*isoNumeratorChem/isoDenominatorChem
     # pdb.set_trace()
 
     # Return the loading

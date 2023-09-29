@@ -142,7 +142,7 @@ def extractZLCParameters(**kwargs):
     if 'isothermDataFile' in kwargs:
         isothermDataFile = kwargs["isothermDataFile"]
     else:
-        isothermDataFile = 'ZYH_DSL_QC_070523.mat'  
+        isothermDataFile = 'Purolite_CO2_3F_290923.mat'  
         
     # Downsample the data at different compositions (this is done on 
     # normalized data) [High and low comp]
@@ -234,6 +234,9 @@ def extractZLCParameters(**kwargs):
         if len(isothermTemp) == 6:
             idx = [0, 2, 4, 1, 3, 5]
             isothermTemp = isothermTemp[idx]
+        if len(isothermTemp) == 13:
+            idx = [0, 2, 4, 6, 7, 8, 9, 10, 11, 12]
+            isothermTemp = isothermTemp[idx]
         paramIso = isothermTemp[np.where(isothermTemp!=0)]
         paramIso = np.append(paramIso,[0,0])
         # modelNonDim = modelOutputTemp[()]["variable"]
@@ -264,6 +267,9 @@ def extractZLCParameters(**kwargs):
         if len(isothermTemp) == 6:
             idx = [0, 2, 4, 1, 3, 5]
             isothermTemp = isothermTemp[idx]
+        if len(isothermTemp) == 13:
+            idx = [0, 2, 4, 6, 7, 8, 9, 10, 11, 12]
+            isothermTemp = isothermTemp[idx]
         paramIso = isothermTemp[np.where(isothermTemp!=0)]
         paramIso = np.append(paramIso,[0,0])
         # modelNonDim = modelOutputTemp[()]["variable"]
@@ -274,7 +280,7 @@ def extractZLCParameters(**kwargs):
         start_population = lhsPopulation(400)
 
     elif modelType == 'KineticSB':
-        optBounds = np.array(([np.finfo(float).eps,10], [np.finfo(float).eps,1]))
+        optBounds = np.array(([np.finfo(float).eps,250], [np.finfo(float).eps,0.05]))
         optType=np.array(['real','real'])
         problemDimension = len(optType)
         isoRef = [1000, 1000] # Reference for the parameter (has to be a list)
@@ -291,6 +297,9 @@ def extractZLCParameters(**kwargs):
         if len(isothermTemp) == 6:
             idx = [0, 2, 4, 1, 3, 5]
             isothermTemp = isothermTemp[idx]
+        if len(isothermTemp) == 13:
+            idx = [0, 2, 4, 6, 7, 8, 9, 10, 11, 12]
+            isothermTemp = isothermTemp[idx]
         paramIso = isothermTemp[np.where(isothermTemp!=0)]
         paramIso = np.append(paramIso,[0,0])
         # modelNonDim = modelOutputTemp[()]["variable"]
@@ -301,7 +310,7 @@ def extractZLCParameters(**kwargs):
         start_population = lhsPopulation(400)
   
     elif modelType == 'KineticSBMacro':
-        optBounds = np.array(([np.finfo(float).eps,10], [np.finfo(float).eps,0.05], [np.finfo(float).eps,1]))
+        optBounds = np.array(([np.finfo(float).eps,250], [np.finfo(float).eps,0.05], [np.finfo(float).eps,3]))
         optType=np.array(['real','real','real'])
         problemDimension = len(optType)
         isoRef = [1000, 1000, 1000] # Reference for the parameter (has to be a list)
@@ -317,6 +326,9 @@ def extractZLCParameters(**kwargs):
         isothermTemp = isothermAll[:,0]
         if len(isothermTemp) == 6:
             idx = [0, 2, 4, 1, 3, 5]
+            isothermTemp = isothermTemp[idx]
+        if len(isothermTemp) == 13:
+            idx = [0, 2, 4, 6, 7, 8, 9, 10, 11, 12]
             isothermTemp = isothermTemp[idx]
         paramIso = isothermTemp[np.where(isothermTemp!=0)]
         paramIso = np.append(paramIso,[0,0,0])
@@ -462,11 +474,18 @@ def ZLCObjectiveFunction(x):
             deadVolumeFlow = deadVolumeFile[0]
         if len(deadVolumeFlow[0]) == 1: # 1 DV for 1 DV file
             deadVolumeFileTemp = str(deadVolumeFlow[0])
-        else:
+        elif len(deadVolumeFlow[0]) == 2: # 1 DV for 1 DV file
             if np.absolute(flowRateExp[-1] - 1) > 0.2: # for lowflowrate experiments!
                 deadVolumeFileTemp =  str(deadVolumeFlow[0][0])
             else:
                 deadVolumeFileTemp =  str(deadVolumeFlow[0][1])
+        elif len(deadVolumeFlow[0]) == 3: # 1 DV for 1 DV file
+            if np.absolute(flowRateExp[-1] - 1) < 0.1: # for lowflowrate experiments!
+                deadVolumeFileTemp =  str(deadVolumeFlow[0][2])
+            elif np.absolute(flowRateExp[-1] - 45/60) < 0.1: # for lowflowrate experiments!
+                deadVolumeFileTemp =  str(deadVolumeFlow[0][1])
+            else:
+                deadVolumeFileTemp =  str(deadVolumeFlow[0][0])
         # Integration and ode evaluation time (check simulateZLC/simulateDeadVolume)
         timeInt = timeElapsedExp
         
