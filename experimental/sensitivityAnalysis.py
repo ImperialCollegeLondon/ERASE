@@ -254,12 +254,20 @@ def computeObjectiveFunction(mainDir, zlcParameterPath, pOpt, pRef):
             deadVolumeFlow = deadVolumeFile[0]
         if len(deadVolumeFlow[0]) == 1: # 1 DV for 1 DV file
             deadVolumeFileTemp = str(deadVolumeFlow[0])
-        else:
+        elif len(deadVolumeFlow[0]) == 2: # 1 DV for 1 DV file
             if np.absolute(flowRateExp[-1] - 1) > 0.2: # for lowflowrate experiments!
                 deadVolumeFileTemp =  str(deadVolumeFlow[0][0])
             else:
                 deadVolumeFileTemp =  str(deadVolumeFlow[0][1])
-        
+        elif len(deadVolumeFlow[0]) == 3: # 1 DV for 1 DV file
+            if np.absolute(flowRateExp[-1] - 1) < 0.1: # for lowflowrate experiments!
+                deadVolumeFileTemp =  str(deadVolumeFlow[0][2])
+            elif np.absolute(flowRateExp[-1] - 45/60) < 0.1: # for lowflowrate experiments!
+                deadVolumeFileTemp =  str(deadVolumeFlow[0][1])
+            else:
+                deadVolumeFileTemp =  str(deadVolumeFlow[0][0])
+                
+                
         # Integration and ode evaluation time (check simulateZLC/simulateDeadVolume)
         timeInt = timeElapsedExp
     
