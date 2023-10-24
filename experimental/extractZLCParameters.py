@@ -79,9 +79,9 @@ def extractZLCParameters(**kwargs):
         modelType = kwargs["modelType"]
     else:
         modelType = 'SSL'
-    
+
     # Number of times optimization repeated
-    numOptRepeat = 5
+    numOptRepeat = 7
     
     # Directory of raw data
     mainDir = 'runData'
@@ -164,6 +164,8 @@ def extractZLCParameters(**kwargs):
     # Confidence interval for the sensitivity analysis
     alpha = 0.95
     
+    popSize = algorithm_param["population_size"]
+    
     #####################################
     #####################################
     
@@ -184,7 +186,7 @@ def extractZLCParameters(**kwargs):
         isothermFile = [] # Isotherm file is empty as it is fit
         paramIso = [] # Isotherm parameters is empty as it is fit
         lhsPopulation = LHS(xlimits=optBounds)
-        start_population = lhsPopulation(400)
+        start_population = lhsPopulation(popSize)
 
     # Dual-site Langmuir
     elif modelType == 'DSL':
@@ -198,7 +200,7 @@ def extractZLCParameters(**kwargs):
         isothermFile = [] # Isotherm file is empty as it is fit
         paramIso = [] # Isotherm parameters is empty as it is fit
         lhsPopulation = LHS(xlimits=optBounds)
-        start_population = lhsPopulation(400)
+        start_population = lhsPopulation(popSize)
         
     # Single-site Sips
     elif modelType == 'SSS':
@@ -211,7 +213,7 @@ def extractZLCParameters(**kwargs):
         isothermFile = [] # Isotherm file is empty as it is fit
         paramIso = [] # Isotherm parameters is empty as it is fit
         lhsPopulation = LHS(xlimits=optBounds)
-        start_population = lhsPopulation(400)
+        start_population = lhsPopulation(popSize)
 
     # Kinetic constants only
     # Note: This might be buggy for simulations performed before 20.08.21
@@ -244,7 +246,7 @@ def extractZLCParameters(**kwargs):
         # Get the isotherm parameters
         # paramIso = np.multiply(modelNonDim,parameterRefTemp)
         lhsPopulation = LHS(xlimits=optBounds)
-        start_population = lhsPopulation(400)
+        start_population = lhsPopulation(popSize)
     
     # Kinetic constants only (Macropore control only)
     # Note: This might be buggy for simulations performed before 20.08.21
@@ -277,7 +279,7 @@ def extractZLCParameters(**kwargs):
         # Get the isotherm parameters
         # paramIso = np.multiply(modelNonDim,parameterRefTemp)
         lhsPopulation = LHS(xlimits=optBounds)
-        start_population = lhsPopulation(400)
+        start_population = lhsPopulation(popSize)
 
     elif modelType == 'KineticSB':
         optBounds = np.array(([np.finfo(float).eps,250], [np.finfo(float).eps,0.05]))
@@ -307,7 +309,7 @@ def extractZLCParameters(**kwargs):
         # Get the isotherm parameters
         # paramIso = np.multiply(modelNonDim,parameterRefTemp)
         lhsPopulation = LHS(xlimits=optBounds)
-        start_population = lhsPopulation(400)
+        start_population = lhsPopulation(popSize)
   
     elif modelType == 'KineticSBMacro':
         optBounds = np.array(([np.finfo(float).eps,250], [np.finfo(float).eps,0.05], [np.finfo(float).eps,3]))
@@ -337,8 +339,66 @@ def extractZLCParameters(**kwargs):
         # Get the isotherm parameters
         # paramIso = np.multiply(modelNonDim,parameterRefTemp)
         lhsPopulation = LHS(xlimits=optBounds)
-        start_population = lhsPopulation(400)
-                
+        start_population = lhsPopulation(popSize)
+        
+    elif modelType == 'Diffusion':
+        optBounds = np.array(([50,800], [0.03,0.045], [0.1e-3,530e-3]))
+        optType=np.array(['real','real','real'])
+        problemDimension = len(optType)
+        isoRef = [1000, 1000, 1000] # Reference for the parameter (has to be a list)
+        # File with parameter estimates for isotherm (ZLC)
+        isothermDir = '..' + os.path.sep + 'isothermFittingData/'
+        modelOutputTemp = loadmat(isothermDir+isothermDataFile)["isothermData"]       
+        # Convert the nDarray to list
+        nDArrayToList = np.ndarray.tolist(modelOutputTemp)
+        # Unpack another time (due to the structure of loadmat)
+        tempListData = nDArrayToList[0][0]
+        # Get the necessary variables
+        isothermAll = tempListData[4]
+        isothermTemp = isothermAll[:,0]
+        if len(isothermTemp) == 6:
+            idx = [0, 2, 4, 1, 3, 5]
+            isothermTemp = isothermTemp[idx]
+        if len(isothermTemp) == 13:
+            idx = [0, 2, 4, 6, 7, 8, 9, 10, 11, 12]
+            isothermTemp = isothermTemp[idx]
+        paramIso = isothermTemp[np.where(isothermTemp!=0)]
+        paramIso = np.append(paramIso,[0,0,0])
+        # modelNonDim = modelOutputTemp[()]["variable"]
+        # parameterRefTemp = load(isothermDir+isothermFile, allow_pickle=True)["parameterReference"]
+        # Get the isotherm parameters
+        # paramIso = np.multiply(modelNonDim,parameterRefTemp)
+        lhsPopulation = LHS(xlimits=optBounds)
+        start_population = lhsPopulation(popSize)            
+    elif modelType == 'Diffusion1T':
+        optBounds = np.array(([0.005e-3,0.1e-3],[0.0001,0.6]))
+        optType=np.array(['real','real'])
+        problemDimension = len(optType)
+        isoRef = [1000, 1000] # Reference for the parameter (has to be a list)
+        # File with parameter estimates for isotherm (ZLC)
+        isothermDir = '..' + os.path.sep + 'isothermFittingData/'
+        modelOutputTemp = loadmat(isothermDir+isothermDataFile)["isothermData"]       
+        # Convert the nDarray to list
+        nDArrayToList = np.ndarray.tolist(modelOutputTemp)
+        # Unpack another time (due to the structure of loadmat)
+        tempListData = nDArrayToList[0][0]
+        # Get the necessary variables
+        isothermAll = tempListData[4]
+        isothermTemp = isothermAll[:,0]
+        if len(isothermTemp) == 6:
+            idx = [0, 2, 4, 1, 3, 5]
+            isothermTemp = isothermTemp[idx]
+        if len(isothermTemp) == 13:
+            idx = [0, 2, 4, 6, 7, 8, 9, 10, 11, 12]
+            isothermTemp = isothermTemp[idx]
+        paramIso = isothermTemp[np.where(isothermTemp!=0)]
+        paramIso = np.append(paramIso,[0,0])
+        # modelNonDim = modelOutputTemp[()]["variable"]
+        # parameterRefTemp = load(isothermDir+isothermFile, allow_pickle=True)["parameterReference"]
+        # Get the isotherm parameters
+        # paramIso = np.multiply(modelNonDim,parameterRefTemp)
+        lhsPopulation = LHS(xlimits=optBounds)
+        start_population = lhsPopulation(popSize)     
     # Initialize the parameters used for ZLC fitting process
     fittingParameters(True,temperature,deadVolumeFile,adsorbentDensity,particleEpsilon,
                       massSorbent,isoRef,downsampleData,paramIso,downsampleExp,modelType)
@@ -427,8 +487,8 @@ def ZLCObjectiveFunction(x):
 
     # Prepare isotherm model (the first n-1 parameters are for the isotherm model)
     if len(paramIso) != 0:
-        if modelType == 'KineticSBMacro':
-            isothermModel = paramIso[0:-3] # Use this if isotherm parameter provided (for kinetics only: KineticSBMacro)
+        if modelType == 'KineticSBMacro' or modelType == 'Diffusion':
+            isothermModel = paramIso[0:-3] # Use this if isotherm parameter provided (for kinetics only: KineticSBMacro or Diffusion)
         else:
             isothermModel = paramIso[0:-2] # Use this if isotherm parameter provided (for kinetics only: Other kinetic models)
     else:        
@@ -489,7 +549,7 @@ def ZLCObjectiveFunction(x):
         # Integration and ode evaluation time (check simulateZLC/simulateDeadVolume)
         timeInt = timeElapsedExp
         
-        if modelType == 'KineticSBMacro':
+        if modelType == 'KineticSBMacro' or modelType == 'Diffusion':
             # Compute the composite response using the optimizer parameters
             _ , moleFracSim , _ = simulateCombinedModel(isothermModel = isothermModel,
                                                     rateConstant_1 = x[-3]*isoRef[-3], # Last but one element is rate constant (Arrhenius constant)
@@ -505,6 +565,22 @@ def ZLCObjectiveFunction(x):
                                                     volGas = volGas,
                                                     adsorbentDensity = adsorbentDensity,
                                                     modelType = modelType)
+        elif modelType == 'Diffusion1T':
+            # Compute the composite response using the optimizer parameters
+            _ , moleFracSim , _ = simulateCombinedModel(isothermModel = isothermModel,
+                                                    rateConstant_1 = x[-2]*isoRef[-2], # Last but one element is rate constant (Arrhenius constant)
+                                                    rateConstant_2 = 0, # Last element is activation energy
+                                                    rateConstant_3 = x[-1]*isoRef[-1], # Last element is activation energy
+                                                    temperature = temperature[ii], # Temperature [K]
+                                                    timeInt = timeInt,
+                                                    initMoleFrac = [moleFracExp[0]], # Initial mole fraction assumed to be the first experimental point
+                                                    flowIn = np.mean(flowRateExp[-1:-2:-1]*1e-6), # Flow rate [m3/s] for ZLC considered to be the mean of last 10 points (equilibrium)
+                                                    expFlag = True,
+                                                    deadVolumeFile = str(deadVolumeFileTemp),
+                                                    volSorbent = volSorbent,
+                                                    volGas = volGas,
+                                                    adsorbentDensity = adsorbentDensity,
+                                                    modelType = 'Diffusion')
         else:
             # Compute the composite response using the optimizer parameters
             _ , moleFracSim , _ = simulateCombinedModel(isothermModel = isothermModel,

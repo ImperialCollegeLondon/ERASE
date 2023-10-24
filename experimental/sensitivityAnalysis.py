@@ -215,6 +215,9 @@ def computeObjectiveFunction(mainDir, zlcParameterPath, pOpt, pRef):
     if len(isothermTemp) == 6:
         idx = [0, 2, 4, 1, 3, 5]
         isothermTemp = isothermTemp[idx]
+    if len(isothermTemp) == 13:
+        idx = [0, 2, 4, 6, 7, 8, 9, 10, 11, 12]
+        isothermTemp = isothermTemp[idx]
     # Compute the downsample intervals for the experiments
     # This is only to make sure that all experiments get equal weights
     numPointsExp = np.zeros(len(fileName))
@@ -262,12 +265,17 @@ def computeObjectiveFunction(mainDir, zlcParameterPath, pOpt, pRef):
     
         # Parse out the xOpt to the isotherm model and kinetic parameters
         # isothermModel = xOpt[0:-2]
-        if len(xOpt) == 2:
+        if modelType == 'Diffusion1T':
+            isothermModel = isothermTemp[np.where(isothermTemp!=0)]        
+            rateConstant_1 = xOpt[-2]
+            rateConstant_2 = 0
+            rateConstant_3 = xOpt[-1]
+        elif modelType == 'KineticSB' or modelType == 'Kinetic' or modelType == 'KineticOld' :
             isothermModel = isothermTemp[np.where(isothermTemp!=0)]        
             rateConstant_1 = xOpt[-2]
             rateConstant_2 = xOpt[-1]
             rateConstant_3 = 0
-        elif len(xOpt) == 3:
+        elif modelType == 'Diffusion' or modelType == 'KineticSBMacro':
             isothermModel = isothermTemp[np.where(isothermTemp!=0)]        
             rateConstant_1 = xOpt[-3]
             rateConstant_2 = xOpt[-2]
@@ -277,10 +285,26 @@ def computeObjectiveFunction(mainDir, zlcParameterPath, pOpt, pRef):
             rateConstant_1 = xOpt[-2]
             rateConstant_2 = xOpt[-1]
             rateConstant_3 = 0
-                
-        # Compute the model response using the optimized parameters
-        _ , moleFracSim , resultMat = simulateCombinedModel(timeInt = timeInt,
-                                                    initMoleFrac = [moleFracExp[0]], # Initial mole fraction assumed to be the first experimental point
+        
+        if modelType == 'Diffusion1T':
+            # Compute the model response using the optimized parameters
+            _ , moleFracSim , resultMat = simulateCombinedModel(timeInt = timeInt,
+                                                        initMoleFrac = [moleFracExp[0]], # Initial mole fraction assumed to be the first experimental point
+                                                    flowIn = np.mean(flowRateExp[-1:-10:-1]*1e-6), # Flow rate for ZLC considered to be the mean of last 10 points (equilibrium)
+                                                    expFlag = True,
+                                                    isothermModel = isothermModel,
+                                                    rateConstant_1 = rateConstant_1,
+                                                    rateConstant_2 = 0,
+                                                    rateConstant_3 = rateConstant_3,
+                                                    deadVolumeFile = str(deadVolumeFileTemp),
+                                                    volSorbent = volSorbent,
+                                                    volGas = volGas,
+                                                    temperature = temperatureExp[ii],
+                                                    modelType = 'Diffusion')
+        else:
+                # Compute the model response using the optimized parameters
+            _ , moleFracSim , resultMat = simulateCombinedModel(timeInt = timeInt,
+                                                        initMoleFrac = [moleFracExp[0]], # Initial mole fraction assumed to be the first experimental point
                                                     flowIn = np.mean(flowRateExp[-1:-10:-1]*1e-6), # Flow rate for ZLC considered to be the mean of last 10 points (equilibrium)
                                                     expFlag = True,
                                                     isothermModel = isothermModel,

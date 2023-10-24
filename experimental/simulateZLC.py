@@ -7,6 +7,7 @@
 # Year:     2021
 # Python:   Python 3.7
 # Authors:  Ashwin Kumar Rajagopalan (AK)
+#           Hassan Azzan (HA)
 #
 # Purpose:
 # Simulates the ZLC setup. This is inspired from Ruthven's work and from the 
@@ -37,7 +38,7 @@ def simulateZLC(**kwargs):
     from computeEquilibriumLoading import computeEquilibriumLoading
     import auxiliaryFunctions
     import os
-    import pdb
+    # import pdb
     
     # Move to top level folder (to avoid path issues)
     os.chdir("..")
@@ -55,25 +56,28 @@ def simulateZLC(**kwargs):
     if 'rateConstant_1' in kwargs:
         rateConstant_1 = np.array(kwargs["rateConstant_1"])
     else:
-        rateConstant_1 = np.array([0.1])
+        rateConstant_1 = np.array([3.79204704e+03])
+        rateConstant_1 = np.array([3*3.79204704e+03])
         
     # Kinetic rate constant 2 (analogous to macropore resistance) [/s]
     if 'rateConstant_2' in kwargs:
         rateConstant_2 = np.array(kwargs["rateConstant_2"])
     else:
-        rateConstant_2 = np.array([0])
-        
+        rateConstant_2 = np.array([3.00373911e+01])
+        # rateConstant_2 = np.array([0.01])
+       
     # Kinetic rate constant 3 [/s]
     if 'rateConstant_3' in kwargs:
         rateConstant_3 = np.array(kwargs["rateConstant_3"])
     else:
-        rateConstant_3 = np.array([0])
+        rateConstant_3 = np.array([100])
+        # rateConstant_3 = np.array([0.01*0.0025**2])
         
     # Feed flow rate [m3/s]
     if 'flowIn' in kwargs:
         flowIn = np.array(kwargs["flowIn"])
     else:
-        flowIn = np.array([5e-7])
+        flowIn = np.array([10*1.66667e-8])
     
     # Feed Mole Fraction [-]
     if 'feedMoleFrac' in kwargs:
@@ -92,7 +96,7 @@ def simulateZLC(**kwargs):
     if 'timeInt' in kwargs:
         timeInt = kwargs["timeInt"]
     else:
-        timeInt = (0.0,300)
+        timeInt = (0.0,600)
         
     # Flag to check if experimental data used
     if 'expFlag' in kwargs:
@@ -115,13 +119,13 @@ def simulateZLC(**kwargs):
     if 'volSorbent' in kwargs:
         volSorbent = kwargs["volSorbent"]
     else:
-        volSorbent = 4.35e-8
+        volSorbent = 4.350000000000000e-08
         
     # Volume of gas chamber (dead volume) [m3]
     if 'volGas' in kwargs:
         volGas = kwargs["volGas"]
     else:
-        volGas = 6.81e-8
+        volGas = 6.803846153846154e-08
         
     # Isotherm model parameters  (SSL or DSL)
     if 'isothermModel' in kwargs:
@@ -129,7 +133,8 @@ def simulateZLC(**kwargs):
     else:
         # Default isotherm model is DSL and uses CO2 isotherm on AC8
         # Reference: 10.1007/s10450-020-00268-7
-        isothermModel = [0.44, 3.17e-6, 28.63e3, 6.10, 3.21e-6, 20.37e3]
+        isothermModel = [4.18*3/4,0.5/np.exp(17.7e4/(8.314*298.15)),17.7e4,0,0,0]
+        isothermModel = [995*3/4,0.0001/np.exp(2.9e4/(8.314*298.15)),2.9e4,0,0,0]
 
     # Adsorbent density [kg/m3]
     # This has to be the skeletal density
@@ -142,7 +147,7 @@ def simulateZLC(**kwargs):
     if 'pressureTotal' in kwargs:
         pressureTotal = np.array(kwargs["pressureTotal"]);
     else:
-        pressureTotal = np.array([1.e5]);
+        pressureTotal = np.array([1e5]);
         
     # Temperature of the gas [K]
     # Can be a vector of temperatures
@@ -155,78 +160,96 @@ def simulateZLC(**kwargs):
     if 'modelType' in kwargs:
         modelType = kwargs["modelType"]
     else:
-        modelType = 'Kinetic'
+        modelType = 'KineticSBMacro'
+        modelType = 'Diffusion'
+    
+    if modelType == 'Diffusion':
+        particleEpsilon = volGas/(volGas+volSorbent)
+        inputParameters = (adsorbentDensity, isothermModel, rateConstant_1, rateConstant_2, rateConstant_3,
+                           flowIn, feedMoleFrac, initMoleFrac, pressureTotal, 
+                           temperature, volSorbent, volGas, modelType)
+        tspan, Y, r, yOut, flowOut, qAverage = DiffusionAdsorption1D(initMoleFrac, t_eval, volSorbent, volGas, adsorbentDensity, particleEpsilon, flowIn, temperature, pressureTotal, [isothermModel], rateConstant_1, rateConstant_2, rateConstant_3)
+        # Presure vector in output
+        pressureVec =  pressureTotal * np.ones(len(tspan)) # Constant pressure
+
+        yOut = np.transpose(yOut)
+        flowOut = np.transpose(flowOut)
+        # Parse out the output matrix and add flow rate
+        resultMat = np.row_stack((yOut,qAverage,pressureVec,flowOut))
+        # pdb.set_trace()
+        # Parse out the time
+        timeSim = tspan
+    else:
+        # Compute the initial sensor loading [mol/m3] @ initMoleFrac
+        equilibriumLoading  = computeEquilibriumLoading(pressureTotal=pressureTotal,
+                                                        temperature=temperature,
+                                                        moleFrac=initMoleFrac,
+                                                        isothermModel=isothermModel)*adsorbentDensity # [mol/m3]
         
-    # Compute the initial sensor loading [mol/m3] @ initMoleFrac
-    equilibriumLoading  = computeEquilibriumLoading(pressureTotal=pressureTotal,
-                                                    temperature=temperature,
-                                                    moleFrac=initMoleFrac,
-                                                    isothermModel=isothermModel)*adsorbentDensity # [mol/m3]
+        # Prepare tuple of input parameters for the ode solver
+        inputParameters = (adsorbentDensity, isothermModel, rateConstant_1, rateConstant_2, rateConstant_3,
+                           flowIn, feedMoleFrac, initMoleFrac, pressureTotal, 
+                           temperature, volSorbent, volGas, modelType)
+                
+        # Solve the system of ordinary differential equations
+        # Stiff solver used for the problem: BDF or Radau
+        # The output is print out every 0.1 s
+        # Solves the model assuming constant/negligible pressure across the sensor
+        # Prepare initial conditions vector
+        initialConditions = np.zeros([2])
+        initialConditions[0] = initMoleFrac[0] # Gas mole fraction
+        initialConditions[1] = equilibriumLoading # Initial Loading
+        
+        # pdb.set_trace()
+        
+        ##########################################################################
+        outputSol = solve_ivp(solveSorptionEquation, timeInt, initialConditions, 
+                              method='Radau', t_eval = t_eval,
+                              rtol = 1e-8, args = inputParameters, first_step =0.0001, dense_output=True)
+        # Presure vector in output
+        pressureVec =  pressureTotal * np.ones(len(outputSol.t)) # Constant pressure
+        # pdb.set_trace()
+        # Compute the outlet flow rate
+        # if outputSol.y[1,:].size != 0:
+        sum_dqdt = np.gradient(outputSol.y[1,:],
+                            outputSol.t) # Compute gradient of loading
+        flowOut = flowIn - ((volSorbent*(8.314*temperature)/pressureTotal)*(sum_dqdt))
+        # else:
+        #     flowOut = flowIn
+        
+        # Parse out the output matrix and add flow rate
+        resultMat = np.row_stack((outputSol.y,pressureVec,flowOut))
     
-    # Prepare tuple of input parameters for the ode solver
-    inputParameters = (adsorbentDensity, isothermModel, rateConstant_1, rateConstant_2, rateConstant_3,
-                       flowIn, feedMoleFrac, initMoleFrac, pressureTotal, 
-                       temperature, volSorbent, volGas, modelType)
-            
-    # Solve the system of ordinary differential equations
-    # Stiff solver used for the problem: BDF or Radau
-    # The output is print out every 0.1 s
-    # Solves the model assuming constant/negligible pressure across the sensor
-    # Prepare initial conditions vector
-    initialConditions = np.zeros([2])
-    initialConditions[0] = initMoleFrac[0] # Gas mole fraction
-    initialConditions[1] = equilibriumLoading # Initial Loading
+        # Parse out the time
+        timeSim = outputSol.t
+        ##########################################################################
+        # ode15s = ode(solveSorptionEquation)
+        # ode15s.set_integrator('vode', method='bdf', order=15, nsteps=3000)
+        # ode15s.set_initial_value(initialConditions, 0)
+        # ode15s.set_f_params(*adsorbentDensity, isothermModel, rateConstant_1, rateConstant_2,
+        #                    flowIn, feedMoleFrac, initMoleFrac, pressureTotal, 
+        #                    temperature, volSorbent, volGas)
+        # pdb.set_trace()
+        # ode15s.integrate(timeInt[-1])
+        # tVals =  np.arange(timeInt[0],timeInt[-1],0.01)
+        # pdb.set_trace()
+        # tVals = t_eval
+        # outputSol = odeint(solveSorptionEquation, initialConditions, tVals, inputParameters,tfirst=True, h0 = 0.01)
+        
+        # # Presure vector in output
+        # pressureVec =  pressureTotal * np.ones(len(outputSol)) # Constant pressure
     
-    # pdb.set_trace()
+        # # Compute the outlet flow rate
+        # sum_dqdt = np.gradient(outputSol[:,1],
+        #                    tVals) # Compute gradient of loading
+        # flowOut = flowIn - ((volSorbent*(8.314*temperature)/pressureTotal)*(sum_dqdt))
+        
+        # # Parse out the output matrix and add flow rate
+        # resultMat = np.row_stack((np.transpose(outputSol),pressureVec,flowOut))
     
-    ##########################################################################
-    outputSol = solve_ivp(solveSorptionEquation, timeInt, initialConditions, 
-                          method='Radau', t_eval = t_eval,
-                          rtol = 1e-8, args = inputParameters, first_step =0.0001, dense_output=True)
-    # Presure vector in output
-    pressureVec =  pressureTotal * np.ones(len(outputSol.t)) # Constant pressure
-    # pdb.set_trace()
-    # Compute the outlet flow rate
-    # if outputSol.y[1,:].size != 0:
-    sum_dqdt = np.gradient(outputSol.y[1,:],
-                        outputSol.t) # Compute gradient of loading
-    flowOut = flowIn - ((volSorbent*(8.314*temperature)/pressureTotal)*(sum_dqdt))
-    # else:
-    #     flowOut = flowIn
-    
-    # Parse out the output matrix and add flow rate
-    resultMat = np.row_stack((outputSol.y,pressureVec,flowOut))
-
-    # Parse out the time
-    timeSim = outputSol.t
-    ##########################################################################
-    # ode15s = ode(solveSorptionEquation)
-    # ode15s.set_integrator('vode', method='bdf', order=15, nsteps=3000)
-    # ode15s.set_initial_value(initialConditions, 0)
-    # ode15s.set_f_params(*adsorbentDensity, isothermModel, rateConstant_1, rateConstant_2,
-    #                    flowIn, feedMoleFrac, initMoleFrac, pressureTotal, 
-    #                    temperature, volSorbent, volGas)
-    # pdb.set_trace()
-    # ode15s.integrate(timeInt[-1])
-    # tVals =  np.arange(timeInt[0],timeInt[-1],0.01)
-    # pdb.set_trace()
-    # tVals = t_eval
-    # outputSol = odeint(solveSorptionEquation, initialConditions, tVals, inputParameters,tfirst=True, h0 = 0.01)
-    
-    # # Presure vector in output
-    # pressureVec =  pressureTotal * np.ones(len(outputSol)) # Constant pressure
-
-    # # Compute the outlet flow rate
-    # sum_dqdt = np.gradient(outputSol[:,1],
-    #                    tVals) # Compute gradient of loading
-    # flowOut = flowIn - ((volSorbent*(8.314*temperature)/pressureTotal)*(sum_dqdt))
-    
-    # # Parse out the output matrix and add flow rate
-    # resultMat = np.row_stack((np.transpose(outputSol),pressureVec,flowOut))
-
-    # # Parse out the time
-    # timeSim = tVals
-    # Call the plotting function
+        # # Parse out the time
+        # timeSim = tVals
+        # Call the plotting function
     if plotFlag:
         plotFullModelResult(timeSim, resultMat, inputParameters,
                             gitCommitID, currentDT)
@@ -242,7 +265,7 @@ def simulateZLC(**kwargs):
 def solveSorptionEquation(t, f, *inputParameters):  
     import numpy as np
     from computeEquilibriumLoading import computeEquilibriumLoading
-    import pdb
+    # import pdb
     # Gas constant
     Rg = 8.314; # [J/mol K]
 
@@ -275,8 +298,8 @@ def solveSorptionEquation(t, f, *inputParameters):
     
     # Compute the gradient (delq*/dc)
     dqbydc = (equilibriumLoadingUp-equilibriumLoading)/(delP/(Rg*temperature)) # [-]
-    dellogc = np.log(partialPressure+delP)-np.log((partialPressure))
-    dlnqbydlnc = (np.log(equilibriumLoadingUp)-np.log(equilibriumLoading))/dellogc
+    dellogp = np.log(partialPressure+delP)-np.log((partialPressure))
+    dlnqbydlnp = (np.log(equilibriumLoadingUp)-np.log(equilibriumLoading))/dellogp
     epsilonp = volGas/(volGas+volSorbent)
     
     if modelType == 'KineticOld':
@@ -300,7 +323,7 @@ def solveSorptionEquation(t, f, *inputParameters):
             
     if modelType == 'Kinetic':
     # Rate constant 1 (analogous to micropore resistance)
-        k1 = rateConstant_1/dlnqbydlnc
+        k1 = rateConstant_1/dlnqbydlnp
     
         # Rate constant 2 (analogous to macropore resistance)
         k2 = rateConstant_2/(1+(1/epsilonp)*dqbydc)
@@ -330,16 +353,39 @@ def solveSorptionEquation(t, f, *inputParameters):
             rateConstant = 1/(1/k1 + 1/k2)
             
     elif modelType == 'KineticSB':
-        rateConstant = rateConstant_1*np.exp(-rateConstant_2*1000/(Rg*temperature))/dlnqbydlnc
+        rateConstant = rateConstant_1*np.exp(-rateConstant_2*1000/(Rg*temperature))/dlnqbydlnp
         if rateConstant<1e-8:
             rateConstant = 1e-8
 
     elif modelType == 'KineticSBMacro':
-        k1 = rateConstant_1*np.exp(-rateConstant_2*1000/(Rg*temperature))/dlnqbydlnc
+        k1 = rateConstant_1*np.exp(-rateConstant_2*1000/(Rg*temperature))/dlnqbydlnp
         # Rate constant 2 (analogous to macropore resistance)
-        k2 = rateConstant_3*np.power(temperature,0.5)/(1+(1/epsilonp)*dqbydc)
+        k2 = rateConstant_3*temperature**0.5/(1+(1/epsilonp)*dqbydc)
+        k2 = rateConstant_3*np.power(temperature,0.5)*epsilonp/(epsilonp+(1-epsilonp)*dqbydc)        
+        k2 = rateConstant_3*(temperature/288.15)**1.75*epsilonp/(epsilonp+(1-epsilonp)*dqbydc)
+
+        # k2 = rateConstant_3
         # k2 = rateConstant_3/(1+(1/epsilonp)*dqbydc)
+        if k1<1e-9:
+            rateConstant = k2
+        # If pure (analogous) micropore
+        elif k2<1e-9:
+            rateConstant = k1
+        # If both resistances are present
+        else:
+            rateConstant = 1/(1/k1 + 1/k2)
+    
+        if rateConstant<1e-8:
+            rateConstant = 1e-8    
         
+    elif modelType == 'KineticSBMacro2':
+        k1 = rateConstant_1*np.exp(-rateConstant_2*1000/(Rg*temperature))/dlnqbydlnp
+        # Rate constant 2 (analogous to macropore resistance)
+        tc = 0.01/(rateConstant_3*temperature**0.5*1/(1+(1/epsilonp)*dqbydc))
+        k2 = 5.14/(tc*(1+(1/epsilonp)*dqbydc)/(rateConstant_3*temperature**0.5))**0.5
+        # pdb.set_trace()
+        # k2 = rateConstant_3*np.power(temperature,0.5)*epsilonp/(epsilonp+(1-epsilonp)*dqbydc)
+        # k2 = rateConstant_3/(1+(1/epsilonp)*dqbydc)        
         # Overall rate constant
         # The following conditions are done for purely numerical reasons
         # If pure (analogous) macropore
@@ -357,6 +403,9 @@ def solveSorptionEquation(t, f, *inputParameters):
             
     # Linear driving force model (derivative of solid phase loadings)
     df[1] = rateConstant*(equilibriumLoading-f[1])
+    
+    # Quadratic driving force model (derivative of solid phase loadings)
+    # df[1] = rateConstant*(equilibriumLoading**2-f[1]**2)/(2*f[1])
 
     # Total mass balance
     # Assumes constant pressure, so flow rate evalauted
@@ -364,8 +413,7 @@ def solveSorptionEquation(t, f, *inputParameters):
     
     # Component mass balance
     term1 = 1/volGas
-    term2 = ((flowIn*feedMoleFrac - flowOut*f[0])
-             - (volSorbent*(Rg*temperature)/pressureTotal)*df[1])
+    term2 = ((flowIn*feedMoleFrac - flowOut*f[0]) - (volSorbent*(Rg*temperature)/pressureTotal)*df[1])
     df[0] = term1*term2
     # pdb.set_trace()
 
@@ -385,7 +433,7 @@ def plotFullModelResult(timeSim, resultMat, inputParameters,
     saveFileExtension = ".png"
     
     # Unpack the tuple of input parameters used to solve equations
-    adsorbentDensity , _ , _ , _ , flowIn, _ , _ , _ , temperature, _ , _ = inputParameters
+    adsorbentDensity, _, _, _, _, flowIn, _, _ , _, temperature, _, _, modelType = inputParameters
 
     os.chdir("plotFunctions")
     # Plot the solid phase compositions
@@ -433,3 +481,339 @@ def plotFullModelResult(timeSim, resultMat, inputParameters,
     plt.show()
 
     os.chdir("..")
+    
+def DiffusionAdsorption1D(Y0, tspan, volSorbent, volGas, adsorbentDensity, epsilon, volFlow, temperature, Ptotal, isothermModelAll, rateConstant_1, rateConstant_2, rateConstant_3):
+    import numpy as np
+    from scipy.integrate import odeint
+    import pdb
+    # import matplotlib.pyplot as plt
+    # from numpy import load
+    # import os
+    # import matplotlib.pyplot as plt
+    # import auxiliaryFunctions
+    import scipy
+    # import nbkode
+    # plt.style.use('doubleColumn.mplstyle') # Custom matplotlib style file
+    # from scipy.integrate import odeint, solve_ivp, ode
+
+    # Constants and others
+    Rg = 8.314  # Universal gas constant [J/molK]
+    # pdb.set_trace()
+    Rp = ((volSorbent + volGas) / (4/3 * np.pi))**(1/3)  # pellet radius [m]]
+    n = 40
+    r = np.linspace(0,Rp+2*Rp/n, n)  # discretize radial domain
+    
+    # pdb.set_trace()
+    # Simulate model for input isotherms
+    for isothermModel in isothermModelAll:
+        # Initial conditions
+        c0 = np.zeros(n)  # concentration in macropore [mol/m^3]
+        c0[:] = Ptotal * Y0 / (Rg * temperature)  # Initial condition c(r,0) = c0 [mol/m^3]
+        c0[-1] = 0
+        q0 = computeEquilibrium(c0, temperature, isothermModel, adsorbentDensity)  # Initial condition equilibrium q(r,0) = q*(c,T) [mol/m^3]
+        q0[-2:] = 0
+        x0 = np.concatenate([c0, q0])    
+        inputArgs = r, n, isothermModel, temperature, rateConstant_1, rateConstant_2, rateConstant_3, epsilon, adsorbentDensity,volGas, volSorbent, volFlow, Y0, Rp
+
+        # ODE solver
+        scipy.integrate.ode(radialDiffusionAdsorption1D).set_integrator('vode', method='bdf', order=15)
+        # scipy.integrate.ode(radialDiffusionAdsorption1D).set_integrator('lsoda',first_step =0.001)
+        Y = odeint(radialDiffusionAdsorption1D, x0, tspan, args=inputArgs)
+        
+        
+        # solver = nbkode.BDF6(radialDiffusionAdsorption1D, 0, x0, params = inputArgs)
+        
+        # tspan, Y = solver.run(tspan)
+        
+        moleGas = np.zeros(len(tspan))
+        moleSolid = np.zeros(len(tspan))
+        qAverage_i = np.zeros(len(tspan))
+        for jj in range(len(tspan)):
+            qAverage_i[jj] = 3 / (Rp**3) *             np.trapz(Y[jj, n:2*n-2] * r[0:-2] ** 2, r[0:-2])
+            moleGas[jj] = volGas * 3 / (Rp**3) *       np.trapz(Y[jj, 0:n-2]   * r[0:-2] ** 2, r[0:-2])
+            moleSolid[jj] = volSorbent * 3 / (Rp**3) * np.trapz(Y[jj, n:2*n-2] * r[0:-2] ** 2, r[0:-2])
+        moleTotal = moleSolid + moleGas
+        moleRate = np.gradient(moleTotal, tspan)
+        volRate = -moleRate * Rg * temperature / Ptotal
+        yOut = Y[:,n-2]*(Rg*temperature)/Ptotal
+        volFlowOut = (volRate + volFlow)
+        qAverage = qAverage_i
+        yOut[yOut < 1e-6] = 1e-6
+        volFlowOut[volFlowOut < volFlow] = volFlow
+        volFlowOut[volFlowOut > 100*volFlow] = 100*volFlow
+        qAverage[qAverage < 1e-6] = 1e-6
+        # pdb.set_trace()
+    
+    return tspan, Y, r, yOut, volFlowOut, qAverage
+
+def radialDiffusionAdsorption1D(x, t, r, n, isothermModel, temperature, rateConstant_1, rateConstant_2, rateConstant_3, epsilon, adsorbentDensity,volGas, volSorbent, volFlow, Y0, Rp):
+    import numpy as np
+    # import computedqbydc
+    # import computedlnqbydlnp
+    # import computeEquilibrium
+    import pdb
+    Rg = 8.314
+    Ptotal = 1e5
+    DcDt = np.zeros(n)
+    DqDt = np.zeros(n)
+    DyDt = np.zeros(n)
+
+    deltar = r[1] - r[0]
+    D2cDx2 = np.zeros(n)
+    
+    c = x[0:n]
+    q = x[n:2*n]
+    
+    # if t == 0:
+    #     c[-2] = Y0*Ptotal/(Rg*temperature)
+    
+    Dmaceff = np.zeros(n)
+    kmiceff = np.zeros(n)
+    kmic = rateConstant_1*np.exp(-rateConstant_2*1000/(Rg*temperature))
+    # Dmac = rateConstant_3*(Rp**2)*(temperature**0.5)
+    Dmac = rateConstant_3*(Rp**2)*((temperature/288.15)**1.75)
+    
+    for jj in range(n):
+        Dmaceff[jj] = Dmac / (epsilon + computedqbydc([c[jj]],[q[jj]], temperature, isothermModel, adsorbentDensity) * (1 - epsilon))
+        # Dmaceff[jj] = Dmac / (epsilon + computeEquilibrium(c[jj], temperature, isothermModel, adsorbentDensity)/c[jj] * (1 - epsilon))
+        kmiceff[jj] = kmic / computedlnqbydlnp([c[jj]],[q[jj]], temperature, isothermModel, adsorbentDensity)
+    # Dmaceff[-2] = Dmac 
+    
+    # Dmaceff[-1] = Dmaceff[-2]*10000
+    D2cDx2[0] = 6 * Dmaceff[0] / (epsilon * deltar ** 2) * (c[1] - c[0]) 
+    # pdb.set_trace()
+    
+    for i in range(1, n-2):   
+        D2cDx2[i] = (Dmaceff[i] / (epsilon * 2 * (i) * deltar ** 2)) * ((i + 2) * c[i + 1] - 2 * (i) * c[i] + (i - 2) * c[i - 1]) + \
+                    (Dmaceff[i + 1] / (epsilon * 2 * deltar ** 2))   * (c[i + 1] - c[i]) + \
+                    (Dmaceff[i - 1] / (epsilon * 2 * deltar ** 2))   * (c[i - 1] - c[i])
+                    
+    # D2cDx2[-2] =  Dmaceff[-2] / (epsilon * deltar ** 2) * (c[-1] - c[-2]) 
+
+    
+    # pdb.set_trace()
+    for i in range(0, n-2): 
+        if i == 0:
+            DqDt[i] = kmiceff[i] * (computeEquilibrium(c[i], temperature, isothermModel, adsorbentDensity) - q[i])
+            DcDt[i] = D2cDx2[i] - ((1 - epsilon) / epsilon) * DqDt[i]
+            # pdb.set_trace()
+        else:
+            DqDt[i] = kmiceff[i] * (computeEquilibrium(c[i], temperature, isothermModel, adsorbentDensity) - q[i])
+            DcDt[i] = D2cDx2[i] - ((1 - epsilon) / epsilon) * 3 / ( ((i+1)*deltar)**3 ) * np.trapz(DqDt[0:i] * r[0:i] ** 2, r[0:i])
+    
+    volMix = volGas+volSorbent
+    # volMix = volSorbent*0.01
+    DnDt = (volSorbent*3 / ( (Rp)**3 ) * np.trapz(DqDt[0:n-2] * r[0:-2] ** 2, r[0:-2])+
+            volGas*3 /     ( (Rp)**3 ) * np.trapz(DcDt[0:n-2] * r[0:-2] ** 2, r[0:-2]))/(volSorbent+volGas)
+    flowOut = volFlow - ((volSorbent+volGas)*(Rg*temperature)/Ptotal)*DnDt;
+    DyDt = 1/(volMix) * ((volFlow*0 - flowOut*c[-2]*(Rg*temperature)/Ptotal) - ((volSorbent+volGas)*(Rg*temperature)/Ptotal)*DnDt);
+    DcDt[-2] = DyDt*Ptotal/(Rg*temperature)
+    DcDt[-1] = 0
+    DqDt[-2:] = 0
+    # pdb.set_trace()
+
+    DfDt = np.concatenate([DcDt, DqDt])
+    # pdb.set_trace()
+    return DfDt
+
+
+def computeEquilibrium(c, temperature, isothermModel, adsorbentDensity):
+    import numpy as np
+    import pdb
+    
+    Rg = 8.314
+    # pdb.set_trace()
+    isoAffinityA = isothermModel[1] * np.exp(isothermModel[2] / (Rg * temperature))
+    isoNumeratorA = isothermModel[0] * isoAffinityA * c
+    isoDenominatorA = 1 + isoAffinityA * c
+
+    isoAffinityB = isothermModel[4] * np.exp(isothermModel[5] / (Rg * temperature))
+    isoNumeratorB = isothermModel[3] * isoAffinityB * c
+    isoDenominatorB = 1 + isoAffinityB * c
+
+    q = adsorbentDensity * (isoNumeratorA / isoDenominatorA + isoNumeratorB / isoDenominatorB)
+    return q
+
+def computedlnqbydlnp(c, q, temperature, isothermModel, adsorbentDensity):
+    import numpy as np
+    # import computeEquilibrium
+    # import pdb 
+    Rg = 8.314
+    dlnqbydlnp = np.zeros(len(c))
+    for i in range(len(c)):
+        delp = 1
+        partialPressure = c[i] * Rg * temperature
+        partialPressureUp = partialPressure + delp
+        if partialPressure == 0:
+            dlnqbydlnp[i] = 1
+        elif partialPressure < 0:
+            dlnqbydlnp[i] = 1
+        else:
+            cUp = c[i] + delp / (Rg * temperature)
+            
+            equilibriumLoading = computeEquilibrium(c[i], temperature, isothermModel, adsorbentDensity)
+            equilibriumLoadingUp = computeEquilibrium(cUp, temperature, isothermModel, adsorbentDensity)
+            
+            dellogp = np.log(partialPressureUp) - np.log(partialPressure)
+            dellogq = np.log(equilibriumLoadingUp) - np.log(equilibriumLoading)
+            
+            dlnqbydlnp[i] = dellogq / dellogp
+    # pdb.set_trace()
+    return dlnqbydlnp
+
+
+def computedqbydc(c, q, temperature, isothermModel, adsorbentDensity):
+    import numpy as np
+    # import computeEquilibrium
+    Rg = 8.314
+    delc = 0.0001
+    dqbydc = np.zeros(len(c))
+    for i in range(len(c)):
+        cUp = c[i] + delc
+        if c[i] == 0:
+            dqbydc[i] = adsorbentDensity*(isothermModel[0] * isothermModel[1] * np.exp(isothermModel[2] / (Rg * temperature)) + isothermModel[3] * isothermModel[4] * np.exp(isothermModel[5] / (Rg * temperature)))
+        elif c[i] < 0:
+            dqbydc[i] = adsorbentDensity*(isothermModel[0] * isothermModel[1] * np.exp(isothermModel[2] / (Rg * temperature)) + isothermModel[3] * isothermModel[4] * np.exp(isothermModel[5] / (Rg * temperature)))
+        else:
+            equilibriumLoading = computeEquilibrium(c[i], temperature, isothermModel, adsorbentDensity)
+            equilibriumLoadingUp = computeEquilibrium(cUp, temperature, isothermModel, adsorbentDensity)
+            
+            delc = cUp - c[i]
+            delq = equilibriumLoadingUp - equilibriumLoading
+            
+            dqbydc[i] = delq / delc
+            
+    return dqbydc
+
+
+
+# def computedlnqbydlnp(c, q, temperature, isothermModel, adsorbentDensity):
+#     import numpy as np
+#     # import computeEquilibrium
+#     import pdb 
+#     Rg = 8.314
+#     dlnqbydlnp = np.zeros(len(c))
+#     for i in range(len(c)):
+#         # delp = 10
+#         # partialPressure = c[i] * Rg * temperature
+#         # partialPressureUp = partialPressure + delp
+#         # if partialPressure == 0:
+#         #     dlnqbydlnp[i] = 10
+#         # elif partialPressure < 0:
+#         #     dlnqbydlnp[i] = 10
+#         # else:
+#                 # if c[i] == 0:
+#         #     dqbydc[i] = 1000
+#         # elif c[i] < 0:
+#         #     dqbydc[i] = 1000
+#         # if c[i] < 0:
+#         #     c[i] = 0
+#         cvals = np.linspace(0,60,1000)
+       
+#         errorvals = (computeEquilibrium(cvals,temperature,isothermModel,adsorbentDensity)-q[i])**2
+#         ind = np.argmin(errorvals)
+#         cinit = cvals[ind]
+        
+#         delp = 10
+#         partialPressure = cinit * Rg * temperature
+        
+#         if partialPressure == 0:
+#             partialPressure = 10
+#         elif partialPressure < 0:
+#             partialPressure = 10
+        
+#         partialPressureUp = partialPressure + delp
+#         cUp = cinit + delp / (Rg * temperature)
+#         equilibriumLoading = computeEquilibrium(cinit, temperature, isothermModel, adsorbentDensity)
+#         equilibriumLoadingUp = computeEquilibrium(cUp, temperature, isothermModel, adsorbentDensity)
+        
+#         dellogp = np.log(partialPressureUp) - np.log(partialPressure)
+#         dellogq = np.log(equilibriumLoadingUp) - np.log(equilibriumLoading)
+        
+#         dlnqbydlnp[i] = dellogq / dellogp
+        
+#         # cvals = np.linspace(0,60,1000)
+#         # pdb.set_trace()
+       
+#         # errorvals = (computeEquilibrium(cvals,temperature,isothermModel,adsorbentDensity)-q[i])**2
+#         # ind = np.argmin(errorvals)
+#         # cinit = cvals[ind]
+        
+#         # Rg = 8.314
+#         # # pdb.set_trace()
+#         # isoAffinityA = isothermModel[1] * np.exp(isothermModel[2] / (Rg * temperature))
+#         # isoNumeratorA = isothermModel[0] * isoAffinityA * cinit
+#         # isoDenominatorA = 1 + isoAffinityA * cinit
+    
+#         # isoAffinityB = isothermModel[4] * np.exp(isothermModel[5] / (Rg * temperature))
+#         # isoNumeratorB = isothermModel[3] * isoAffinityB * cinit
+#         # isoDenominatorB = 1 + isoAffinityB * cinit
+        
+#         # qA = isoNumeratorA/isoDenominatorA
+#         # qB = isoNumeratorB/isoDenominatorB
+             
+#         # dlnqbydlnp[i] = (1-qA/(isothermModel[0]-qB/(isothermModel[3])))
+#         # pdb.set_trace()
+#     return dlnqbydlnp
+
+
+# def computedqbydc(c, q, temperature, isothermModel, adsorbentDensity):
+#     import numpy as np
+#     import pdb
+#     Rg = 8.134
+#     delc = 0.01
+#     dqbydc = np.zeros(len(c))
+#     for i in range(len(c)):
+#         # cUp = c[i] + delc
+#         # if c[i] == 0:
+#         #     dqbydc[i] = 1000
+#         # elif c[i] < 0:
+#         #     dqbydc[i] = 1000
+#         if c[i] < 0:
+#             c[i] = 0
+    
+#         # equilibriumLoading = computeEquilibrium(c[i], temperature, isothermModel, adsorbentDensity)
+#         # equilibriumLoadingUp = computeEquilibrium(cUp, temperature, isothermModel, adsorbentDensity)
+        
+#         # delc = cUp - c[i]
+#         # delq = equilibriumLoadingUp - equilibriumLoading
+        
+#         # dqbydc[i] = delq / delc
+        
+#         cvals = np.linspace(0,60,1000)
+       
+#         errorvals = (computeEquilibrium(cvals,temperature,isothermModel,adsorbentDensity)-q[i])**2
+#         ind = np.argmin(errorvals)
+#         cinit = cvals[ind]
+        
+#         if cinit == 0:
+#             cinit = 0.001
+#         elif cinit < 0:
+#             cinit = 0.001
+        
+#         cUp = cinit+delc
+        
+#         equilibriumLoading = computeEquilibrium(cinit, temperature, isothermModel, adsorbentDensity)
+#         equilibriumLoadingUp = computeEquilibrium(cUp, temperature, isothermModel, adsorbentDensity)
+        
+#         delq = equilibriumLoadingUp - equilibriumLoading
+        
+#         dqbydc[i] = delq / delc
+#         # pdb.set_trace()
+
+#         # Rg = 8.314
+#         # # pdb.set_trace()
+#         # isoAffinityA = isothermModel[1] * np.exp(isothermModel[2] / (Rg * temperature))
+#         # isoNumeratorA = isothermModel[0] * isoAffinityA * cinit
+#         # isoDenominatorA = 1 + isoAffinityA * cinit
+    
+#         # isoAffinityB = isothermModel[4] * np.exp(isothermModel[5] / (Rg * temperature))
+#         # isoNumeratorB = isothermModel[3] * isoAffinityB * cinit
+#         # isoDenominatorB = 1 + isoAffinityB * cinit
+        
+#         # qA = isoNumeratorA/isoDenominatorA
+#         # qB = isoNumeratorB/isoDenominatorB
+        
+#         # dqbydc[i] = ((1-qA /(isothermModel[0]))**2*isoAffinityA*isothermModel[0]  +   (1-qB /(isothermModel[3]))**2*isoAffinityB*isothermModel[3])*adsorbentDensity
+            
+#     return dqbydc

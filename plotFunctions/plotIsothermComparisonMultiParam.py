@@ -356,6 +356,8 @@ for kk in range(len(zlcFileName)):
         x_ZLC = np.zeros(9)
     else:
         x_ZLC = np.zeros(8)
+    
+    
     # x_ZLC = np.zeros(6)
     # x_ZLC[-2:] = np.multiply(modelNonDim,parameterReference)
     # x_ZLC[0:3] = [2.99999956e+01, 9.62292726e-08, 2.15988572e+04,]# MT
@@ -436,8 +438,6 @@ for kk in range(len(zlcFileName)):
         rateConstant_2 = kineticConstants[-1]
         rateConstant_3 = 0     
 
-    # rateConstant_2 = 0
-    
 
     for jj in range(len(temperature)):
         for ii in range(len(y)):
