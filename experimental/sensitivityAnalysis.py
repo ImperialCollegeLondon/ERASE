@@ -299,7 +299,7 @@ def computeObjectiveFunction(mainDir, zlcParameterPath, pOpt, pRef):
             rateConstant_2 = xOpt[-1]
             rateConstant_3 = 0
         
-        if modelType == 'Diffusion1T' or modelType == 'Diffusion1TNI':
+        if modelType == 'Diffusion1T':
             # Compute the model response using the optimized parameters
             _ , moleFracSim , resultMat = simulateCombinedModel(timeInt = timeInt,
                                                         initMoleFrac = [moleFracExp[0]], # Initial mole fraction assumed to be the first experimental point
@@ -314,6 +314,21 @@ def computeObjectiveFunction(mainDir, zlcParameterPath, pOpt, pRef):
                                                     volGas = volGas,
                                                     temperature = temperatureExp[ii],
                                                     modelType = 'Diffusion')
+        elif modelType == 'Diffusion1TNI':
+            # Compute the model response using the optimized parameters
+            _ , moleFracSim , resultMat = simulateCombinedModel(timeInt = timeInt,
+                                                        initMoleFrac = [moleFracExp[0]], # Initial mole fraction assumed to be the first experimental point
+                                                    flowIn = np.mean(flowRateExp[-1:-10:-1]*1e-6), # Flow rate for ZLC considered to be the mean of last 10 points (equilibrium)
+                                                    expFlag = True,
+                                                    isothermModel = isothermModel,
+                                                    rateConstant_1 = rateConstant_1,
+                                                    rateConstant_2 = 0,
+                                                    rateConstant_3 = rateConstant_3,
+                                                    deadVolumeFile = str(deadVolumeFileTemp),
+                                                    volSorbent = volSorbent,
+                                                    volGas = volGas,
+                                                    temperature = temperatureExp[ii],
+                                                    modelType = 'Diffusion1TNI')
         else:
                 # Compute the model response using the optimized parameters
             _ , moleFracSim , resultMat = simulateCombinedModel(timeInt = timeInt,

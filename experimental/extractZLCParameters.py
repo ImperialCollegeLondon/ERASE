@@ -594,7 +594,7 @@ def ZLCObjectiveFunction(x):
                                                     volGas = volGas,
                                                     adsorbentDensity = adsorbentDensity,
                                                     modelType = modelType)
-        elif modelType == 'Diffusion1T' or modelType == 'Diffusion1TNI':
+        elif modelType == 'Diffusion1T':
             # Compute the composite response using the optimizer parameters
             _ , moleFracSim , _ = simulateCombinedModel(isothermModel = isothermModel,
                                                     rateConstant_1 = x[-2]*isoRef[-2], # Last but one element is rate constant (Arrhenius constant)
@@ -610,6 +610,22 @@ def ZLCObjectiveFunction(x):
                                                     volGas = volGas,
                                                     adsorbentDensity = adsorbentDensity,
                                                     modelType = 'Diffusion')
+        elif modelType == 'Diffusion1TNI':
+            # Compute the composite response using the optimizer parameters
+            _ , moleFracSim , _ = simulateCombinedModel(isothermModel = isothermModel,
+                                                    rateConstant_1 = x[-2]*isoRef[-2], # Last but one element is rate constant (Arrhenius constant)
+                                                    rateConstant_2 = 0, # Last element is activation energy
+                                                    rateConstant_3 = x[-1]*isoRef[-1], # Last element is activation energy
+                                                    temperature = temperature[ii], # Temperature [K]
+                                                    timeInt = timeInt,
+                                                    initMoleFrac = [moleFracExp[0]], # Initial mole fraction assumed to be the first experimental point
+                                                    flowIn = np.mean(flowRateExp[-1:-2:-1]*1e-6), # Flow rate [m3/s] for ZLC considered to be the mean of last 10 points (equilibrium)
+                                                    expFlag = True,
+                                                    deadVolumeFile = str(deadVolumeFileTemp),
+                                                    volSorbent = volSorbent,
+                                                    volGas = volGas,
+                                                    adsorbentDensity = adsorbentDensity,
+                                                    modelType = 'Diffusion1TNI')
         else:
             # Compute the composite response using the optimizer parameters
             _ , moleFracSim , _ = simulateCombinedModel(isothermModel = isothermModel,

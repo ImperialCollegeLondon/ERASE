@@ -762,7 +762,8 @@ def radialDiffusionAdsorption1DNI(x, t, r, n, isothermModel, temperature, rateCo
     U = volFlow/crossArea
     Re = U*Diameter/kinVis
     Pr = kinVis*Cs/conductivity
-    Nu = 2 + (0.4*Re**0.5 + 0.06*Re**0.4)*Pr**0.4
+    # Nu = 2 + (0.4*Re**0.5 + 0.06*Re**0.4)*Pr**0.4
+    Nu = Nu = 2 + 0.6*Re**0.5*Pr**(1/3)
     ha = conductivity*Nu/(2*Rp)*a
     for i in range(1, n-2):   
         D2cDx2[i] = (Dmaceff[i] / (epsilon * 2 * (i) * deltar ** 2)) * ((i + 2) * c[i + 1] - 2 * (i) * c[i] + (i - 2) * c[i - 1]) + \
