@@ -38,7 +38,7 @@ def simulateZLC(**kwargs):
     from computeEquilibriumLoading import computeEquilibriumLoading
     import auxiliaryFunctions
     import os
-    # import pdb
+    import pdb
     
     # Move to top level folder (to avoid path issues)
     os.chdir("..")
@@ -163,12 +163,29 @@ def simulateZLC(**kwargs):
         modelType = 'KineticSBMacro'
         modelType = 'Diffusion'
     
-    if modelType == 'Diffusion':
+    if modelType == 'Diffusion' or modelType == 'Diffusion1T':
         particleEpsilon = volGas/(volGas+volSorbent)
         inputParameters = (adsorbentDensity, isothermModel, rateConstant_1, rateConstant_2, rateConstant_3,
                            flowIn, feedMoleFrac, initMoleFrac, pressureTotal, 
                            temperature, volSorbent, volGas, modelType)
         tspan, Y, r, yOut, flowOut, qAverage = DiffusionAdsorption1D(initMoleFrac, t_eval, volSorbent, volGas, adsorbentDensity, particleEpsilon, flowIn, temperature, pressureTotal, [isothermModel], rateConstant_1, rateConstant_2, rateConstant_3)
+        # Presure vector in output
+        pressureVec =  pressureTotal * np.ones(len(tspan)) # Constant pressure
+
+        yOut = np.transpose(yOut)
+        flowOut = np.transpose(flowOut)
+        # Parse out the output matrix and add flow rate
+        resultMat = np.row_stack((yOut,qAverage,pressureVec,flowOut))
+        # pdb.set_trace()
+        # Parse out the time
+        timeSim = tspan
+        
+    elif modelType == 'Diffusion1TNI':
+        particleEpsilon = volGas/(volGas+volSorbent)
+        inputParameters = (adsorbentDensity, isothermModel, rateConstant_1, rateConstant_2, rateConstant_3,
+                           flowIn, feedMoleFrac, initMoleFrac, pressureTotal, 
+                           temperature, volSorbent, volGas, modelType)
+        tspan, Y, r, yOut, flowOut, qAverage, tempVals = DiffusionAdsorption1DNI(initMoleFrac, t_eval, volSorbent, volGas, adsorbentDensity, particleEpsilon, flowIn, temperature, pressureTotal, [isothermModel], rateConstant_1, rateConstant_2, rateConstant_3)
         # Presure vector in output
         pressureVec =  pressureTotal * np.ones(len(tspan)) # Constant pressure
 
@@ -359,10 +376,16 @@ def solveSorptionEquation(t, f, *inputParameters):
 
     elif modelType == 'KineticSBMacro':
         k1 = rateConstant_1*np.exp(-rateConstant_2*1000/(Rg*temperature))/dlnqbydlnp
+        # k1 = rateConstant_1*np.exp(-rateConstant_2*1000/(Rg*temperature))
+        # k1 = rateConstant_1*np.exp(-rateConstant_2*1000/(Rg*temperature))
         # Rate constant 2 (analogous to macropore resistance)
         k2 = rateConstant_3*temperature**0.5/(1+(1/epsilonp)*dqbydc)
         k2 = rateConstant_3*np.power(temperature,0.5)*epsilonp/(epsilonp+(1-epsilonp)*dqbydc)        
-        k2 = rateConstant_3*(temperature/288.15)**1.75*epsilonp/(epsilonp+(1-epsilonp)*dqbydc)
+        k2 = 15*rateConstant_3*(temperature/288.15)**1.75/(epsilonp+(1-epsilonp)*dqbydc)
+        # k2 = 15*rateConstant_3*(temperature/288.15)**1.75*epsilonp/(epsilonp+(1-epsilonp)*dqbydc)
+        # k2 = 15*rateConstant_3*(temperature/288.15)**1.75/(1+(1/epsilonp)*dqbydc)
+        # k2 = 15*rateConstant_3*(temperature/288.15)**1.75*epsilonp/(1+(1/epsilonp)*dqbydc)
+        # k2 = 15*rateConstant_3*(temperature/288.15)**1.75*epsilonp
 
         # k2 = rateConstant_3
         # k2 = rateConstant_3/(1+(1/epsilonp)*dqbydc)
@@ -485,7 +508,7 @@ def plotFullModelResult(timeSim, resultMat, inputParameters,
 def DiffusionAdsorption1D(Y0, tspan, volSorbent, volGas, adsorbentDensity, epsilon, volFlow, temperature, Ptotal, isothermModelAll, rateConstant_1, rateConstant_2, rateConstant_3):
     import numpy as np
     from scipy.integrate import odeint
-    import pdb
+    # import pdb
     # import matplotlib.pyplot as plt
     # from numpy import load
     # import os
@@ -500,7 +523,7 @@ def DiffusionAdsorption1D(Y0, tspan, volSorbent, volGas, adsorbentDensity, epsil
     Rg = 8.314  # Universal gas constant [J/molK]
     # pdb.set_trace()
     Rp = ((volSorbent + volGas) / (4/3 * np.pi))**(1/3)  # pellet radius [m]]
-    n = 40
+    n = 100
     r = np.linspace(0,Rp+2*Rp/n, n)  # discretize radial domain
     
     # pdb.set_trace()
@@ -538,7 +561,7 @@ def DiffusionAdsorption1D(Y0, tspan, volSorbent, volGas, adsorbentDensity, epsil
         yOut = Y[:,n-2]*(Rg*temperature)/Ptotal
         volFlowOut = (volRate + volFlow)
         qAverage = qAverage_i
-        yOut[yOut < 1e-6] = 1e-6
+        yOut[yOut < 1e-5] = 1e-5
         volFlowOut[volFlowOut < volFlow] = volFlow
         volFlowOut[volFlowOut > 100*volFlow] = 100*volFlow
         qAverage[qAverage < 1e-6] = 1e-6
@@ -572,37 +595,49 @@ def radialDiffusionAdsorption1D(x, t, r, n, isothermModel, temperature, rateCons
     kmic = rateConstant_1*np.exp(-rateConstant_2*1000/(Rg*temperature))
     # Dmac = rateConstant_3*(Rp**2)*(temperature**0.5)
     Dmac = rateConstant_3*(Rp**2)*((temperature/288.15)**1.75)
-    
-    for jj in range(n):
-        Dmaceff[jj] = Dmac / (epsilon + computedqbydc([c[jj]],[q[jj]], temperature, isothermModel, adsorbentDensity) * (1 - epsilon))
-        # Dmaceff[jj] = Dmac / (epsilon + computeEquilibrium(c[jj], temperature, isothermModel, adsorbentDensity)/c[jj] * (1 - epsilon))
-        kmiceff[jj] = kmic / computedlnqbydlnp([c[jj]],[q[jj]], temperature, isothermModel, adsorbentDensity)
-    # Dmaceff[-2] = Dmac 
+    # DmolVals = [6.21e-5, 6.54e-5, 6.95e-5]
+    # Dmol = 1000
+    # if temperature == 288.15:
+    #     Dmol = DmolVals[0]
+    # elif temperature == 298.15:
+    #     Dmol = DmolVals[1]
+    # elif temperature == 308.15:
+    #     Dmol = DmolVals[2] 
+    # else:
+    #     Dmol = 100
+
+    # for jj in range(n):
+    #     Dmaceff[jj] = Dmac / (epsilon + computedqbydc([c[jj]],[q[jj]], temperature, isothermModel, adsorbentDensity) * (1 - epsilon))
+    #     # Dmaceff[jj] = np.min([Dmaceff[jj],Dmol])
+    #     kmiceff[jj] = kmic / computedlnqbydlnp([c[jj]],[q[jj]], temperature, isothermModel, adsorbentDensity)
+
+    # Dmaceff[:] =  Dmac / (epsilon + computedqbydc([np.mean(c[0:-2])],[np.mean(q[0:-2])], temperature, isothermModel, adsorbentDensity) * (1 - epsilon))
+    Dmaceff[:] =  Dmac 
+    kmiceff[:] =  kmic
     
     # Dmaceff[-1] = Dmaceff[-2]*10000
     D2cDx2[0] = 6 * Dmaceff[0] / (epsilon * deltar ** 2) * (c[1] - c[0]) 
+    heatAds = heatofAdsorption(c, temperature, isothermModel, adsorbentDensity)
     # pdb.set_trace()
     
     for i in range(1, n-2):   
         D2cDx2[i] = (Dmaceff[i] / (epsilon * 2 * (i) * deltar ** 2)) * ((i + 2) * c[i + 1] - 2 * (i) * c[i] + (i - 2) * c[i - 1]) + \
                     (Dmaceff[i + 1] / (epsilon * 2 * deltar ** 2))   * (c[i + 1] - c[i]) + \
                     (Dmaceff[i - 1] / (epsilon * 2 * deltar ** 2))   * (c[i - 1] - c[i])
-                    
-    # D2cDx2[-2] =  Dmaceff[-2] / (epsilon * deltar ** 2) * (c[-1] - c[-2]) 
-
     
     # pdb.set_trace()
     for i in range(0, n-2): 
-        if i == 0:
-            DqDt[i] = kmiceff[i] * (computeEquilibrium(c[i], temperature, isothermModel, adsorbentDensity) - q[i])
-            DcDt[i] = D2cDx2[i] - ((1 - epsilon) / epsilon) * DqDt[i]
+        # if i == 0:
+        DqDt[i] = kmiceff[i] * (computeEquilibrium(c[i], temperature, isothermModel, adsorbentDensity) - q[i])
+        DcDt[i] = D2cDx2[i] - ((1 - epsilon) / epsilon) * DqDt[i]
             # pdb.set_trace()
-        else:
-            DqDt[i] = kmiceff[i] * (computeEquilibrium(c[i], temperature, isothermModel, adsorbentDensity) - q[i])
-            DcDt[i] = D2cDx2[i] - ((1 - epsilon) / epsilon) * 3 / ( ((i+1)*deltar)**3 ) * np.trapz(DqDt[0:i] * r[0:i] ** 2, r[0:i])
+        # else:
+        #     DqDt[i] = kmiceff[i] * (computeEquilibrium(c[i], temperature, isothermModel, adsorbentDensity) - q[i])
+        #     DcDt[i] = D2cDx2[i] - ((1 - epsilon) / epsilon) * 3 / ( ((i+1)*deltar)**3 ) * np.trapz(DqDt[0:i] * r[0:i] ** 2, r[0:i])
     
-    volMix = volGas+volSorbent
-    # volMix = volSorbent*0.01
+    # volMix = volGas
+    volMix = (volGas+volSorbent)
+    # volMix = 0.57e-6
     DnDt = (volSorbent*3 / ( (Rp)**3 ) * np.trapz(DqDt[0:n-2] * r[0:-2] ** 2, r[0:-2])+
             volGas*3 /     ( (Rp)**3 ) * np.trapz(DcDt[0:n-2] * r[0:-2] ** 2, r[0:-2]))/(volSorbent+volGas)
     flowOut = volFlow - ((volSorbent+volGas)*(Rg*temperature)/Ptotal)*DnDt;
@@ -617,9 +652,154 @@ def radialDiffusionAdsorption1D(x, t, r, n, isothermModel, temperature, rateCons
     return DfDt
 
 
+def DiffusionAdsorption1DNI(Y0, tspan, volSorbent, volGas, adsorbentDensity, epsilon, volFlow, temperature, Ptotal, isothermModelAll, rateConstant_1, rateConstant_2, rateConstant_3):
+    import numpy as np
+    from scipy.integrate import odeint
+    # import pdb
+    # import matplotlib.pyplot as plt
+    # from numpy import load
+    # import os
+    # import matplotlib.pyplot as plt
+    # import auxiliaryFunctions
+    import scipy
+    # import nbkode
+    # plt.style.use('doubleColumn.mplstyle') # Custom matplotlib style file
+    # from scipy.integrate import odeint, solve_ivp, ode
+
+    # Constants and others
+    Rg = 8.314  # Universal gas constant [J/molK]
+    # pdb.set_trace()
+    Rp = ((volSorbent + volGas) / (4/3 * np.pi))**(1/3)  # pellet radius [m]]
+    n = 40
+    r = np.linspace(0,Rp+2*Rp/n, n)  # discretize radial domain
+    
+    # pdb.set_trace()
+    # Simulate model for input isotherms
+    for isothermModel in isothermModelAll:
+        # Initial conditions
+        c0 = np.zeros(n)  # concentration in macropore [mol/m^3]
+        c0[:] = Ptotal * Y0 / (Rg * temperature)  # Initial condition c(r,0) = c0 [mol/m^3]
+        T0 = np.zeros(n)
+        T0[:] = temperature  # Initial condition c(r,0) = c0 [mol/m^3]
+        c0[-1] = 0
+        q0 = computeEquilibrium(c0, temperature, isothermModel, adsorbentDensity)  # Initial condition equilibrium q(r,0) = q*(c,T) [mol/m^3]
+        q0[-2:] = 0
+        x0 = np.concatenate([c0, q0, T0])    
+        inputArgs = r, n, isothermModel, temperature, rateConstant_1, rateConstant_2, rateConstant_3, epsilon, adsorbentDensity,volGas, volSorbent, volFlow, Y0, Rp
+
+        # ODE solver
+        scipy.integrate.ode(radialDiffusionAdsorption1D).set_integrator('vode', method='bdf', order=15)
+        # scipy.integrate.ode(radialDiffusionAdsorption1D).set_integrator('lsoda',first_step =0.001)
+        Y = odeint(radialDiffusionAdsorption1DNI, x0, tspan, args=inputArgs)
+        
+        
+        # solver = nbkode.BDF6(radialDiffusionAdsorption1D, 0, x0, params = inputArgs)
+        
+        # tspan, Y = solver.run(tspan)
+        
+        moleGas = np.zeros(len(tspan))
+        moleSolid = np.zeros(len(tspan))
+        qAverage_i = np.zeros(len(tspan))
+        for jj in range(len(tspan)):
+            qAverage_i[jj] = 3 / (Rp**3) *             np.trapz(Y[jj, n:2*n-2] * r[0:-2] ** 2, r[0:-2])
+            moleGas[jj] = volGas * 3 / (Rp**3) *       np.trapz(Y[jj, 0:n-2]   * r[0:-2] ** 2, r[0:-2])
+            moleSolid[jj] = volSorbent * 3 / (Rp**3) * np.trapz(Y[jj, n:2*n-2] * r[0:-2] ** 2, r[0:-2])
+        moleTotal = moleSolid + moleGas
+        moleRate = np.gradient(moleTotal, tspan)
+        volRate = -moleRate * Rg * temperature / Ptotal
+        yOut = Y[:,n-2]*(Rg*temperature)/Ptotal
+        volFlowOut = (volRate + volFlow)
+        qAverage = qAverage_i
+        yOut[yOut < 1e-5] = 1e-5
+        volFlowOut[volFlowOut < volFlow] = volFlow
+        volFlowOut[volFlowOut > 100*volFlow] = 100*volFlow
+        qAverage[qAverage < 1e-6] = 1e-6
+        tempVals = Y[:,2*n:3*n];
+        # pdb.set_trace()
+    
+    return tspan, Y, r, yOut, volFlowOut, qAverage, tempVals
+
+def radialDiffusionAdsorption1DNI(x, t, r, n, isothermModel, temperature, rateConstant_1, rateConstant_2, rateConstant_3, epsilon, adsorbentDensity,volGas, volSorbent, volFlow, Y0, Rp):
+    import numpy as np
+    # import computedqbydc
+    # import computedlnqbydlnp
+    # import computeEquilibrium
+    import pdb
+    Rg = 8.314
+    Ptotal = 1e5
+    DcDt = np.zeros(n)
+    DqDt = np.zeros(n)
+    DTDt = np.zeros(n)
+
+    deltar = r[1] - r[0]
+    D2cDx2 = np.zeros(n)
+    
+    c = x[0:n]
+    q = x[n:2*n]
+    T = x[2*n:3*n]
+    
+    # if t == 0:
+    #     c[-2] = Y0*Ptotal/(Rg*temperature)
+    
+    Dmaceff = np.zeros(n)
+    kmiceff = np.zeros(n)
+    kmic = rateConstant_1*np.exp(-rateConstant_2*1000/(Rg*T[-1]))
+    # Dmac = rateConstant_3*(Rp**2)*(temperature**0.5)
+    Dmac = rateConstant_3*(Rp**2)*((T[-1]/288.15)**1.75)
+    Dmaceff[:] =  Dmac 
+    kmiceff[:] =  kmic
+    
+    # Dmaceff[-1] = Dmaceff[-2]*10000
+    D2cDx2[0] = 6 * Dmaceff[0] / (epsilon * deltar ** 2) * (c[1] - c[0]) 
+    heatAds = heatofAdsorption(c, T[-1], isothermModel, adsorbentDensity)
+    Cs =  8.3736e5;
+    
+    a = 3/Rp
+    conductivity = 0.15
+    kinVis = 11.69e-5
+    crossArea = (np.pi*0.01**2)/4
+    Diameter = 2*Rp
+    U = volFlow/crossArea
+    Re = U*Diameter/kinVis
+    Pr = kinVis*Cs/conductivity
+    Nu = 2 + (0.4*Re**0.5 + 0.06*Re**0.4)*Pr**0.4
+    ha = conductivity*Nu/(2*Rp)*a
+    for i in range(1, n-2):   
+        D2cDx2[i] = (Dmaceff[i] / (epsilon * 2 * (i) * deltar ** 2)) * ((i + 2) * c[i + 1] - 2 * (i) * c[i] + (i - 2) * c[i - 1]) + \
+                    (Dmaceff[i + 1] / (epsilon * 2 * deltar ** 2))   * (c[i + 1] - c[i]) + \
+                    (Dmaceff[i - 1] / (epsilon * 2 * deltar ** 2))   * (c[i - 1] - c[i])
+    
+    # pdb.set_trace()
+    for i in range(0, n-2): 
+        # if i == 0:
+        DqDt[i] = kmiceff[i] * (computeEquilibrium(c[i], T[-1], isothermModel, adsorbentDensity) - q[i])
+        DcDt[i] = D2cDx2[i] - ((1 - epsilon) / epsilon) * DqDt[i]
+            # pdb.set_trace()
+        # else:
+        #     DqDt[i] = kmiceff[i] * (computeEquilibrium(c[i], temperature, isothermModel, adsorbentDensity) - q[i])
+        #     DcDt[i] = D2cDx2[i] - ((1 - epsilon) / epsilon) * 3 / ( ((i+1)*deltar)**3 ) * np.trapz(DqDt[0:i] * r[0:i] ** 2, r[0:i])
+    # pdb.set_trace()
+    DTDt[:] = 1/Cs *((3 / ( (Rp)**3 ) * np.trapz(DqDt[0:n-2] * r[0:-2] ** 2, r[0:-2]))*heatAds[0]+(ha)*(temperature-T[-1]))
+    # volMix = volGas
+    volMix = (volGas+volSorbent)
+    # volMix = 0.57e-6
+    DnDt = (volSorbent*3 / ( (Rp)**3 ) * np.trapz(DqDt[0:n-2] * r[0:-2] ** 2, r[0:-2])+
+            volGas*3 /     ( (Rp)**3 ) * np.trapz(DcDt[0:n-2] * r[0:-2] ** 2, r[0:-2]))/(volSorbent+volGas)
+    flowOut = volFlow - ((volSorbent+volGas)*(Rg*T[-1])/Ptotal)*DnDt;
+    DyDt = 1/(volMix) * ((volFlow*0 - flowOut*c[-2]*(Rg*T[-1])/Ptotal) - ((volSorbent+volGas)*(Rg*T[-1])/Ptotal)*DnDt);
+    DcDt[-2] = DyDt*Ptotal/(Rg*T[-1])
+    DcDt[-1] = 0
+    DqDt[-2:] = 0
+    # pdb.set_trace()
+
+    DfDt = np.concatenate([DcDt, DqDt, DTDt])
+    # pdb.set_trace()
+    return DfDt
+
+
 def computeEquilibrium(c, temperature, isothermModel, adsorbentDensity):
     import numpy as np
-    import pdb
+    # import pdb
     
     Rg = 8.314
     # pdb.set_trace()
@@ -685,75 +865,61 @@ def computedqbydc(c, q, temperature, isothermModel, adsorbentDensity):
             
     return dqbydc
 
+def heatofAdsorption(c, temperature, isothermModel, adsorbentDensity):
+    import numpy as np
+    # import pdb
+    
+    Rg = 8.314
+    # pdb.set_trace()
+    isoAffinityA = isothermModel[1] * np.exp(isothermModel[2] / (Rg * temperature))
+    isoNumeratorA1 = isothermModel[0] * isoAffinityA * isothermModel[2]
+    isoNumeratorA2 = isothermModel[0] * isoAffinityA
+    isoDenominatorA = (1 + isoAffinityA * c)**2
+
+    isoAffinityB = isothermModel[4] * np.exp(isothermModel[5] / (Rg * temperature))
+    isoNumeratorB1 = isothermModel[3] * isoAffinityB * isothermModel[5]
+    isoNumeratorB2 = isothermModel[3] * isoAffinityB
+    isoDenominatorB = (1 + isoAffinityB * c)**2
+    
+    isonumeratorTotal = isoNumeratorA1/isoDenominatorA + isoNumeratorB1/isoDenominatorB
+    isoDenominatorTotal = isoNumeratorA2/isoDenominatorA + isoNumeratorB2/isoDenominatorB
+
+    delH = isonumeratorTotal/isoDenominatorTotal
+    return delH
+
 
 
 # def computedlnqbydlnp(c, q, temperature, isothermModel, adsorbentDensity):
 #     import numpy as np
 #     # import computeEquilibrium
-#     import pdb 
+#     # import pdb 
 #     Rg = 8.314
-#     dlnqbydlnp = np.zeros(len(c))
-#     for i in range(len(c)):
-#         # delp = 10
-#         # partialPressure = c[i] * Rg * temperature
-#         # partialPressureUp = partialPressure + delp
-#         # if partialPressure == 0:
-#         #     dlnqbydlnp[i] = 10
-#         # elif partialPressure < 0:
-#         #     dlnqbydlnp[i] = 10
-#         # else:
-#                 # if c[i] == 0:
-#         #     dqbydc[i] = 1000
-#         # elif c[i] < 0:
-#         #     dqbydc[i] = 1000
-#         # if c[i] < 0:
-#         #     c[i] = 0
-#         cvals = np.linspace(0,60,1000)
+#     dlnqbydlnp = np.zeros(len(q))
+#     for i in range(len(q)):
+#         cvals = np.linspace(0,50,1000)
        
 #         errorvals = (computeEquilibrium(cvals,temperature,isothermModel,adsorbentDensity)-q[i])**2
 #         ind = np.argmin(errorvals)
 #         cinit = cvals[ind]
         
-#         delp = 10
+#         delp = 1
 #         partialPressure = cinit * Rg * temperature
         
 #         if partialPressure == 0:
-#             partialPressure = 10
+#             dlnqbydlnp[i] = 1
 #         elif partialPressure < 0:
-#             partialPressure = 10
-        
-#         partialPressureUp = partialPressure + delp
-#         cUp = cinit + delp / (Rg * temperature)
-#         equilibriumLoading = computeEquilibrium(cinit, temperature, isothermModel, adsorbentDensity)
-#         equilibriumLoadingUp = computeEquilibrium(cUp, temperature, isothermModel, adsorbentDensity)
-        
-#         dellogp = np.log(partialPressureUp) - np.log(partialPressure)
-#         dellogq = np.log(equilibriumLoadingUp) - np.log(equilibriumLoading)
-        
-#         dlnqbydlnp[i] = dellogq / dellogp
-        
-#         # cvals = np.linspace(0,60,1000)
-#         # pdb.set_trace()
-       
-#         # errorvals = (computeEquilibrium(cvals,temperature,isothermModel,adsorbentDensity)-q[i])**2
-#         # ind = np.argmin(errorvals)
-#         # cinit = cvals[ind]
-        
-#         # Rg = 8.314
-#         # # pdb.set_trace()
-#         # isoAffinityA = isothermModel[1] * np.exp(isothermModel[2] / (Rg * temperature))
-#         # isoNumeratorA = isothermModel[0] * isoAffinityA * cinit
-#         # isoDenominatorA = 1 + isoAffinityA * cinit
-    
-#         # isoAffinityB = isothermModel[4] * np.exp(isothermModel[5] / (Rg * temperature))
-#         # isoNumeratorB = isothermModel[3] * isoAffinityB * cinit
-#         # isoDenominatorB = 1 + isoAffinityB * cinit
-        
-#         # qA = isoNumeratorA/isoDenominatorA
-#         # qB = isoNumeratorB/isoDenominatorB
-             
-#         # dlnqbydlnp[i] = (1-qA/(isothermModel[0]-qB/(isothermModel[3])))
-#         # pdb.set_trace()
+#             dlnqbydlnp[i] = 1
+#         else:
+#             partialPressureUp = partialPressure + delp
+#             cUp = cinit + delp / (Rg * temperature)
+#             equilibriumLoading = computeEquilibrium(cinit, temperature, isothermModel, adsorbentDensity)
+#             equilibriumLoadingUp = computeEquilibrium(cUp, temperature, isothermModel, adsorbentDensity)
+            
+#             dellogp = np.log(partialPressureUp) - np.log(partialPressure)
+#             dellogq = np.log(equilibriumLoadingUp) - np.log(equilibriumLoading)
+            
+#             dlnqbydlnp[i] = dellogq / dellogp
+
 #     return dlnqbydlnp
 
 

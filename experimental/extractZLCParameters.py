@@ -69,7 +69,7 @@ def extractZLCParameters(**kwargs):
     currentDT = auxiliaryFunctions.getCurrentDateTime()
     
     # Find out the total number of cores available for parallel processing
-    num_cores = 32
+    num_cores = 150
 
     #####################################
     ###### USER DEFINED PROPERTIES ######
@@ -342,7 +342,7 @@ def extractZLCParameters(**kwargs):
         start_population = lhsPopulation(popSize)
         
     elif modelType == 'Diffusion':
-        optBounds = np.array(([50,800], [0.03,0.045], [0.1e-3,530e-3]))
+        optBounds = np.array(([1000,10000], [0.023,0.040], [1.1e-3,6e-3]))
         optType=np.array(['real','real','real'])
         problemDimension = len(optType)
         isoRef = [1000, 1000, 1000] # Reference for the parameter (has to be a list)
@@ -371,7 +371,7 @@ def extractZLCParameters(**kwargs):
         lhsPopulation = LHS(xlimits=optBounds)
         start_population = lhsPopulation(popSize)            
     elif modelType == 'Diffusion1T':
-        optBounds = np.array(([0.005e-3,0.1e-3],[0.0001,0.6]))
+        optBounds = np.array(([35.2e-3,40e-3],[0.8e-3,7e-3]))
         optType=np.array(['real','real'])
         problemDimension = len(optType)
         isoRef = [1000, 1000] # Reference for the parameter (has to be a list)
@@ -398,7 +398,36 @@ def extractZLCParameters(**kwargs):
         # Get the isotherm parameters
         # paramIso = np.multiply(modelNonDim,parameterRefTemp)
         lhsPopulation = LHS(xlimits=optBounds)
-        start_population = lhsPopulation(popSize)     
+        start_population = lhsPopulation(popSize)  
+    elif modelType == 'Diffusion1TNI':
+        optBounds = np.array(([35.2e-3,40e-3],[0.8e-3,7e-3]))
+        optType=np.array(['real','real'])
+        problemDimension = len(optType)
+        isoRef = [1000, 1000] # Reference for the parameter (has to be a list)
+        # File with parameter estimates for isotherm (ZLC)
+        isothermDir = '..' + os.path.sep + 'isothermFittingData/'
+        modelOutputTemp = loadmat(isothermDir+isothermDataFile)["isothermData"]       
+        # Convert the nDarray to list
+        nDArrayToList = np.ndarray.tolist(modelOutputTemp)
+        # Unpack another time (due to the structure of loadmat)
+        tempListData = nDArrayToList[0][0]
+        # Get the necessary variables
+        isothermAll = tempListData[4]
+        isothermTemp = isothermAll[:,0]
+        if len(isothermTemp) == 6:
+            idx = [0, 2, 4, 1, 3, 5]
+            isothermTemp = isothermTemp[idx]
+        if len(isothermTemp) == 13:
+            idx = [0, 2, 4, 6, 7, 8, 9, 10, 11, 12]
+            isothermTemp = isothermTemp[idx]
+        paramIso = isothermTemp[np.where(isothermTemp!=0)]
+        paramIso = np.append(paramIso,[0,0])
+        # modelNonDim = modelOutputTemp[()]["variable"]
+        # parameterRefTemp = load(isothermDir+isothermFile, allow_pickle=True)["parameterReference"]
+        # Get the isotherm parameters
+        # paramIso = np.multiply(modelNonDim,parameterRefTemp)
+        lhsPopulation = LHS(xlimits=optBounds)
+        start_population = lhsPopulation(popSize)
     # Initialize the parameters used for ZLC fitting process
     fittingParameters(True,temperature,deadVolumeFile,adsorbentDensity,particleEpsilon,
                       massSorbent,isoRef,downsampleData,paramIso,downsampleExp,modelType)
@@ -565,7 +594,7 @@ def ZLCObjectiveFunction(x):
                                                     volGas = volGas,
                                                     adsorbentDensity = adsorbentDensity,
                                                     modelType = modelType)
-        elif modelType == 'Diffusion1T':
+        elif modelType == 'Diffusion1T' or modelType == 'Diffusion1TNI':
             # Compute the composite response using the optimizer parameters
             _ , moleFracSim , _ = simulateCombinedModel(isothermModel = isothermModel,
                                                     rateConstant_1 = x[-2]*isoRef[-2], # Last but one element is rate constant (Arrhenius constant)

@@ -278,6 +278,11 @@ def computeObjectiveFunction(mainDir, zlcParameterPath, pOpt, pRef):
             rateConstant_1 = xOpt[-2]
             rateConstant_2 = 0
             rateConstant_3 = xOpt[-1]
+        elif modelType == 'Diffusion1TNI':
+            isothermModel = isothermTemp[np.where(isothermTemp!=0)]        
+            rateConstant_1 = xOpt[-2]
+            rateConstant_2 = 0
+            rateConstant_3 = xOpt[-1]
         elif modelType == 'KineticSB' or modelType == 'Kinetic' or modelType == 'KineticOld' :
             isothermModel = isothermTemp[np.where(isothermTemp!=0)]        
             rateConstant_1 = xOpt[-2]
@@ -294,7 +299,7 @@ def computeObjectiveFunction(mainDir, zlcParameterPath, pOpt, pRef):
             rateConstant_2 = xOpt[-1]
             rateConstant_3 = 0
         
-        if modelType == 'Diffusion1T':
+        if modelType == 'Diffusion1T' or modelType == 'Diffusion1TNI':
             # Compute the model response using the optimized parameters
             _ , moleFracSim , resultMat = simulateCombinedModel(timeInt = timeInt,
                                                         initMoleFrac = [moleFracExp[0]], # Initial mole fraction assumed to be the first experimental point
