@@ -24,7 +24,7 @@
 
 %%% USER INPUT %%%
 % File name to be used for analysis/plotting
-rawDataFileName = 'MonoZIF-67_8mL_PoreVol';
+rawDataFileName = 'Z13X_ZLC_HA';
 
 % Name of files from QC and MIP (only for reference purposes)
 poreVolume.rawFiles.quantachromeFileName = '';
@@ -43,7 +43,7 @@ if ~exist(['poreVolumeData',filesep,rawDataFileName,'.mat'],'file')
     % First column - pore diameter [nm]
     % Second column - cummulative volume, V [ml/g] (Ar/N2)
     poreVolume.QC = [];
-    % First column - pore radius [nm]
+    % First column - pore diameter [nm]
     % Second column - incremental intrusion [ml/g] (Hg)
     poreVolume.MIP = [];
     % Save the file
@@ -52,7 +52,7 @@ if ~exist(['poreVolumeData',filesep,rawDataFileName,'.mat'],'file')
     % dummy file that should be populated with the raw data
     load(['poreVolumeData',filesep,rawDataFileName]);
     clear quantachromeFileName mercuryIntrusionFileName rawDataFileName processFlag;
-    error('Raw file in .mat format does not exist. Populate the data using raw files from QC or MIP and resave the file. A file with the file name is created in poreVolumeData!!')
+    error('Raw file in .mat format does not exist. Populate the data using raw files from QC (cumulative) or MIP (incremental) and resave the file. PORE WIDTH IN DIAMETER [nm]. A file with the file name is created in poreVolumeData!!')
 end
 % Load the saved raw data from the .mat file
 load(['poreVolumeData',filesep,rawDataFileName])
@@ -72,8 +72,8 @@ if ~isfield(poreVolume,'properties')
     % MIP
     % Sort MIP data based on ascending pore radius
     poreVolume.MIP = sortrows(poreVolume.MIP,1);
-    % Convert pore radius to pore diameter [nm]
-    poreVolume.MIP(:,1) = 2.*poreVolume.MIP(:,1);
+    %     % Convert pore radius to pore diameter [nm]
+    %     poreVolume.MIP(:,1) = 2.*poreVolume.MIP(:,1);
     % Compute cumulative pore size distribution
     poreVolume.MIP(:,3) = cumsum(poreVolume.MIP(:,2));
     % Compute interpolation query points
@@ -115,14 +115,14 @@ if ~isfield(poreVolume,'properties')
     dims = [1 35];
     definput = {'20','hsv'};
     poreVolume.options.poreWidthThreshold = str2num(cell2mat(inputdlg(prompt,dlgtitle,dims,definput)));
-    
+
     % Close the plot window
     close all
-    
+
     % Find the indices for QC and MIP to fit threshold
     poreVolume.options.QCindexLast = find(poreVolume.interp.QC(:,1)<poreVolume.options.poreWidthThreshold,1,'last');
     poreVolume.options.MIPindexFirst = find(poreVolume.interp.MIP(:,1)>=poreVolume.options.poreWidthThreshold,1,'first');
-    
+
     % Combine QC and MIP
     % Note that low pore diameter values come from the QC and high pore
     % diameter values come from MIP (due to the theory behind their working)
@@ -131,22 +131,22 @@ if ~isfield(poreVolume,'properties')
     % Third column: Cummulative volume [mL/g]
     poreVolume.combined = [poreVolume.interp.QC(1:poreVolume.options.QCindexLast,[1 3]); poreVolume.interp.MIP(poreVolume.options.MIPindexFirst:end,[1 3])];
     poreVolume.combined(:,3) = cumsum(poreVolume.combined(:,2));
-    
+
     % Prompt user to enter bulk density of sample from MIP
     prompt = {'Enter bulk density [g/mL]:'};
     dlgtitle = 'PoreVolume';
     dims = [1 35];
     definput = {'20','hsv'};
     bulkDensity = str2num(cell2mat(inputdlg(prompt,dlgtitle,dims,definput)));
-    
-    
+
+
     % Calculate material properties from data
     poreVolume.properties.bulkDensity = bulkDensity;
     poreVolume.properties.bulkVolume = 1./bulkDensity;
     poreVolume.properties.totalPoreVolume = poreVolume.combined(end-1,3);
     poreVolume.properties.skeletalDensity = 1/(poreVolume.properties.bulkVolume - poreVolume.properties.totalPoreVolume);
     poreVolume.properties.totalVoidage = poreVolume.properties.totalPoreVolume./poreVolume.properties.bulkVolume;
-    
+
     % Get the git commit ID
     poreVolume.gitCommitID = getGitCommit;
 end
@@ -167,6 +167,36 @@ if isfield(poreVolume,'properties')
     save(['poreVolumeData',filesep,rawDataFileName], 'poreVolume')
 end
 
+figure
+hold on
+plot(poreVolume.MIP(:,1),poreVolume.MIP(:,4),'Color','red', 'HandleVisibility','off','LineWidth',2,'LineStyle','none','Marker','o')
+distType = 'wbl';
+x = poreVolume.MIP(50:77,1);
+p = cumtrapz(x,poreVolume.MIP(50:77,4));
+p = p - min(p);
+pVals = linspace(min(p),max(p),12000)./max(p);
+xVals = interp1(p./max(p),x,pVals);
+dist = fitdist(xVals',distType);
+dvals = linspace(poreVolume.MIP(46,1),poreVolume.MIP(end,1),100000);
+distribPDF = pdf(dist,dvals);
+plot(dvals,distribPDF.*max(p)+min(p),'LineStyle','-','LineWidth',2,'Color','red')
+set(gca,'YScale','linear','XScale','log','FontSize',20,'LineWidth',0.8)
+grid on; axis square; box on
+set(gca,'fontname','arial')
+xlim([50 1e4])
+ylim([0 0.00035])
 fprintf('Skeletal Density = %5.4e g/mL \n',poreVolume.properties.skeletalDensity);
 fprintf('Total pore volume = %5.4e mL/g \n',poreVolume.properties.totalPoreVolume);
 fprintf('Total voidage = %5.4e \n',poreVolume.properties.totalVoidage);
+[M,V] = wblstat(dist.A,dist.B);
+poreVolume.properties.meanRadius = M./2;
+poreVolume.properties.stDevRadius= sqrt(V)./2;
+
+vCO = poreVolume.MIP(end,3)
+% rhoHg = 13.5
+S = 7.5 % HY and TMAY = 200, NaY = 230;
+sumdelV = sum((poreVolume.MIP(2:end,2).*1e-6)./(poreVolume.MIP(2:end,1).*1e-9));
+yVal = 4./S .* sumdelV;
+tau = (2.23 - 1.13.*vCO.*poreVolume.properties.bulkDensity).*(0.92.*yVal).^2
+% tau = (2.23 - 1.13.*vCO*poreVolume.properties.bulkDensity)
+Rp = 0.5./(((sum(poreVolume.MIP(50:end,2)./poreVolume.MIP(50:end,1))))./(sum(poreVolume.MIP(50:end,2))));

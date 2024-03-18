@@ -195,6 +195,7 @@ def computeObjectiveFunction(mainDir, zlcParameterPath, pOpt, pRef):
     adsorbentDensity = load(zlcParameterPath)["adsorbentDensity"]
     particleEpsilon = load(zlcParameterPath)["particleEpsilon"]
     massSorbent = load(zlcParameterPath)["massSorbent"]
+    rpore = load(zlcParameterPath)["rpore"]
     # Volume of sorbent material [m3]
     volSorbent = (massSorbent/1000)/adsorbentDensity
     # Volume of gas chamber (dead volume) [m3]
@@ -283,6 +284,16 @@ def computeObjectiveFunction(mainDir, zlcParameterPath, pOpt, pRef):
             rateConstant_1 = xOpt[-2]
             rateConstant_2 = 0
             rateConstant_3 = xOpt[-1]
+        elif modelType == 'Diffusion1Ttau':
+            isothermModel = isothermTemp[np.where(isothermTemp!=0)]        
+            rateConstant_1 = xOpt[-2]
+            rateConstant_2 = 0
+            rateConstant_3 = xOpt[-1]
+        elif modelType == 'Diffusion1TNItau':
+            isothermModel = isothermTemp[np.where(isothermTemp!=0)]        
+            rateConstant_1 = xOpt[-2]
+            rateConstant_2 = 0
+            rateConstant_3 = xOpt[-1]
         elif modelType == 'KineticSB' or modelType == 'Kinetic' or modelType == 'KineticOld' :
             isothermModel = isothermTemp[np.where(isothermTemp!=0)]        
             rateConstant_1 = xOpt[-2]
@@ -309,6 +320,7 @@ def computeObjectiveFunction(mainDir, zlcParameterPath, pOpt, pRef):
                                                     rateConstant_1 = rateConstant_1,
                                                     rateConstant_2 = 0,
                                                     rateConstant_3 = rateConstant_3,
+                                                    rpore = rpore,
                                                     deadVolumeFile = str(deadVolumeFileTemp),
                                                     volSorbent = volSorbent,
                                                     volGas = volGas,
@@ -324,11 +336,45 @@ def computeObjectiveFunction(mainDir, zlcParameterPath, pOpt, pRef):
                                                     rateConstant_1 = rateConstant_1,
                                                     rateConstant_2 = 0,
                                                     rateConstant_3 = rateConstant_3,
+                                                    rpore = rpore,
                                                     deadVolumeFile = str(deadVolumeFileTemp),
                                                     volSorbent = volSorbent,
                                                     volGas = volGas,
                                                     temperature = temperatureExp[ii],
                                                     modelType = 'Diffusion1TNI')
+        elif modelType == 'Diffusion1Ttau':
+            # Compute the model response using the optimized parameters
+            _ , moleFracSim , resultMat = simulateCombinedModel(timeInt = timeInt,
+                                                        initMoleFrac = [moleFracExp[0]], # Initial mole fraction assumed to be the first experimental point
+                                                    flowIn = np.mean(flowRateExp[-1:-10:-1]*1e-6), # Flow rate for ZLC considered to be the mean of last 10 points (equilibrium)
+                                                    expFlag = True,
+                                                    isothermModel = isothermModel,
+                                                    rateConstant_1 = rateConstant_1,
+                                                    rateConstant_2 = 0,
+                                                    rateConstant_3 = rateConstant_3,
+                                                    rpore = rpore,
+                                                    deadVolumeFile = str(deadVolumeFileTemp),
+                                                    volSorbent = volSorbent,
+                                                    volGas = volGas,
+                                                    temperature = temperatureExp[ii],
+                                                    modelType = 'Diffusion1Ttau')
+        elif modelType == 'Diffusion1TNItau':
+            # Compute the model response using the optimized parameters
+            _ , moleFracSim , resultMat = simulateCombinedModel(timeInt = timeInt,
+                                                        initMoleFrac = [moleFracExp[0]], # Initial mole fraction assumed to be the first experimental point
+                                                    flowIn = np.mean(flowRateExp[-1:-10:-1]*1e-6), # Flow rate for ZLC considered to be the mean of last 10 points (equilibrium)
+                                                    expFlag = True,
+                                                    isothermModel = isothermModel,
+                                                    rateConstant_1 = rateConstant_1,
+                                                    rateConstant_2 = 0,
+                                                    rateConstant_3 = rateConstant_3,
+                                                    rpore = rpore,
+                                                    deadVolumeFile = str(deadVolumeFileTemp),
+                                                    volSorbent = volSorbent,
+                                                    volGas = volGas,
+                                                    temperature = temperatureExp[ii],
+                                                    modelType = 'Diffusion1TNItau')
+        
         else:
                 # Compute the model response using the optimized parameters
             _ , moleFracSim , resultMat = simulateCombinedModel(timeInt = timeInt,
@@ -339,6 +385,7 @@ def computeObjectiveFunction(mainDir, zlcParameterPath, pOpt, pRef):
                                                     rateConstant_1 = rateConstant_1,
                                                     rateConstant_2 = rateConstant_2,
                                                     rateConstant_3 = rateConstant_3,
+                                                    rpore = rpore,
                                                     deadVolumeFile = str(deadVolumeFileTemp),
                                                     volSorbent = volSorbent,
                                                     volGas = volGas,

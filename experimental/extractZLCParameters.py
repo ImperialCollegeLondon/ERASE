@@ -149,13 +149,19 @@ def extractZLCParameters(**kwargs):
     if 'downsampleData' in kwargs:
         downsampleData = kwargs["downsampleData"]
     else:
-        downsampleData = 'downsampleData.mat'    
+        downsampleData = True  
         
     # Downsample the for each exp to have the same number of points
     if 'downsampleExp' in kwargs:
         downsampleExp = kwargs["downsampleExp"]
     else:
-        downsampleExp = 'downsampleExp.mat'
+        downsampleExp = False
+      
+    # Downsample the for each exp to have the same number of points
+    if 'rpore' in kwargs:
+        rpore = kwargs["rpore"]
+    else:
+        rpore = 1e-9
         
     # Dummt file as placeholder
     isothermFile = 'zlcParameters_20210525_1610_a079f4a.npz'
@@ -399,6 +405,64 @@ def extractZLCParameters(**kwargs):
         # paramIso = np.multiply(modelNonDim,parameterRefTemp)
         lhsPopulation = LHS(xlimits=optBounds)
         start_population = lhsPopulation(popSize)  
+    elif modelType == 'Diffusion1Ttau':
+        optBounds = np.array(([35.2e-3,40e-3],[1e-3,10e-3]))
+        optType=np.array(['real','real'])
+        problemDimension = len(optType)
+        isoRef = [1000, 1000] # Reference for the parameter (has to be a list)
+        # File with parameter estimates for isotherm (ZLC)
+        isothermDir = '..' + os.path.sep + 'isothermFittingData/'
+        modelOutputTemp = loadmat(isothermDir+isothermDataFile)["isothermData"]       
+        # Convert the nDarray to list
+        nDArrayToList = np.ndarray.tolist(modelOutputTemp)
+        # Unpack another time (due to the structure of loadmat)
+        tempListData = nDArrayToList[0][0]
+        # Get the necessary variables
+        isothermAll = tempListData[4]
+        isothermTemp = isothermAll[:,0]
+        if len(isothermTemp) == 6:
+            idx = [0, 2, 4, 1, 3, 5]
+            isothermTemp = isothermTemp[idx]
+        if len(isothermTemp) == 13:
+            idx = [0, 2, 4, 6, 7, 8, 9, 10, 11, 12]
+            isothermTemp = isothermTemp[idx]
+        paramIso = isothermTemp[np.where(isothermTemp!=0)]
+        paramIso = np.append(paramIso,[0,0])
+        # modelNonDim = modelOutputTemp[()]["variable"]
+        # parameterRefTemp = load(isothermDir+isothermFile, allow_pickle=True)["parameterReference"]
+        # Get the isotherm parameters
+        # paramIso = np.multiply(modelNonDim,parameterRefTemp)
+        lhsPopulation = LHS(xlimits=optBounds)
+        start_population = lhsPopulation(popSize)  
+    elif modelType == 'Diffusion1TNItau':
+        optBounds = np.array(([35.2e-3,40e-3],[1e-3,10e-3]))
+        optType=np.array(['real','real'])
+        problemDimension = len(optType)
+        isoRef = [1000, 1000] # Reference for the parameter (has to be a list)
+        # File with parameter estimates for isotherm (ZLC)
+        isothermDir = '..' + os.path.sep + 'isothermFittingData/'
+        modelOutputTemp = loadmat(isothermDir+isothermDataFile)["isothermData"]       
+        # Convert the nDarray to list
+        nDArrayToList = np.ndarray.tolist(modelOutputTemp)
+        # Unpack another time (due to the structure of loadmat)
+        tempListData = nDArrayToList[0][0]
+        # Get the necessary variables
+        isothermAll = tempListData[4]
+        isothermTemp = isothermAll[:,0]
+        if len(isothermTemp) == 6:
+            idx = [0, 2, 4, 1, 3, 5]
+            isothermTemp = isothermTemp[idx]
+        if len(isothermTemp) == 13:
+            idx = [0, 2, 4, 6, 7, 8, 9, 10, 11, 12]
+            isothermTemp = isothermTemp[idx]
+        paramIso = isothermTemp[np.where(isothermTemp!=0)]
+        paramIso = np.append(paramIso,[0,0])
+        # modelNonDim = modelOutputTemp[()]["variable"]
+        # parameterRefTemp = load(isothermDir+isothermFile, allow_pickle=True)["parameterReference"]
+        # Get the isotherm parameters
+        # paramIso = np.multiply(modelNonDim,parameterRefTemp)
+        lhsPopulation = LHS(xlimits=optBounds)
+        start_population = lhsPopulation(popSize)  
     elif modelType == 'Diffusion1TNI':
         optBounds = np.array(([35.2e-3,40e-3],[0.8e-3,7e-3]))
         optType=np.array(['real','real'])
@@ -430,7 +494,7 @@ def extractZLCParameters(**kwargs):
         start_population = lhsPopulation(popSize)
     # Initialize the parameters used for ZLC fitting process
     fittingParameters(True,temperature,deadVolumeFile,adsorbentDensity,particleEpsilon,
-                      massSorbent,isoRef,downsampleData,paramIso,downsampleExp,modelType)
+                      massSorbent,isoRef,downsampleData,paramIso,downsampleExp,modelType,rpore)
     
     # Minimize an objective function to compute the equilibrium and kinetic 
     # parameters from ZLC experiments
@@ -481,7 +545,8 @@ def extractZLCParameters(**kwargs):
            downsampleFlag = downsampleData, # Flag for downsampling data by conc [-]
            downsampleExp = downsampleExp, # Flag for downsampling data by number of points [-]
            hostName = socket.gethostname(),
-           modelType = modelType) # Hostname of the computer
+           modelType = modelType,
+           rpore = rpore) # Hostname of the computer
     
     # Remove all the .npy files genereated from the .mat
     # Load the names of the file to be used for estimating ZLC parameters
@@ -507,7 +572,7 @@ def ZLCObjectiveFunction(x):
     from computeMLEError import computeMLEError
     import pdb 
     # Get the zlc parameters needed for the solver
-    temperature, deadVolumeFile, adsorbentDensity, particleEpsilon, massSorbent, isoRef, downsampleData, paramIso, downsampleExp, modelType = fittingParameters(False,[],[],[],[],[],[],[],[],[],[])
+    temperature, deadVolumeFile, adsorbentDensity, particleEpsilon, massSorbent, isoRef, downsampleData, paramIso, downsampleExp, modelType,rpore = fittingParameters(False,[],[],[],[],[],[],[],[],[],[],[])
 
     # Volume of sorbent material [m3]
     volSorbent = (massSorbent/1000)/adsorbentDensity
@@ -584,6 +649,7 @@ def ZLCObjectiveFunction(x):
                                                     rateConstant_1 = x[-3]*isoRef[-3], # Last but one element is rate constant (Arrhenius constant)
                                                     rateConstant_2 = x[-2]*isoRef[-2], # Last element is activation energy
                                                     rateConstant_3 = x[-1]*isoRef[-1], # Last element is activation energy
+                                                    rpore = rpore,
                                                     temperature = temperature[ii], # Temperature [K]
                                                     timeInt = timeInt,
                                                     initMoleFrac = [moleFracExp[0]], # Initial mole fraction assumed to be the first experimental point
@@ -600,6 +666,7 @@ def ZLCObjectiveFunction(x):
                                                     rateConstant_1 = x[-2]*isoRef[-2], # Last but one element is rate constant (Arrhenius constant)
                                                     rateConstant_2 = 0, # Last element is activation energy
                                                     rateConstant_3 = x[-1]*isoRef[-1], # Last element is activation energy
+                                                    rpore = rpore,
                                                     temperature = temperature[ii], # Temperature [K]
                                                     timeInt = timeInt,
                                                     initMoleFrac = [moleFracExp[0]], # Initial mole fraction assumed to be the first experimental point
@@ -610,12 +677,47 @@ def ZLCObjectiveFunction(x):
                                                     volGas = volGas,
                                                     adsorbentDensity = adsorbentDensity,
                                                     modelType = 'Diffusion')
+        elif modelType == 'Diffusion1Ttau':
+            # Compute the composite response using the optimizer parameters
+            _ , moleFracSim , _ = simulateCombinedModel(isothermModel = isothermModel,
+                                                    rateConstant_1 = x[-2]*isoRef[-2], # Last but one element is rate constant (Arrhenius constant)
+                                                    rateConstant_2 = 0, # Last element is activation energy
+                                                    rateConstant_3 = x[-1]*isoRef[-1], # Last element is activation energy
+                                                    rpore = rpore,
+                                                    temperature = temperature[ii], # Temperature [K]
+                                                    timeInt = timeInt,
+                                                    initMoleFrac = [moleFracExp[0]], # Initial mole fraction assumed to be the first experimental point
+                                                    flowIn = np.mean(flowRateExp[-1:-2:-1]*1e-6), # Flow rate [m3/s] for ZLC considered to be the mean of last 10 points (equilibrium)
+                                                    expFlag = True,
+                                                    deadVolumeFile = str(deadVolumeFileTemp),
+                                                    volSorbent = volSorbent,
+                                                    volGas = volGas,
+                                                    adsorbentDensity = adsorbentDensity,
+                                                    modelType = 'Diffusion1Ttau')
+        elif modelType == 'Diffusion1TNItau':
+            # Compute the composite response using the optimizer parameters
+            _ , moleFracSim , _ = simulateCombinedModel(isothermModel = isothermModel,
+                                                    rateConstant_1 = x[-2]*isoRef[-2], # Last but one element is rate constant (Arrhenius constant)
+                                                    rateConstant_2 = 0, # Last element is activation energy
+                                                    rateConstant_3 = x[-1]*isoRef[-1], # Last element is activation energy
+                                                    rpore = rpore,
+                                                    temperature = temperature[ii], # Temperature [K]
+                                                    timeInt = timeInt,
+                                                    initMoleFrac = [moleFracExp[0]], # Initial mole fraction assumed to be the first experimental point
+                                                    flowIn = np.mean(flowRateExp[-1:-2:-1]*1e-6), # Flow rate [m3/s] for ZLC considered to be the mean of last 10 points (equilibrium)
+                                                    expFlag = True,
+                                                    deadVolumeFile = str(deadVolumeFileTemp),
+                                                    volSorbent = volSorbent,
+                                                    volGas = volGas,
+                                                    adsorbentDensity = adsorbentDensity,
+                                                    modelType = 'Diffusion1TNItau')
         elif modelType == 'Diffusion1TNI':
             # Compute the composite response using the optimizer parameters
             _ , moleFracSim , _ = simulateCombinedModel(isothermModel = isothermModel,
                                                     rateConstant_1 = x[-2]*isoRef[-2], # Last but one element is rate constant (Arrhenius constant)
                                                     rateConstant_2 = 0, # Last element is activation energy
                                                     rateConstant_3 = x[-1]*isoRef[-1], # Last element is activation energy
+                                                    rpore = rpore,
                                                     temperature = temperature[ii], # Temperature [K]
                                                     timeInt = timeInt,
                                                     initMoleFrac = [moleFracExp[0]], # Initial mole fraction assumed to be the first experimental point
@@ -632,6 +734,7 @@ def ZLCObjectiveFunction(x):
                                                     rateConstant_1 = x[-2]*isoRef[-2], # Last but one element is rate constant (Arrhenius constant)
                                                     rateConstant_2 = x[-1]*isoRef[-1], # Last element is activation energy
                                                     rateConstant_3 = 0, # Last element is activation energy
+                                                    rpore = rpore,
                                                     temperature = temperature[ii], # Temperature [K]
                                                     timeInt = timeInt,
                                                     initMoleFrac = [moleFracExp[0]], # Initial mole fraction assumed to be the first experimental point
@@ -663,7 +766,7 @@ def ZLCObjectiveFunction(x):
 # This is done because the ga cannot handle additional user inputs
 def fittingParameters(initFlag,temperature,deadVolumeFile,adsorbentDensity,
                       particleEpsilon,massSorbent,isoRef,downsampleData,
-                      paramIso,downsampleExp,modelType):
+                      paramIso,downsampleExp,modelType, rpore):
     from numpy import savez
     from numpy import load
     # Process the data for python (if needed)
@@ -679,7 +782,8 @@ def fittingParameters(initFlag,temperature,deadVolumeFile,adsorbentDensity,
                downsampleData=downsampleData,
                paramIso = paramIso, 
                downsampleExp = downsampleExp,
-               modelType = modelType)
+               modelType = modelType,
+               rpore = rpore)
     # Returns the path of the .npz file to be used 
     else:
     # Load the dummy file with temperature, deadVolumeFile, adsorbent density, particle voidage,
@@ -695,4 +799,5 @@ def fittingParameters(initFlag,temperature,deadVolumeFile,adsorbentDensity,
         paramIso = load (dummyFileName)["paramIso"]        
         downsampleExp = load (dummyFileName)["downsampleExp"]
         modelType = load (dummyFileName)["modelType"]
-        return temperature, deadVolumeFile, adsorbentDensity, particleEpsilon, massSorbent, isoRef, downsampleData, paramIso, downsampleExp, modelType
+        rpore = load (dummyFileName)["rpore"]
+        return temperature, deadVolumeFile, adsorbentDensity, particleEpsilon, massSorbent, isoRef, downsampleData, paramIso, downsampleExp, modelType, rpore
