@@ -40,27 +40,15 @@ massSorbent = 0.013 # ZYNa
 # massSorbent = 0.065 # ZYTMA
 # massSorbent = 0.077 # CMS 3K
 
+rpore = 166e-9
+
 # Isotherm model (if fitting only kinetic constant)
 # isothermDataFile = 'ZYTMA_DSL_QC_070523.mat'
 isothermDataFile = 'ZYNa_DSL_QC_070323.mat'
 # isothermDataFile = 'ZYH_DSL_QC_070523.mat'
 
-# modelType = 'KineticSBMacro'
-modelType = 'Diffusion1T'
+modelType = 'Diffusion1Ttau'
 
-
-# fileName  = ['ZLC_ZYNa_Exp05A_Output.mat',
-#             'ZLC_ZYNa_Exp03A_Output.mat',
-#             'ZLC_ZYNa_Exp09A_Output.mat',
-#             'ZLC_ZYNa_Exp05B_Output.mat',
-#             'ZLC_ZYNa_Exp03B_Output.mat',
-#             'ZLC_ZYNa_Exp09B_Output.mat',
-#             'ZLC_ZYNa_Exp06A_Output.mat',
-#             'ZLC_ZYNa_Exp04A_Output.mat',
-#             'ZLC_ZYNa_Exp10A_Output.mat',
-#             'ZLC_ZYNa_Exp06B_Output.mat',
-#             'ZLC_ZYNa_Exp04B_Output.mat',
-#             'ZLC_ZYNa_Exp10B_Output.mat',]  
 
 fileName  = ['ZLC_ZYNaCrush_Exp05A_Output.mat',
             'ZLC_ZYNaCrush_Exp09A_Output.mat',
@@ -75,25 +63,10 @@ fileName  = ['ZLC_ZYNaCrush_Exp05A_Output.mat',
             'ZLC_ZYNaCrush_Exp10B_Output.mat',
             'ZLC_ZYNaCrush_Exp12B_Output.mat',] 
 
-fileName  = ['ZLC_ZYNaCrush_Exp05B_Output.mat',
-            'ZLC_ZYNaCrush_Exp09B_Output.mat',
-            'ZLC_ZYNaCrush_Exp11B_Output.mat',
-            'ZLC_ZYNaCrush_Exp06B_Output.mat',
-            'ZLC_ZYNaCrush_Exp10B_Output.mat',
-            'ZLC_ZYNaCrush_Exp12B_Output.mat',] 
-
-fileName  = ['ZLC_ZYNaCrush_Exp05A_Output.mat',
-            'ZLC_ZYNaCrush_Exp09A_Output.mat',
-            'ZLC_ZYNaCrush_Exp11A_Output.mat',
-            'ZLC_ZYNaCrush_Exp06A_Output.mat',
+fileName  = ['ZLC_ZYNaCrush_Exp06A_Output.mat',
             'ZLC_ZYNaCrush_Exp10A_Output.mat',
-            'ZLC_ZYNaCrush_Exp12A_Output.mat',] 
+            'ZLC_ZYNaCrush_Exp12A_Output.mat',]
 
-# fileName  = ['ZLC_ZYNaCrush_Exp06A_Output.mat',
-#             'ZLC_ZYNaCrush_Exp10A_Output.mat',
-#             'ZLC_ZYNaCrush_Exp12A_Output.mat',] 
-# fileName  = ['ZLC_ZYNa_Exp05B_Output.mat',
-#             'ZLC_ZYNa_Exp06B_Output.mat',]  
 
 deadVolumeFile = [[['deadVolumeCharacteristics_20231122_1743_b571c46.npz', 
                     'deadVolumeCharacteristics_20231122_1757_b571c46.npz']], 
@@ -101,7 +74,6 @@ deadVolumeFile = [[['deadVolumeCharacteristics_20231122_1743_b571c46.npz',
                     'deadVolumeCharacteristics_20231122_1804_b571c46.npz']]] 
 
 temperature = [ 288.15, 298.15, 308.15, ]*4 # ZY
-# temperature = [ 288.15]*4 # ZY
 
 print('fileName = '+str(fileName))
 print('downsampleConc = '+str(downsampleData))
@@ -114,15 +86,7 @@ print('deadVolumeFile = '+str(deadVolumeFile))
 print('modelType = '+str(modelType))
 
 
-# for ii in range(5):
-#     algorithm_param = {'max_num_iteration':30,
-#                         'population_size':400,
-#                         'mutation_probability':0.25,
-#                         'crossover_probability': 0.55,
-#                         'parents_portion': 0.15,
-#                         'elit_ratio': 0.01,
-#                         'max_iteration_without_improv':None}
-for ii in range(2):
+for ii in range(1):
     algorithm_param = {'max_num_iteration':10,
                         'population_size':80,
                         'mutation_probability':0.25,
@@ -137,15 +101,55 @@ for ii in range(2):
                   algorithm_param = algorithm_param,
                   adsorbentDensity = adsorbentDensity,
                   particleEpsilon = particleEpsilon,
+                  rpore = rpore,
                   massSorbent = massSorbent,
                   deadVolumeFile = deadVolumeFile,
                   isothermDataFile = isothermDataFile,
                   downsampleData = downsampleData,
                   downsampleExp = downsampleExp)
     
+# fileName  = ['ZLC_ZYNaCrush_Exp05B_Output.mat',
+#             'ZLC_ZYNaCrush_Exp09B_Output.mat',
+#             'ZLC_ZYNaCrush_Exp11B_Output.mat',
+#             'ZLC_ZYNaCrush_Exp06B_Output.mat',
+#             'ZLC_ZYNaCrush_Exp10B_Output.mat',
+#             'ZLC_ZYNaCrush_Exp12B_Output.mat',] 
 
+
+
+# print('fileName = '+str(fileName))
+# print('downsampleConc = '+str(downsampleData))
+# print('downsampleExp = '+str(downsampleExp))
+# print('massSorbent = '+str(massSorbent))
+# print('particleEpsilon = '+str(particleEpsilon))
+# print('adsorbentDensity = '+str(adsorbentDensity))
+# print('isothermDataFile = '+str(isothermDataFile))
+# print('deadVolumeFile = '+str(deadVolumeFile))
+# print('modelType = '+str(modelType))
+
+
+# for ii in range(1):
+#     algorithm_param = {'max_num_iteration':10,
+#                         'population_size':80,
+#                         'mutation_probability':0.25,
+#                         'crossover_probability': 0.55,
+#                         'parents_portion': 0.15,
+#                         'elit_ratio': 0.01,
+#                         'max_iteration_without_improv':None}
+
+#     extractZLCParameters(modelType = modelType,
+#                   fileName = fileName,
+#                   temperature = temperature,
+#                   algorithm_param = algorithm_param,
+#                   adsorbentDensity = adsorbentDensity,
+#                   particleEpsilon = particleEpsilon,
+#                   massSorbent = massSorbent,
+#                   deadVolumeFile = deadVolumeFile,
+#                   isothermDataFile = isothermDataFile,
+#                   downsampleData = downsampleData,
+#                   downsampleExp = downsampleExp)
+    
 # ##############################################################################
-
 
 # Adsorbent properties
 # Adsorbent density [kg/m3]
@@ -175,38 +179,32 @@ massSorbent = 0.02 # ZYTMA real
 # massSorbent = 0.065 # ZYTMA
 # massSorbent = 0.077 # CMS 3K
 
+rpore = 162e-9
+
 # Isotherm model (if fitting only kinetic constant)
 isothermDataFile = 'ZYTMA_DSL_QC_070523.mat'
 # isothermDataFile = 'ZYNa_DSL_QC_070323.mat'
 # isothermDataFile = 'ZYH_DSL_QC_070523.mat'
 
-# modelType = 'KineticSBMacro'
-modelType = 'Diffusion1T'
+modelType = 'Diffusion1Ttau'
 
-
-fileName  = ['ZLC_ZYTMACrush_Exp09B_Output.mat',
-            'ZLC_ZYTMACrush_Exp05B_Output.mat',
-            'ZLC_ZYTMACrush_Exp03B_Output.mat',
-            'ZLC_ZYTMACrush_Exp10B_Output.mat',
-            'ZLC_ZYTMACrush_Exp06B_Output.mat',
-            'ZLC_ZYTMACrush_Exp04B_Output.mat',]
 
 fileName  = ['ZLC_ZYTMACrush_Exp09A_Output.mat',
             'ZLC_ZYTMACrush_Exp05A_Output.mat',
             'ZLC_ZYTMACrush_Exp03A_Output.mat',
             'ZLC_ZYTMACrush_Exp10A_Output.mat',
             'ZLC_ZYTMACrush_Exp06A_Output.mat',
+            'ZLC_ZYTMACrush_Exp04A_Output.mat',
+            'ZLC_ZYTMACrush_Exp09B_Output.mat',
+            'ZLC_ZYTMACrush_Exp05B_Output.mat',
+            'ZLC_ZYTMACrush_Exp03B_Output.mat',
+            'ZLC_ZYTMACrush_Exp10B_Output.mat',
+            'ZLC_ZYTMACrush_Exp06B_Output.mat',
+            'ZLC_ZYTMACrush_Exp04B_Output.mat',]
+
+fileName  = ['ZLC_ZYTMACrush_Exp10A_Output.mat',
+            'ZLC_ZYTMACrush_Exp06A_Output.mat',
             'ZLC_ZYTMACrush_Exp04A_Output.mat',]
-
-# fileName  = ['ZLC_ZYTMACrush_Exp10A_Output.mat',
-#             'ZLC_ZYTMACrush_Exp06A_Output.mat',
-#             'ZLC_ZYTMACrush_Exp04A_Output.mat',]
-
-# fileName  = ['ZLC_ZYHCrush_Exp06B_Output.mat',
-#             'ZLC_ZYHCrush_Exp08B_Output.mat',
-#             'ZLC_ZYHCrush_Exp10B_Output.mat',] 
-# fileName  = ['ZLC_ZYH_Exp09B_Output.mat',
-#             'ZLC_ZYH_Exp10B_Output.mat',]
 
 
 deadVolumeFile = [[['deadVolumeCharacteristics_20231122_1743_b571c46.npz', 
@@ -228,15 +226,7 @@ print('deadVolumeFile = '+str(deadVolumeFile))
 print('modelType = '+str(modelType))
 
 
-# for ii in range(5):
-#     algorithm_param = {'max_num_iteration':30,
-#                         'population_size':400,
-#                         'mutation_probability':0.25,
-#                         'crossover_probability': 0.55,
-#                         'parents_portion': 0.15,
-#                         'elit_ratio': 0.01,
-#                         'max_iteration_without_improv':None}
-for ii in range(2):
+for ii in range(1):
     algorithm_param = {'max_num_iteration':10,
                         'population_size':80,
                         'mutation_probability':0.25,
@@ -252,11 +242,54 @@ for ii in range(2):
                   algorithm_param = algorithm_param,
                   adsorbentDensity = adsorbentDensity,
                   particleEpsilon = particleEpsilon,
+                  rpore = rpore,
                   massSorbent = massSorbent,
                   deadVolumeFile = deadVolumeFile,
                   isothermDataFile = isothermDataFile,
                   downsampleData = downsampleData,
                   downsampleExp = downsampleExp)
+
+
+# fileName  = ['ZLC_ZYTMACrush_Exp09B_Output.mat',
+#             'ZLC_ZYTMACrush_Exp05B_Output.mat',
+#             'ZLC_ZYTMACrush_Exp03B_Output.mat',
+#             'ZLC_ZYTMACrush_Exp10B_Output.mat',
+#             'ZLC_ZYTMACrush_Exp06B_Output.mat',
+#             'ZLC_ZYTMACrush_Exp04B_Output.mat',]
+
+
+# print('fileName = '+str(fileName))
+# print('downsampleConc = '+str(downsampleData))
+# print('downsampleExp = '+str(downsampleExp))
+# print('massSorbent = '+str(massSorbent))
+# print('particleEpsilon = '+str(particleEpsilon))
+# print('adsorbentDensity = '+str(adsorbentDensity))
+# print('isothermDataFile = '+str(isothermDataFile))
+# print('deadVolumeFile = '+str(deadVolumeFile))
+# print('modelType = '+str(modelType))
+
+
+# for ii in range(1):
+#     algorithm_param = {'max_num_iteration':10,
+#                         'population_size':80,
+#                         'mutation_probability':0.25,
+#                         'crossover_probability': 0.55,
+#                         'parents_portion': 0.15,
+#                         'elit_ratio': 0.01,
+#                         'max_iteration_without_improv':None}
+    
+#     # for ii in range(1):
+#     extractZLCParameters(modelType = modelType,
+#                   fileName = fileName,
+#                   temperature = temperature,
+#                   algorithm_param = algorithm_param,
+#                   adsorbentDensity = adsorbentDensity,
+#                   particleEpsilon = particleEpsilon,
+#                   massSorbent = massSorbent,
+#                   deadVolumeFile = deadVolumeFile,
+#                   isothermDataFile = isothermDataFile,
+#                   downsampleData = downsampleData,
+#                   downsampleExp = downsampleExp)
 
 # ##############################################################################
 
@@ -286,75 +319,32 @@ massSorbent = 0.026 # ZYH real
 # massSorbent = 0.065 # ZYTMA
 # massSorbent = 0.077 # CMS 3K
 
+rpore = 107e-9
+
 # Isotherm model (if fitting only kinetic constant)
 # isothermDataFile = 'ZYTMA_DSL_QC_070523.mat'
 # isothermDataFile = 'ZYNa_DSL_QC_070323.mat'
 isothermDataFile = 'ZYH_DSL_QC_070523.mat'
 
 # modelType = 'KineticSBMacro'
-modelType = 'Diffusion1T'
-
-
-# fileName  = ['ZLC_ZYH_Exp09A_Output.mat',
-#             'ZLC_ZYH_Exp11A_Output.mat',
-#             'ZLC_ZYH_Exp13A_Output.mat',
-#             'ZLC_ZYH_Exp09B_Output.mat',
-#             'ZLC_ZYH_Exp11B_Output.mat',
-#             'ZLC_ZYH_Exp13B_Output.mat',
-#             'ZLC_ZYH_Exp10A_Output.mat',
-#             'ZLC_ZYH_Exp12A_Output.mat',
-#             'ZLC_ZYH_Exp14A_Output.mat',
-#             'ZLC_ZYH_Exp10B_Output.mat',
-#             'ZLC_ZYH_Exp12B_Output.mat',
-#             'ZLC_ZYH_Exp14B_Output.mat',]
-
-fileName  = ['ZLC_ZYHCrush_Exp05A_Output.mat',
-            'ZLC_ZYHCrush_Exp07A_Output.mat',
-            'ZLC_ZYHCrush_Exp09A_Output.mat',
-            'ZLC_ZYHCrush_Exp06A_Output.mat',
-            'ZLC_ZYHCrush_Exp08A_Output.mat',
-            'ZLC_ZYHCrush_Exp10A_Output.mat',
-            'ZLC_ZYHCrush_Exp05B_Output.mat',
-            'ZLC_ZYHCrush_Exp07B_Output.mat',
-            'ZLC_ZYHCrush_Exp09B_Output.mat',
-            'ZLC_ZYHCrush_Exp06B_Output.mat',
-            'ZLC_ZYHCrush_Exp08B_Output.mat',
-            'ZLC_ZYHCrush_Exp10B_Output.mat',] 
-
-fileName  = ['ZLC_ZYHCrush_Exp05B_Output.mat',
-            'ZLC_ZYHCrush_Exp07B_Output.mat',
-            'ZLC_ZYHCrush_Exp09B_Output.mat',
-            'ZLC_ZYHCrush_Exp06B_Output.mat',
-            'ZLC_ZYHCrush_Exp08B_Output.mat',
-            'ZLC_ZYHCrush_Exp10B_Output.mat',] 
-
-fileName  = ['ZLC_ZYHCrush_Exp05A_Output.mat',
-            'ZLC_ZYHCrush_Exp07A_Output.mat',
-            'ZLC_ZYHCrush_Exp09A_Output.mat',
-            'ZLC_ZYHCrush_Exp06A_Output.mat',
-            'ZLC_ZYHCrush_Exp08A_Output.mat',
-            'ZLC_ZYHCrush_Exp10A_Output2.mat',]
+modelType = 'Diffusion1Ttau'
 
 fileName  = ['ZLC_ZYHCrush_Exp05A_Output_new.mat',
             'ZLC_ZYHCrush_Exp07A_Output_new.mat',
             'ZLC_ZYHCrush_Exp09A_Output_new.mat',
             'ZLC_ZYHCrush_Exp06A_Output_new.mat',
             'ZLC_ZYHCrush_Exp08A_Output_new.mat',
+            'ZLC_ZYHCrush_Exp10A_Output_new.mat',
+            'ZLC_ZYHCrush_Exp05B_Output_new.mat',
+            'ZLC_ZYHCrush_Exp07B_Output_new.mat',
+            'ZLC_ZYHCrush_Exp09B_Output_new.mat',
+            'ZLC_ZYHCrush_Exp06B_Output_new.mat',
+            'ZLC_ZYHCrush_Exp08B_Output_new.mat',
+            'ZLC_ZYHCrush_Exp10B_Output_new.mat',]
+
+fileName  = ['ZLC_ZYHCrush_Exp06A_Output_new.mat',
+            'ZLC_ZYHCrush_Exp08A_Output_new.mat',
             'ZLC_ZYHCrush_Exp10A_Output_new.mat',]
-
-# fileName  = ['ZLC_ZYHCrush_Exp06A_Output_new.mat',
-#             'ZLC_ZYHCrush_Exp08A_Output_new.mat',
-#             'ZLC_ZYHCrush_Exp10A_Output_new.mat',]
-
-# fileName  = ['ZLC_ZYHCrush_Exp06A_Output.mat',
-#             'ZLC_ZYHCrush_Exp08A_Output.mat',
-#             'ZLC_ZYHCrush_Exp10A_Output.mat',] 
-
-# fileName  = ['ZLC_ZYHCrush_Exp06B_Output.mat',
-#             'ZLC_ZYHCrush_Exp08B_Output.mat',
-#             'ZLC_ZYHCrush_Exp10B_Output.mat',] 
-# fileName  = ['ZLC_ZYH_Exp09B_Output.mat',
-#             'ZLC_ZYH_Exp10B_Output.mat',]
 
 
 deadVolumeFile = [[['deadVolumeCharacteristics_20231122_1743_b571c46.npz', 
@@ -363,7 +353,6 @@ deadVolumeFile = [[['deadVolumeCharacteristics_20231122_1743_b571c46.npz',
                     'deadVolumeCharacteristics_20231122_1804_b571c46.npz']]] 
 
 temperature = [ 288.15, 298.15, 308.15, ]*4 # ZY
-# temperature = [ 288.15,]*4 # ZY
 
 print('fileName = '+str(fileName))
 print('downsampleConc = '+str(downsampleData))
@@ -375,16 +364,7 @@ print('isothermDataFile = '+str(isothermDataFile))
 print('deadVolumeFile = '+str(deadVolumeFile))
 print('modelType = '+str(modelType))
 
-
-# for ii in range(5):
-#     algorithm_param = {'max_num_iteration':30,
-#                         'population_size':400,
-#                         'mutation_probability':0.25,
-#                         'crossover_probability': 0.55,
-#                         'parents_portion': 0.15,
-#                         'elit_ratio': 0.01,
-#                         'max_iteration_without_improv':None}
-for ii in range(2):
+for ii in range(1):
     algorithm_param = {'max_num_iteration':10,
                         'population_size':80,
                         'mutation_probability':0.25,
@@ -407,8 +387,54 @@ for ii in range(2):
                   downsampleExp = downsampleExp)
 
 
-# ##############################################################################
+# fileName  = ['ZLC_ZYHCrush_Exp05B_Output_new.mat',
+#             'ZLC_ZYHCrush_Exp07B_Output_new.mat',
+#             'ZLC_ZYHCrush_Exp09B_Output_new.mat',
+#             'ZLC_ZYHCrush_Exp06B_Output_new.mat',
+#             'ZLC_ZYHCrush_Exp08B_Output_new.mat',
+#             'ZLC_ZYHCrush_Exp10B_Output_new.mat',]
 
+# deadVolumeFile = [[['deadVolumeCharacteristics_20231122_1743_b571c46.npz', 
+#                     'deadVolumeCharacteristics_20231122_1757_b571c46.npz']], 
+#                   [['deadVolumeCharacteristics_20231122_1750_b571c46.npz', 
+#                     'deadVolumeCharacteristics_20231122_1804_b571c46.npz']]] 
+
+# temperature = [ 288.15, 298.15, 308.15, ]*4 # ZY
+
+# print('fileName = '+str(fileName))
+# print('downsampleConc = '+str(downsampleData))
+# print('downsampleExp = '+str(downsampleExp))
+# print('massSorbent = '+str(massSorbent))
+# print('particleEpsilon = '+str(particleEpsilon))
+# print('adsorbentDensity = '+str(adsorbentDensity))
+# print('isothermDataFile = '+str(isothermDataFile))
+# print('deadVolumeFile = '+str(deadVolumeFile))
+# print('modelType = '+str(modelType))
+
+
+# for ii in range(1):
+#     algorithm_param = {'max_num_iteration':10,
+#                         'population_size':80,
+#                         'mutation_probability':0.25,
+#                         'crossover_probability': 0.55,
+#                         'parents_portion': 0.15,
+#                         'elit_ratio': 0.01,
+#                         'max_iteration_without_improv':None}
+    
+#     # for ii in range(1):
+#     extractZLCParameters(modelType = modelType,
+#                   fileName = fileName,
+#                   temperature = temperature,
+#                   algorithm_param = algorithm_param,
+#                   adsorbentDensity = adsorbentDensity,
+#                   particleEpsilon = particleEpsilon,
+#                   massSorbent = massSorbent,
+#                   deadVolumeFile = deadVolumeFile,
+#                   isothermDataFile = isothermDataFile,
+#                   downsampleData = downsampleData,
+#                   downsampleExp = downsampleExp)
+    
+# ##############################################################################
 # # Adsorbent properties
 # # Adsorbent density [kg/m3]
 # # This has to be the skeletal density
