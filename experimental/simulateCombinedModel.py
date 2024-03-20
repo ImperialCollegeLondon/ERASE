@@ -141,6 +141,12 @@ def simulateCombinedModel(**kwargs):
         modelType = kwargs["modelType"]
     else:
         modelType = 'Kinetic'
+    
+    # Flag to check mean pore radius
+    if 'rpore' in kwargs:
+        rpore = kwargs["rpore"]
+    else:
+        rpore = 1e-9
     # Call the simulateZLC function to simulate the sorption in a given sorbent
     timeZLC, resultMat, _ = simulateZLC(isothermModel = isothermModel,
                                         rateConstant_1 = rateConstant_1,
@@ -152,6 +158,7 @@ def simulateCombinedModel(**kwargs):
                                         initMoleFrac = initMoleFrac,
                                         timeInt = timeInt,
                                         expFlag=expFlag,
+                                        rpore = rpore,
                                         volSorbent = volSorbent,
                                         volGas = volGas,
                                         adsorbentDensity = adsorbentDensity,

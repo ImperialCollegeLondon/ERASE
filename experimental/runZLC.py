@@ -68,10 +68,10 @@ fileName  = ['ZLC_ZYNaCrush_Exp06A_Output.mat',
             'ZLC_ZYNaCrush_Exp12A_Output.mat',]
 
 
-deadVolumeFile = [[['deadVolumeCharacteristics_20231122_1743_b571c46.npz', 
-                    'deadVolumeCharacteristics_20231122_1757_b571c46.npz']], 
-                  [['deadVolumeCharacteristics_20231122_1750_b571c46.npz', 
-                    'deadVolumeCharacteristics_20231122_1804_b571c46.npz']]] 
+deadVolumeFile = [[['deadVolumeCharacteristics_20231122_1743_b571c46.npz', # lowcomp low flow
+                    'deadVolumeCharacteristics_20231122_1757_b571c46.npz']], # lowcomp high flow
+                  [['deadVolumeCharacteristics_20231122_1750_b571c46.npz', # highcomp low flow
+                    'deadVolumeCharacteristics_20231122_1804_b571c46.npz']]] # highcomp high flow
 
 temperature = [ 288.15, 298.15, 308.15, ]*4 # ZY
 
