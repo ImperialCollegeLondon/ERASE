@@ -622,14 +622,16 @@ def ZLCObjectiveFunction(x):
         moleFracExp = moleFracExpTemp[::int(np.round(downsampleInt[ii]))]
         flowRateExp = flowRateTemp[::int(np.round(downsampleInt[ii]))] # [cc/s]
             
-        if moleFracExp[0] > 0.5:
+        if moleFracExp[0] > 0.2:
             deadVolumeFlow = deadVolumeFile[1]
         else:
             deadVolumeFlow = deadVolumeFile[0]
+            
+            
         if len(deadVolumeFlow[0]) == 1: # 1 DV for 1 DV file
             deadVolumeFileTemp = str(deadVolumeFlow[0])
         elif len(deadVolumeFlow[0]) == 2: # 1 DV for 1 DV file
-            if np.absolute(flowRateExp[-1] - 1) > 0.2: # for lowflowrate experiments!
+            if np.absolute(flowRateExp[-1] - 60/60) > 0.2: # for lowflowrate experiments!
                 deadVolumeFileTemp =  str(deadVolumeFlow[0][0])
             else:
                 deadVolumeFileTemp =  str(deadVolumeFlow[0][1])

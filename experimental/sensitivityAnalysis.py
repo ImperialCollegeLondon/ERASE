@@ -249,7 +249,7 @@ def computeObjectiveFunction(mainDir, zlcParameterPath, pOpt, pRef):
         moleFracExp = moleFracExpTemp[::int(np.round(downsampleInt[ii]))]
         flowRateExp = flowRateTemp[::int(np.round(downsampleInt[ii]))]
         
-        if moleFracExp[0] > 0.5:
+        if moleFracExp[0] > 0.2:
             deadVolumeFlow = deadVolumeFile[1]
         else:
             deadVolumeFlow = deadVolumeFile[0]
