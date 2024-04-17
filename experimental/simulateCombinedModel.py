@@ -147,6 +147,13 @@ def simulateCombinedModel(**kwargs):
         rpore = kwargs["rpore"]
     else:
         rpore = 1e-9
+        
+    # Flag to check Dpvals
+    if 'Dpvals' in kwargs:
+        Dpvals = kwargs["Dpvals"]
+    else:
+        Dpvals = [3.05671321526166e-05,	3.15050794527196e-05,	3.24331710687508e-05]
+        
     # Call the simulateZLC function to simulate the sorption in a given sorbent
     timeZLC, resultMat, _ = simulateZLC(isothermModel = isothermModel,
                                         rateConstant_1 = rateConstant_1,
@@ -159,6 +166,7 @@ def simulateCombinedModel(**kwargs):
                                         timeInt = timeInt,
                                         expFlag=expFlag,
                                         rpore = rpore,
+                                        Dpvals = Dpvals,
                                         volSorbent = volSorbent,
                                         volGas = volGas,
                                         adsorbentDensity = adsorbentDensity,

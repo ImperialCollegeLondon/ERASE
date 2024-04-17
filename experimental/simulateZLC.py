@@ -169,6 +169,13 @@ def simulateZLC(**kwargs):
     else:
         rpore = 1e-9
         
+    # Flag to check Dpvals
+    if 'Dpvals' in kwargs:
+        Dpvals = kwargs["Dpvals"]
+    else:
+        Dpvals = [3.05671321526166e-05,	3.15050794527196e-05,	3.24331710687508e-05]
+        
+        
     if modelType == 'Diffusion' or modelType == 'Diffusion1T':
         particleEpsilon = volGas/(volGas+volSorbent)
         inputParameters = (adsorbentDensity, isothermModel, rateConstant_1, rateConstant_2, rateConstant_3,
@@ -206,8 +213,8 @@ def simulateZLC(**kwargs):
         particleEpsilon = volGas/(volGas+volSorbent)
         inputParameters = (adsorbentDensity, isothermModel, rateConstant_1, rateConstant_2, rateConstant_3,
                            flowIn, feedMoleFrac, initMoleFrac, pressureTotal, 
-                           temperature, volSorbent, volGas, modelType, rpore)
-        tspan, Y, r, yOut, flowOut, qAverage = DiffusionAdsorption1Dtau(initMoleFrac, t_eval, volSorbent, volGas, adsorbentDensity, particleEpsilon, flowIn, temperature, pressureTotal, [isothermModel], rateConstant_1, rateConstant_2, rateConstant_3, rpore)
+                           temperature, volSorbent, volGas, modelType, rpore, Dpvals)
+        tspan, Y, r, yOut, flowOut, qAverage = DiffusionAdsorption1Dtau(initMoleFrac, t_eval, volSorbent, volGas, adsorbentDensity, particleEpsilon, flowIn, temperature, pressureTotal, [isothermModel], rateConstant_1, rateConstant_2, rateConstant_3, rpore, Dpvals)
         # Presure vector in output
         pressureVec =  pressureTotal * np.ones(len(tspan)) # Constant pressure
 
@@ -730,7 +737,7 @@ def radialDiffusionAdsorption1D(x, t, r, n, isothermModel, temperature, rateCons
     # pdb.set_trace()
     return DfDt
 
-def DiffusionAdsorption1Dtau(Y0, tspan, volSorbent, volGas, adsorbentDensity, epsilon, volFlow, temperature, Ptotal, isothermModelAll, rateConstant_1, rateConstant_2, rateConstant_3, rpore):
+def DiffusionAdsorption1Dtau(Y0, tspan, volSorbent, volGas, adsorbentDensity, epsilon, volFlow, temperature, Ptotal, isothermModelAll, rateConstant_1, rateConstant_2, rateConstant_3, rpore, Dpvals):
     import numpy as np
     from scipy.integrate import odeint
     # import pdb
@@ -761,7 +768,7 @@ def DiffusionAdsorption1Dtau(Y0, tspan, volSorbent, volGas, adsorbentDensity, ep
         q0 = computeEquilibrium(c0, temperature, isothermModel, adsorbentDensity)  # Initial condition equilibrium q(r,0) = q*(c,T) [mol/m^3]
         q0[-2:] = 0
         x0 = np.concatenate([c0, q0])    
-        inputArgs = r, n, isothermModel, temperature, rateConstant_1, rateConstant_2, rateConstant_3, epsilon, adsorbentDensity,volGas, volSorbent, volFlow, Y0, Rp, rpore
+        inputArgs = r, n, isothermModel, temperature, rateConstant_1, rateConstant_2, rateConstant_3, epsilon, adsorbentDensity,volGas, volSorbent, volFlow, Y0, Rp, rpore, Dpvals
 
         # ODE solver
         scipy.integrate.ode(radialDiffusionAdsorption1Dtau).set_integrator('vode', method='bdf', order=15)
@@ -794,7 +801,7 @@ def DiffusionAdsorption1Dtau(Y0, tspan, volSorbent, volGas, adsorbentDensity, ep
     
     return tspan, Y, r, yOut, volFlowOut, qAverage
 
-def radialDiffusionAdsorption1Dtau(x, t, r, n, isothermModel, temperature, rateConstant_1, rateConstant_2, rateConstant_3, epsilon, adsorbentDensity,volGas, volSorbent, volFlow, Y0, Rp, rpore):
+def radialDiffusionAdsorption1Dtau(x, t, r, n, isothermModel, temperature, rateConstant_1, rateConstant_2, rateConstant_3, epsilon, adsorbentDensity,volGas, volSorbent, volFlow, Y0, Rp, rpore, Dpvals):
     import numpy as np
     # import computedqbydc
     # import computedlnqbydlnp
@@ -826,10 +833,13 @@ def radialDiffusionAdsorption1Dtau(x, t, r, n, isothermModel, temperature, rateC
 
     if temperature == 288.15:
         Dmol = DmolVals[0]
+        Dp = Dpvals[0]
     elif temperature == 298.15:
         Dmol = DmolVals[1]
+        Dp = Dpvals[1]
     elif temperature == 308.15:
         Dmol = DmolVals[2] 
+        Dp = Dpvals[2]
     else:
         Dmol = 0
 
@@ -842,7 +852,8 @@ def radialDiffusionAdsorption1Dtau(x, t, r, n, isothermModel, temperature, rateC
     # for jj in range(n):
     #     fac = 1-c[jj]*Rg*temperature/1e5*(1-(44/4)**0.5)
     #     Dmaceff[jj] = epsilon/rateConstant_3*(1/((1/Dk+fac/Dmol)))
-    Dmaceff[:] =  epsilon/rateConstant_3*(1/((1/Dk+1/Dmol))) 
+    # Dmaceff[:] =  epsilon/rateConstant_3*(1/((1/Dk+1/Dmol))) 
+    Dmaceff[:] =  epsilon/rateConstant_3*(Dp) 
     kmiceff[:] =  kmic
     
     # Dmaceff[-1] = Dmaceff[-2]*10000

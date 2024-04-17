@@ -195,7 +195,14 @@ def computeObjectiveFunction(mainDir, zlcParameterPath, pOpt, pRef):
     adsorbentDensity = load(zlcParameterPath)["adsorbentDensity"]
     particleEpsilon = load(zlcParameterPath)["particleEpsilon"]
     massSorbent = load(zlcParameterPath)["massSorbent"]
-    rpore = load(zlcParameterPath)["rpore"]
+    if modelType == 'Diffusion1Ttau' or modelType == 'Diffusion1TNItau':
+        # mean pore radius from MIP
+        rpore = load(zlcParameterPath)["rpore"]
+        Dpvals = load(zlcParameterPath)["Dpvals"]
+    else:
+        rpore = 107e-9
+        Dpvals = [3.05671321526166e-05,	3.15050794527196e-05,	3.24331710687508e-05]
+
     # Volume of sorbent material [m3]
     volSorbent = (massSorbent/1000)/adsorbentDensity
     # Volume of gas chamber (dead volume) [m3]
@@ -321,6 +328,7 @@ def computeObjectiveFunction(mainDir, zlcParameterPath, pOpt, pRef):
                                                     rateConstant_2 = 0,
                                                     rateConstant_3 = rateConstant_3,
                                                     rpore = rpore,
+                                                    Dpvals = Dpvals,
                                                     deadVolumeFile = str(deadVolumeFileTemp),
                                                     volSorbent = volSorbent,
                                                     volGas = volGas,
@@ -337,6 +345,7 @@ def computeObjectiveFunction(mainDir, zlcParameterPath, pOpt, pRef):
                                                     rateConstant_2 = 0,
                                                     rateConstant_3 = rateConstant_3,
                                                     rpore = rpore,
+                                                    Dpvals = Dpvals,
                                                     deadVolumeFile = str(deadVolumeFileTemp),
                                                     volSorbent = volSorbent,
                                                     volGas = volGas,
@@ -353,6 +362,7 @@ def computeObjectiveFunction(mainDir, zlcParameterPath, pOpt, pRef):
                                                     rateConstant_2 = 0,
                                                     rateConstant_3 = rateConstant_3,
                                                     rpore = rpore,
+                                                    Dpvals = Dpvals,
                                                     deadVolumeFile = str(deadVolumeFileTemp),
                                                     volSorbent = volSorbent,
                                                     volGas = volGas,
@@ -369,6 +379,7 @@ def computeObjectiveFunction(mainDir, zlcParameterPath, pOpt, pRef):
                                                     rateConstant_2 = 0,
                                                     rateConstant_3 = rateConstant_3,
                                                     rpore = rpore,
+                                                    Dpvals = Dpvals,
                                                     deadVolumeFile = str(deadVolumeFileTemp),
                                                     volSorbent = volSorbent,
                                                     volGas = volGas,
@@ -386,6 +397,7 @@ def computeObjectiveFunction(mainDir, zlcParameterPath, pOpt, pRef):
                                                     rateConstant_2 = rateConstant_2,
                                                     rateConstant_3 = rateConstant_3,
                                                     rpore = rpore,
+                                                    Dpvals = Dpvals,
                                                     deadVolumeFile = str(deadVolumeFileTemp),
                                                     volSorbent = volSorbent,
                                                     volGas = volGas,

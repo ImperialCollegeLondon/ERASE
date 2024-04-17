@@ -162,6 +162,12 @@ def extractZLCParameters(**kwargs):
         rpore = kwargs["rpore"]
     else:
         rpore = 1e-9
+    
+    # Flag to check Dpvals
+    if 'Dpvals' in kwargs:
+        Dpvals = kwargs["Dpvals"]
+    else:
+        Dpvals = [3.05671321526166e-05,	3.15050794527196e-05,	3.24331710687508e-05]
         
     # Dummt file as placeholder
     isothermFile = 'zlcParameters_20210525_1610_a079f4a.npz'
@@ -406,7 +412,7 @@ def extractZLCParameters(**kwargs):
         lhsPopulation = LHS(xlimits=optBounds)
         start_population = lhsPopulation(popSize)  
     elif modelType == 'Diffusion1Ttau':
-        optBounds = np.array(([35.2e-3,40e-3],[1e-3,10e-3]))
+        optBounds = np.array(([35,80e-3],[1e-3,10e-3]))
         optType=np.array(['real','real'])
         problemDimension = len(optType)
         isoRef = [1000, 1000] # Reference for the parameter (has to be a list)
@@ -494,7 +500,7 @@ def extractZLCParameters(**kwargs):
         start_population = lhsPopulation(popSize)
     # Initialize the parameters used for ZLC fitting process
     fittingParameters(True,temperature,deadVolumeFile,adsorbentDensity,particleEpsilon,
-                      massSorbent,isoRef,downsampleData,paramIso,downsampleExp,modelType,rpore)
+                      massSorbent,isoRef,downsampleData,paramIso,downsampleExp,modelType,rpore,Dpvals)
     
     # Minimize an objective function to compute the equilibrium and kinetic 
     # parameters from ZLC experiments
@@ -546,7 +552,8 @@ def extractZLCParameters(**kwargs):
            downsampleExp = downsampleExp, # Flag for downsampling data by number of points [-]
            hostName = socket.gethostname(),
            modelType = modelType,
-           rpore = rpore) # Hostname of the computer
+           rpore = rpore,
+           Dpvals = Dpvals) # Hostname of the computer
     
     # Remove all the .npy files genereated from the .mat
     # Load the names of the file to be used for estimating ZLC parameters
@@ -572,7 +579,7 @@ def ZLCObjectiveFunction(x):
     from computeMLEError import computeMLEError
     import pdb 
     # Get the zlc parameters needed for the solver
-    temperature, deadVolumeFile, adsorbentDensity, particleEpsilon, massSorbent, isoRef, downsampleData, paramIso, downsampleExp, modelType,rpore = fittingParameters(False,[],[],[],[],[],[],[],[],[],[],[])
+    temperature, deadVolumeFile, adsorbentDensity, particleEpsilon, massSorbent, isoRef, downsampleData, paramIso, downsampleExp, modelType,rpore,Dpvals = fittingParameters(False,[],[],[],[],[],[],[],[],[],[],[],[])
 
     # Volume of sorbent material [m3]
     volSorbent = (massSorbent/1000)/adsorbentDensity
@@ -652,6 +659,7 @@ def ZLCObjectiveFunction(x):
                                                     rateConstant_2 = x[-2]*isoRef[-2], # Last element is activation energy
                                                     rateConstant_3 = x[-1]*isoRef[-1], # Last element is activation energy
                                                     rpore = rpore,
+                                                    Dpvals = Dpvals,
                                                     temperature = temperature[ii], # Temperature [K]
                                                     timeInt = timeInt,
                                                     initMoleFrac = [moleFracExp[0]], # Initial mole fraction assumed to be the first experimental point
@@ -669,6 +677,7 @@ def ZLCObjectiveFunction(x):
                                                     rateConstant_2 = 0, # Last element is activation energy
                                                     rateConstant_3 = x[-1]*isoRef[-1], # Last element is activation energy
                                                     rpore = rpore,
+                                                    Dpvals = Dpvals,
                                                     temperature = temperature[ii], # Temperature [K]
                                                     timeInt = timeInt,
                                                     initMoleFrac = [moleFracExp[0]], # Initial mole fraction assumed to be the first experimental point
@@ -686,6 +695,7 @@ def ZLCObjectiveFunction(x):
                                                     rateConstant_2 = 0, # Last element is activation energy
                                                     rateConstant_3 = x[-1]*isoRef[-1], # Last element is activation energy
                                                     rpore = rpore,
+                                                    Dpvals = Dpvals,
                                                     temperature = temperature[ii], # Temperature [K]
                                                     timeInt = timeInt,
                                                     initMoleFrac = [moleFracExp[0]], # Initial mole fraction assumed to be the first experimental point
@@ -703,6 +713,7 @@ def ZLCObjectiveFunction(x):
                                                     rateConstant_2 = 0, # Last element is activation energy
                                                     rateConstant_3 = x[-1]*isoRef[-1], # Last element is activation energy
                                                     rpore = rpore,
+                                                    Dpvals = Dpvals,
                                                     temperature = temperature[ii], # Temperature [K]
                                                     timeInt = timeInt,
                                                     initMoleFrac = [moleFracExp[0]], # Initial mole fraction assumed to be the first experimental point
@@ -720,6 +731,7 @@ def ZLCObjectiveFunction(x):
                                                     rateConstant_2 = 0, # Last element is activation energy
                                                     rateConstant_3 = x[-1]*isoRef[-1], # Last element is activation energy
                                                     rpore = rpore,
+                                                    Dpvals = Dpvals,
                                                     temperature = temperature[ii], # Temperature [K]
                                                     timeInt = timeInt,
                                                     initMoleFrac = [moleFracExp[0]], # Initial mole fraction assumed to be the first experimental point
@@ -737,6 +749,7 @@ def ZLCObjectiveFunction(x):
                                                     rateConstant_2 = x[-1]*isoRef[-1], # Last element is activation energy
                                                     rateConstant_3 = 0, # Last element is activation energy
                                                     rpore = rpore,
+                                                    Dpvals = Dpvals,
                                                     temperature = temperature[ii], # Temperature [K]
                                                     timeInt = timeInt,
                                                     initMoleFrac = [moleFracExp[0]], # Initial mole fraction assumed to be the first experimental point
@@ -768,7 +781,7 @@ def ZLCObjectiveFunction(x):
 # This is done because the ga cannot handle additional user inputs
 def fittingParameters(initFlag,temperature,deadVolumeFile,adsorbentDensity,
                       particleEpsilon,massSorbent,isoRef,downsampleData,
-                      paramIso,downsampleExp,modelType, rpore):
+                      paramIso,downsampleExp,modelType, rpore, Dpvals):
     from numpy import savez
     from numpy import load
     # Process the data for python (if needed)
@@ -785,7 +798,8 @@ def fittingParameters(initFlag,temperature,deadVolumeFile,adsorbentDensity,
                paramIso = paramIso, 
                downsampleExp = downsampleExp,
                modelType = modelType,
-               rpore = rpore)
+               rpore = rpore,
+               Dpvals = Dpvals)
     # Returns the path of the .npz file to be used 
     else:
     # Load the dummy file with temperature, deadVolumeFile, adsorbent density, particle voidage,
@@ -802,4 +816,5 @@ def fittingParameters(initFlag,temperature,deadVolumeFile,adsorbentDensity,
         downsampleExp = load (dummyFileName)["downsampleExp"]
         modelType = load (dummyFileName)["modelType"]
         rpore = load (dummyFileName)["rpore"]
-        return temperature, deadVolumeFile, adsorbentDensity, particleEpsilon, massSorbent, isoRef, downsampleData, paramIso, downsampleExp, modelType, rpore
+        Dpvals = load (dummyFileName)["Dpvals"]
+        return temperature, deadVolumeFile, adsorbentDensity, particleEpsilon, massSorbent, isoRef, downsampleData, paramIso, downsampleExp, modelType, rpore, Dpvals
