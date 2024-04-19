@@ -146,6 +146,8 @@ DeVals = tauFac.*DpVal;
 DeValsDelta = abs(tauFac2'.*DpVal-DeVals);
 
 function ChapmanEnskogVals = UnpackCEVals
+% tabulated values for kT/eps12 vs OmegaD from Mass Transfer in
+% Heterogeneous Catalysis - Satterfield 1970 M.I.T. Press pg. 14-15
 ChapmanEnskogVals = [0.300000000000000	2.66200000000000
 0.350000000000000	2.47600000000000
 0.400000000000000	2.31800000000000
