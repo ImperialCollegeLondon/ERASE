@@ -23,8 +23,9 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%% USER INPUT %%%
+clc;clear all;close all;
 % File name to be used for analysis/plotting
-rawDataFileName = 'Z13X_ZLC_HA';
+rawDataFileName = 'DummtKillian';
 
 % Name of files from QC and MIP (only for reference purposes)
 poreVolume.rawFiles.quantachromeFileName = '';
@@ -75,12 +76,12 @@ if ~isfield(poreVolume,'properties')
     %     % Convert pore radius to pore diameter [nm]
     %     poreVolume.MIP(:,1) = 2.*poreVolume.MIP(:,1);
     % Compute cumulative pore size distribution
-    poreVolume.MIP(:,3) = cumsum(poreVolume.MIP(:,2));
+    poreVolume.MIP(:,4) = cumsum(poreVolume.MIP(:,2));
     % Compute interpolation query points
     interpMIP = exp(1).^(linspace(log(min(poreVolume.MIP(:,1))),log(max(poreVolume.MIP(:,1))),200));
     poreVolume.interp.MIP(:,1) = interpMIP';
     % interpolate cumulative pore volume
-    poreVolume.interp.MIP(:,2) = interp1(poreVolume.MIP(:,1),poreVolume.MIP(:,3),interpMIP');
+    poreVolume.interp.MIP(:,2) = interp1(poreVolume.MIP(:,1),poreVolume.MIP(:,4),interpMIP');
     % Compute incremental pore volume
     poreVolume.interp.MIP(:,3) = [poreVolume.interp.MIP(1,2);  diff(poreVolume.interp.MIP(:,2))];
 end
@@ -169,15 +170,17 @@ end
 
 figure
 hold on
-plot(poreVolume.MIP(:,1),poreVolume.MIP(:,4),'Color','red', 'HandleVisibility','off','LineWidth',2,'LineStyle','none','Marker','o')
+macroporeIndex = find(poreVolume.MIP(1:end,1)>50,1,'first');
+endIndex = 77;
+plot(poreVolume.MIP(:,1),poreVolume.MIP(:,3),'Color','red', 'HandleVisibility','off','LineWidth',2,'LineStyle','none','Marker','o')
 distType = 'wbl';
-x = poreVolume.MIP(50:77,1);
-p = cumtrapz(x,poreVolume.MIP(50:77,4));
+x = poreVolume.MIP(macroporeIndex:endIndex,1);
+p = cumtrapz(x,poreVolume.MIP(macroporeIndex:endIndex,3));
 p = p - min(p);
 pVals = linspace(min(p),max(p),12000)./max(p);
 xVals = interp1(p./max(p),x,pVals);
 dist = fitdist(xVals',distType);
-dvals = linspace(poreVolume.MIP(46,1),poreVolume.MIP(end,1),100000);
+dvals = linspace(poreVolume.MIP(macroporeIndex,1),poreVolume.MIP(end,1),100000);
 distribPDF = pdf(dist,dvals);
 plot(dvals,distribPDF.*max(p)+min(p),'LineStyle','-','LineWidth',2,'Color','red')
 set(gca,'YScale','linear','XScale','log','FontSize',20,'LineWidth',0.8)
@@ -191,12 +194,12 @@ fprintf('Total voidage = %5.4e \n',poreVolume.properties.totalVoidage);
 [M,V] = wblstat(dist.A,dist.B);
 poreVolume.properties.meanRadius = M./2;
 poreVolume.properties.stDevRadius= sqrt(V)./2;
-
-vCO = poreVolume.MIP(end,3)
-% rhoHg = 13.5
-S = 7.5 % HY and TMAY = 200, NaY = 230;
-sumdelV = sum((poreVolume.MIP(2:end,2).*1e-6)./(poreVolume.MIP(2:end,1).*1e-9));
-yVal = 4./S .* sumdelV;
-tau = (2.23 - 1.13.*vCO.*poreVolume.properties.bulkDensity).*(0.92.*yVal).^2
-% tau = (2.23 - 1.13.*vCO*poreVolume.properties.bulkDensity)
-Rp = 0.5./(((sum(poreVolume.MIP(50:end,2)./poreVolume.MIP(50:end,1))))./(sum(poreVolume.MIP(50:end,2))));
+% 
+% vCO = poreVolume.MIP(end,3)
+% % rhoHg = 13.5
+% S = 7.5 % HY and TMAY = 200, NaY = 230;
+% sumdelV = sum((poreVolume.MIP(2:end,2).*1e-6)./(poreVolume.MIP(2:end,1).*1e-9));
+% yVal = 4./S .* sumdelV;
+% tau = (2.23 - 1.13.*vCO.*poreVolume.properties.bulkDensity).*(0.92.*yVal).^2
+% % tau = (2.23 - 1.13.*vCO*poreVolume.properties.bulkDensity)
+% Rp = 0.5./(((sum(poreVolume.MIP(50:end,2)./poreVolume.MIP(50:end,1))))./(sum(poreVolume.MIP(50:end,2))));

@@ -119,6 +119,12 @@ def plotsForArticle_Experiment(**kwargs):
         if kwargs["figureZLCObj"]:
             plotForArticle_figureZLCObj(gitCommitID, currentDT,
                                        saveFlag, saveFileExtension)
+
+    # If ZLC objective functions
+    if 'figureZLCObjZY' in kwargs:
+        if kwargs["figureZLCObjZY"]:
+            plotForArticle_figureZLCObjZY(gitCommitID, currentDT,
+                                       saveFlag, saveFileExtension)
             
     # If raw textural characterization
     if 'figureRawTex' in kwargs:
@@ -239,7 +245,7 @@ def plotForArticle_figureMat(gitCommitID, currentDT,
     isothermDir = os.path.join('isothermData','isothermResults')
     
     # File with pore characterization data
-    isothermALL = ['AC_S1_DSL_100621.mat',
+    isothermALL = ['AC_S1_DSL_100521.mat',
                    'BNp_SSL_100621.mat',
                    'Z13X_H_DSL_100621.mat',]
 
@@ -2236,6 +2242,172 @@ def plotForArticle_figureZLCObj(gitCommitID, currentDT,
 
         ax2.text(2.9,materialLabel_H[pp], "Computational", fontsize=8, fontweight = 'bold',color = '#7d8597')
         ax2.text(materialLabel_X[pp],panelLabel_H[pp], materialText[pp], fontsize=8, fontweight = 'bold',color = '#4895EF')
+        
+    #  Save the figure
+    if saveFlag:
+        # FileName: figureZLCObj_<currentDateTime>_<GitCommitID_Current>_<GitCommitID_Data>
+        saveFileName = "figureZLCObj" + "_" + currentDT + "_" + gitCommitID + saveFileExtension
+        savePath = os.path.join('..','simulationFigures','experimentManuscript',saveFileName)
+        # Check if inputResources directory exists or not. If not, create the folder
+        if not os.path.exists(os.path.join('..','simulationFigures','experimentManuscript')):
+            os.mkdir(os.path.join('..','simulationFigures','experimentManuscript'))
+        plt.savefig (savePath)
+            
+    plt.show()
+
+# fun: plotForArticle_figureZLCObj
+# Plots the Figure ZLC Fit of the manuscript: ZLC goodness of fit for experimental results
+def plotForArticle_figureZLCObjZY(gitCommitID, currentDT, 
+                           saveFlag, saveFileExtension):
+    import numpy as np
+    import matplotlib.pyplot as plt
+    import auxiliaryFunctions
+    from numpy import load
+    import os
+    from matplotlib.ticker import MaxNLocator
+    import pdb
+    plt.style.use('doubleColumn2Row.mplstyle') # Custom matplotlib style file
+
+    # Get the commit ID of the current repository
+    gitCommitID = auxiliaryFunctions.getCommitID()
+    
+    # Get the current date and time for saving purposes    
+    currentDT = auxiliaryFunctions.getCurrentDateTime()
+    
+    # Minimum J for all the materials (computational) - HARD CODED
+    minJ_True = [-1894, -1077, -10592]
+    
+    # X limits for the different materials
+    YLIM_L = [[1460, 1480],[1460, 1480],[1890, 1910]]
+    YLIM_H1 = [[10, 20],[10, 20],[10, 20]]
+    YLIM_H2 = [[1, 2],[1, 2],[1, 2]]
+    
+    # Label positions for the different materials
+    minJLabel = [-1875,-1045, -10300]
+    materialText = ["Zeolite H-Y", "Zeolite Na-Y", "Zeolite NaTMA-Y"]
+    materialLabel_X = [4.45, 4.45, 4.32]
+    # materialLabel_L = [196.75, 396.75, -55]
+    # materialLabel_H = [-1500, -535, -5400]
+    panelLabel = ["(a)","(b)","(c)","(d)","(e)","(f)"]
+    panelLabel_L = [198.5, 398.5, -52.5]
+    panelLabel_H = [-1450, -470, -4750]
+
+    # Parameter estimate files (Experimental)
+                        # ZYH Experiments
+    zlcFileNameExpALL = [['zlcParameters_ZYHCrush_20240409_0436_b571c46.npz',
+                          'zlcParameters_ZYHCrush_20240420_1834_b571c46.npz',
+                          'zlcParameters_ZYHCrush_20240420_2316_b571c46.npz',
+                          'zlcParameters_ZYHCrush_20240421_0353_b571c46.npz',
+                          'zlcParameters_ZYHCrush_20240421_0829_b571c46.npz',],
+                        # ZYNa Experiments
+                        ['zlcParameters_ZYNaCrush_20240419_0831_b571c46.npz',
+                        'zlcParameters_ZYNaCrush_20240418_1637_b571c46.npz',
+                        'zlcParameters_ZYNaCrush_20240418_2137_b571c46.npz', # DSL BAD (but lowest J)
+                        'zlcParameters_ZYNaCrush_20240419_0302_b571c46.npz', # DSL BAD (but lowest J)
+                        'zlcParameters_ZYNaCrush_20240419_0302_b571c46.npz'],
+                          # ZYNaTMA Experiments
+                        ['zlcParameters_ZYTMACrush_20240419_1920_b571c46.npz',
+                          'zlcParameters_ZYTMACrush_20240420_0032_b571c46.npz',
+                          'zlcParameters_ZYTMACrush_20240420_0519_b571c46.npz',
+                          'zlcParameters_ZYTMACrush_20240420_0935_b571c46.npz',
+                          'zlcParameters_ZYTMACrush_20240420_1405_b571c46.npz',]]
+
+    
+    for pp in range(len(zlcFileNameExpALL)):
+        # Experiments
+        zlcFileName = zlcFileNameExpALL[pp]
+        objectiveFunction = np.zeros([len(zlcFileName)])
+        # Loop over all available ZLC files for a given material
+        for kk in range(len(zlcFileName)):
+            # Obtain the onjective function values
+            parameterPath = os.path.join('..','simulationResults',zlcFileName[kk])
+            modelOutputTemp = load(parameterPath, allow_pickle=True)["modelOutput"]
+            objectiveFunction[kk] = round(modelOutputTemp[()]["function"],5)/1000
+            
+        ax1 = plt.subplot(2,3,pp+1)       
+        xx = range(1,len(zlcFileName)+1)
+        ax1.plot(xx,objectiveFunction,
+                 linestyle = ':', linewidth = 0.5,
+                 color = '#7d8597', marker = '^', markersize = 3,
+                 markerfacecolor = 'black',
+                 markeredgecolor = 'black') # ALL
+    
+        if pp == 0:
+            ax1.set(ylabel='$J$ × $10^{-3}$ [-]',
+                    xlim = [1,5], ylim = [min(objectiveFunction)*0.99999, max(objectiveFunction)*1.00001])
+        else:
+            ax1.set(xlim = [1,5], ylim = [min(objectiveFunction)*0.99999, max(objectiveFunction)*1.00001]) 
+        # ax1.locator_params(axis="y", nbins=4)
+        # ax1.locator_params(axis="x", nbins=4)
+        # ax1.xaxis.set_major_locator(MaxNLocator(integer=True))
+         
+        # pdb.set_trace()
+        # Simulation
+        zlcFileName = zlcFileNameExpALL[pp]
+        objectiveFunction = np.zeros([len(zlcFileName)])
+        tauVals = np.zeros([len(zlcFileName)])
+        microTimeVals = np.zeros([len(zlcFileName)])
+        
+        # Loop over all available ZLC files for a given material
+        for kk in range(len(zlcFileName)):
+            # Obtain the onjective function values
+            parameterPath = os.path.join('..','simulationResults',zlcFileName[kk])
+            modelOutputTemp = load(parameterPath, allow_pickle=True)["modelOutput"]
+            objectiveFunction[kk] = round(modelOutputTemp[()]["function"],0)
+
+            # Isotherm parameter reference
+            parameterReference = load(parameterPath)["parameterReference"]
+            paramIso = load(parameterPath)["paramIso"]
+            # Load the model
+            modelOutputTemp = load(parameterPath, allow_pickle=True)["modelOutput"]
+            modelNonDim = modelOutputTemp[()]["variable"]
+            microTimeVals[kk] = modelNonDim[0]*1000/15
+            tauVals[kk] = modelNonDim[1]*1000
+        # pdb.set_trace()
+            
+        ax2 = plt.subplot(2,3,pp+4)       
+        xx = range(1,len(zlcFileName)+1)
+        ax2.plot(xx,microTimeVals,
+                  linestyle = ':', linewidth = 0.5,
+                  color = '#7d8597', marker = 'v', markersize = 3,
+                  markerfacecolor = 'red',
+                  markeredgecolor = 'red') # ALL
+        
+        ax3 = ax2.twinx()  # instantiate a second axes that shares the same x-axis
+        ax3.plot(xx,tauVals,
+                  linestyle = ':', linewidth = 0.5,
+                  color = '#7d8597', marker = 'v', markersize = 3,
+                  markerfacecolor = 'blue',
+                  markeredgecolor = 'blue') # ALL
+        
+        if pp == 0:
+            ax2.set(xlabel='Repetition [-]', 
+                    xlim = [1,5],ylim = YLIM_H1[pp]) 
+            ax2.set_ylabel('$D^e_\mu/{r_p^2}$ [s$^{-1}$]',color = 'red')
+
+        else:
+            ax2.set(xlabel='Repetition [-]', 
+                    xlim = [1,5],ylim = YLIM_H1[pp]) 
+        ax2.locator_params(axis="y", nbins=4)
+        
+        if pp == 2:
+            ax3.set(ylabel='$τ$ [-]',
+                    xlim = [1,5],ylim = YLIM_H2[pp]) 
+            ax3.set_ylabel('$τ$ [-]',color = 'blue')
+        else:
+            ax3.set(xlim = [1,5],ylim = YLIM_H2[pp]) 
+        ax3.locator_params(axis="y", nbins=4)
+        ax3.locator_params(axis="y", nbins=4)
+        
+        # # Put other text entries
+        # ax1.text(1.15, panelLabel_L[pp], panelLabel[pp], fontsize=8,)
+        # ax2.text(1.15, panelLabel_H[pp], panelLabel[pp+3], fontsize=8,)
+
+        # ax1.text(3.1,materialLabel_L[pp], "Experimental", fontsize=8, fontweight = 'bold',color = '#7d8597')
+        # ax1.text(materialLabel_X[pp],panelLabel_L[pp], materialText[pp], fontsize=8, fontweight = 'bold',color = '#4895EF')
+
+        # ax2.text(2.9,materialLabel_H[pp], "Computational", fontsize=8, fontweight = 'bold',color = '#7d8597')
+        # ax2.text(materialLabel_X[pp],panelLabel_H[pp], materialText[pp], fontsize=8, fontweight = 'bold',color = '#4895EF')
         
     #  Save the figure
     if saveFlag:

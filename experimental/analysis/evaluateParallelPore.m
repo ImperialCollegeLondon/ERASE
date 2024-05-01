@@ -26,17 +26,16 @@ clc;clear all;
 Tvals = [288.15, 298.15, 308.15];
 
 CarrierGas = 'He';
-Ptotal = 10; % total pressure in atm
+Ptotal = 1; % total pressure in atm
 
-poreData = load('ZYTMA_ZLC_HA.mat');
+poreData = load('DummtKillian.mat');
 MIP = poreData.poreVolume.MIP;
 macroporeIndex = find(poreData.poreVolume.MIP(1:end,1)>50,1,'first');
-macroporeVolume = poreData.poreVolume.MIP(end,3)-poreData.poreVolume.MIP(macroporeIndex,3);
+macroporeVolume = poreData.poreVolume.MIP(end,4)-poreData.poreVolume.MIP(macroporeIndex,4);
 epVals = macroporeVolume./poreData.poreVolume.properties.bulkVolume;
 
 % Chapman-Enskog equation
 ChapmanEnskogVals = UnpackCEVals;
-
 MwCO2 = 44; % molecular weight of CO2 [kg/mol]
 switch CarrierGas
     case 'He'
@@ -65,7 +64,7 @@ for ii = 1:length(Tvals)
 end
 
 
-DpVal = zeros(1,3);
+DpVal = zeros(1,length(Tvals));
 
 set(groot,'defaulttextInterpreter','latex') %latex axis labels
 set(groot, 'DefaultLegendInterpreter', 'latex')
@@ -85,10 +84,10 @@ tiledlayout(1,1, 'Padding', 'compact', 'TileSpacing', 'compact');
 nexttile
 hold on
 x = poreData.poreVolume.MIP(macroporeIndex:77,1);
-p = cumtrapz(x,poreData.poreVolume.MIP(macroporeIndex:77,4));
+p = cumtrapz(x,poreData.poreVolume.MIP(macroporeIndex:77,3));
 p = p - min(p);
 pVals = linspace(min(p),max(p),12000)./max(p);
-xVals = interp1(p./max(p),x,pVals)-poreData.poreVolume.MIP(macroporeIndex,1);
+% xVals = interp1(p./max(p),x,pVals)-poreData.poreVolume.MIP(macroporeIndex,1);
 xVals = interp1(p./max(p),x,pVals);
 dist = fitdist(xVals',distType)
 dvals = linspace(MIP(macroporeIndex,1),MIP(end,1),100000);

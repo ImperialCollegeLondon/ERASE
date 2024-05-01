@@ -93,8 +93,8 @@ downsampleData = True
 
 # modelType = 'KineticSBMacro'
 # modelType = 'KineticOld'
-# modelType = 'KineticOld'
-modelType = 'Diffusion1Ttau'
+modelType = 'KineticOld'
+# modelType = 'Diffusion1Ttau'
 
 isothermModels = [[995*6/4,0.0001/np.exp(2.9e4/(Rg*298.15)),2.9e4,0,0,0],
                   [6.5*6/4,0.04/np.exp(4.6e4/(Rg*298.15)),4.6e4,0,0,0],
@@ -128,8 +128,8 @@ legendLines = ['$k_{micro}$ << $k_{macro}$',
 legendLines = ['$k = 0.1$ s$^\mathregular{-1}$',
                '$k = 1$ s$^\mathregular{-1}$',]
 
-legendLines = ['$τ = 2$',
-               '$τ = 5$',]
+# legendLines = ['$τ = 2$',
+#                 '$τ = 5$',]
 lineStyles = ['-','dashed']
 
 
@@ -320,7 +320,8 @@ for jj in range(len(isothermModels)):
             if flagDesorption:
                 initMoleFrac = [moleFracExp[0]]
                 # initMoleFrac = [0.1]
-                feedMoleFrac = [0.0]
+                feedMoleFrac = [0.1]
+                # feedMoleFrac = [0]
             else:
                 initMoleFrac = [1e-7]
                 feedMoleFrac = [1]
@@ -392,7 +393,7 @@ for jj in range(len(isothermModels)):
                     plt.subplot(4,3,jj+4) .set(xlabel='$t$ [s]', 
                             ylabel='$y$ [-]', 
                             # xlim = [0,2000], ylim =  [1e-6, 1])  
-                            xlim = [0,30], ylim =  [1e-2, 1])  
+                            xlim = [0,100], ylim =  [1e-3, 1])  
             else:
                 plt.subplot(4,3,jj+4) .semilogy(timeElapsedExp,moleFracSim,
                      color=colorsForPlot[ii],label=legendStr,alpha = 1, linestyle = linestyle) # Simulation response    
@@ -401,7 +402,7 @@ for jj in range(len(isothermModels)):
                 color='#118ab2',alpha=0.2,
                 linestyle = '-') # Dead volume simulation response    
             plt.subplot(4,3,jj+4) .set(xlabel='$t$ [s]', 
-                    ylabel='$y$ [-]', ylim =  [1e-2, 1]) 
+                    ylabel='$y$ [-]', ylim =  [1e-3, 1]) 
             plt.subplot(4,3,jj+4) .locator_params(axis="x", nbins=4)
             plt.subplot(4,3,4) .legend()
             
@@ -422,7 +423,7 @@ for jj in range(len(isothermModels)):
                     plt.subplot(4,3,jj+7) .set(xlabel='$Ft$ [cc]', 
                         ylabel='$y$ [-]', 
                         # xlim = [0,2000], ylim =  [1e-6, 1])  
-                        xlim = [0,100], ylim =  [1e-2, 1])  
+                        xlim = [0,100], ylim =  [1e-3, 1])  
                 else:
                     plt.subplot(4,3,jj+7) .semilogy(flowRateSim*timeElapsedExp*1e6,moleFracSim,
                      color=colorsForPlot[ii],alpha = 1, linestyle = linestyle) # Simulation response 
@@ -433,7 +434,7 @@ for jj in range(len(isothermModels)):
                     plt.subplot(4,3,jj+7) .set(xlabel='$Ft$ [cc]', 
                             ylabel='$y$ [-]', 
                             # xlim = [0,2000], ylim =  [1e-6, 1])  
-                            xlim = [0,30], ylim =  [1e-2, 1])  
+                            xlim = [0,100], ylim =  [1e-3, 1])  
             else:
                 plt.subplot(4,3,jj+7) .semilogy(timeElapsedExp,moleFracSim,
                      color=colorsForPlot[ii],label=legendStr,alpha = 1, linestyle = linestyle) # Simulation response    
@@ -442,7 +443,7 @@ for jj in range(len(isothermModels)):
                 color='#118ab2',alpha=0.2,
                 linestyle = '-') # Dead volume simulation response    
             plt.subplot(4,3,jj+7) .set(xlabel='$Ft$ [cc]', 
-                    ylabel='$y$ [-]', ylim =  [1e-2, 1]) 
+                    ylabel='$y$ [-]', ylim =  [1e-3, 1]) 
             plt.subplot(4,3,jj+7) .locator_params(axis="x", nbins=4)
             plt.subplot(4,3,7) .legend()
             
@@ -454,11 +455,11 @@ for jj in range(len(isothermModels)):
             if flagDesorption:
                 plt.subplot(4,3,jj+10) .set(xlabel='$t$ [s]', 
                         ylabel='Fractional loading [-]',  
-                        xlim = [0,2000], ylim =  [0, 1])   
+                        xlim = [0,200], ylim =  [0, 1])   
             else:
                 plt.subplot(4,3,jj+10) .set(xlabel='$t$ [s]', 
                         ylabel='$Fractional loading [-]',  
-                        xlim = [0,2000], ylim =  [0, 1])  
+                        xlim = [0,30], ylim =  [0, 1])  
             plt.subplot(4,3,jj+10) .locator_params(axis="x", nbins=4)
         
 plt.show()
