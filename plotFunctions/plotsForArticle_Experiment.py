@@ -2294,23 +2294,20 @@ def plotForArticle_figureZLCObjZY(gitCommitID, currentDT,
 
     # Parameter estimate files (Experimental)
                         # ZYH Experiments
-    zlcFileNameExpALL = [['zlcParameters_ZYHCrush_20240409_0436_b571c46.npz',
-                          'zlcParameters_ZYHCrush_20240420_1834_b571c46.npz',
-                          'zlcParameters_ZYHCrush_20240420_2316_b571c46.npz',
-                          'zlcParameters_ZYHCrush_20240421_0353_b571c46.npz',
-                          'zlcParameters_ZYHCrush_20240421_0829_b571c46.npz',],
+    zlcFileNameExpALL = [['zlcParameters_ZYHCrush_20240518_2113_b571c46.npz',
+                          'zlcParameters_ZYHCrush_20240519_0220_b571c46.npz',
+                          'zlcParameters_ZYHCrush_20240519_0729_b571c46.npz',
+                          'zlcParameters_ZYHCrush_20240519_1239_b571c46.npz',],
                         # ZYNa Experiments
-                        ['zlcParameters_ZYNaCrush_20240419_0831_b571c46.npz',
-                        'zlcParameters_ZYNaCrush_20240418_1637_b571c46.npz',
-                        'zlcParameters_ZYNaCrush_20240418_2137_b571c46.npz', # DSL BAD (but lowest J)
-                        'zlcParameters_ZYNaCrush_20240419_0302_b571c46.npz', # DSL BAD (but lowest J)
-                        'zlcParameters_ZYNaCrush_20240419_0302_b571c46.npz'],
+                        ['zlcParameters_ZYNaCrush_20240521_2053_b571c46.npz', # DSL BAD (but lowest J)
+                        'zlcParameters_ZYNaCrush_20240521_2240_b571c46.npz',
+                        'zlcParameters_ZYNaCrush_20240522_0027_b571c46.npz',
+                        'zlcParameters_ZYNaCrush_20240522_0220_b571c46.npz',],
                           # ZYNaTMA Experiments
-                        ['zlcParameters_ZYTMACrush_20240419_1920_b571c46.npz',
-                          'zlcParameters_ZYTMACrush_20240420_0032_b571c46.npz',
-                          'zlcParameters_ZYTMACrush_20240420_0519_b571c46.npz',
-                          'zlcParameters_ZYTMACrush_20240420_0935_b571c46.npz',
-                          'zlcParameters_ZYTMACrush_20240420_1405_b571c46.npz',]]
+                        ['zlcParameters_ZYTMACrush_20240520_1036_b571c46.npz',
+                          'zlcParameters_ZYTMACrush_20240520_1459_b571c46.npz',
+                          'zlcParameters_ZYTMACrush_20240520_1927_b571c46.npz',
+                          'zlcParameters_ZYTMACrush_20240520_2353_b571c46.npz',]]
 
     
     for pp in range(len(zlcFileNameExpALL)):
@@ -2334,9 +2331,9 @@ def plotForArticle_figureZLCObjZY(gitCommitID, currentDT,
     
         if pp == 0:
             ax1.set(ylabel='$J$ × $10^{-3}$ [-]',
-                    xlim = [1,5], ylim = [min(objectiveFunction)*0.99999, max(objectiveFunction)*1.00001])
+                    xlim = [1,4], ylim = [min(objectiveFunction)*0.99999, max(objectiveFunction)*1.00001])
         else:
-            ax1.set(xlim = [1,5], ylim = [min(objectiveFunction)*0.99999, max(objectiveFunction)*1.00001]) 
+            ax1.set(xlim = [1,4], ylim = [min(objectiveFunction)*0.99999, max(objectiveFunction)*1.00001]) 
         # ax1.locator_params(axis="y", nbins=4)
         # ax1.locator_params(axis="x", nbins=4)
         # ax1.xaxis.set_major_locator(MaxNLocator(integer=True))
@@ -2361,7 +2358,10 @@ def plotForArticle_figureZLCObjZY(gitCommitID, currentDT,
             # Load the model
             modelOutputTemp = load(parameterPath, allow_pickle=True)["modelOutput"]
             modelNonDim = modelOutputTemp[()]["variable"]
-            microTimeVals[kk] = modelNonDim[0]*1000/15
+            if pp == 9:
+                microTimeVals[kk] = modelNonDim[0]*1000
+            else:
+                microTimeVals[kk] = modelNonDim[0]*1000/15
             tauVals[kk] = modelNonDim[1]*1000
         # pdb.set_trace()
             
@@ -2382,20 +2382,20 @@ def plotForArticle_figureZLCObjZY(gitCommitID, currentDT,
         
         if pp == 0:
             ax2.set(xlabel='Repetition [-]', 
-                    xlim = [1,5],ylim = YLIM_H1[pp]) 
+                    xlim = [1,4],ylim = YLIM_H1[pp]) 
             ax2.set_ylabel('$D^e_\mu/{r_p^2}$ [s$^{-1}$]',color = 'red')
 
         else:
             ax2.set(xlabel='Repetition [-]', 
-                    xlim = [1,5],ylim = YLIM_H1[pp]) 
+                    xlim = [1,4],ylim = YLIM_H1[pp]) 
         ax2.locator_params(axis="y", nbins=4)
         
         if pp == 2:
             ax3.set(ylabel='$τ$ [-]',
-                    xlim = [1,5],ylim = YLIM_H2[pp]) 
+                    xlim = [1,4],ylim = YLIM_H2[pp]) 
             ax3.set_ylabel('$τ$ [-]',color = 'blue')
         else:
-            ax3.set(xlim = [1,5],ylim = YLIM_H2[pp]) 
+            ax3.set(xlim = [1,4],ylim = YLIM_H2[pp]) 
         ax3.locator_params(axis="y", nbins=4)
         ax3.locator_params(axis="y", nbins=4)
         

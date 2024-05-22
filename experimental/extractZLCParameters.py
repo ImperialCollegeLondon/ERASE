@@ -7,6 +7,8 @@
 # Year:     2021
 # Python:   Python 3.7
 # Authors:  Ashwin Kumar Rajagopalan (AK)
+#           Hassan Azzan (HA)
+#           Tristan Spreng (TS)
 #
 # Purpose:
 # Find the isotherm parameters and the kinetic rate constant by fitting
@@ -412,7 +414,7 @@ def extractZLCParameters(**kwargs):
         lhsPopulation = LHS(xlimits=optBounds)
         start_population = lhsPopulation(popSize)  
     elif modelType == 'Diffusion1Ttau':
-        optBounds = np.array(([35,80e-3],[1e-3,10e-3]))
+        optBounds = np.array(([15*12e-3,15*20e-3],[1e-3,10e-3]))
         optType=np.array(['real','real'])
         problemDimension = len(optType)
         isoRef = [1000, 1000] # Reference for the parameter (has to be a list)

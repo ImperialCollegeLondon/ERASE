@@ -25,7 +25,7 @@
 %%% USER INPUT %%%
 clc;clear all;close all;
 % File name to be used for analysis/plotting
-rawDataFileName = 'DummtKillian';
+rawDataFileName = 'Copy_of_ZYTMA_ZLC_HA';
 
 % Name of files from QC and MIP (only for reference purposes)
 poreVolume.rawFiles.quantachromeFileName = '';
@@ -77,6 +77,7 @@ if ~isfield(poreVolume,'properties')
     %     poreVolume.MIP(:,1) = 2.*poreVolume.MIP(:,1);
     % Compute cumulative pore size distribution
     poreVolume.MIP(:,4) = cumsum(poreVolume.MIP(:,2));
+    poreVolume.MIP(:,3) = [0;abs(diff(poreVolume.MIP(:,4))./diff(poreVolume.MIP(:,1)))];
     % Compute interpolation query points
     interpMIP = exp(1).^(linspace(log(min(poreVolume.MIP(:,1))),log(max(poreVolume.MIP(:,1))),200));
     poreVolume.interp.MIP(:,1) = interpMIP';
@@ -171,9 +172,9 @@ end
 figure
 hold on
 macroporeIndex = find(poreVolume.MIP(1:end,1)>50,1,'first');
-endIndex = 77;
+endIndex = 81;
 plot(poreVolume.MIP(:,1),poreVolume.MIP(:,3),'Color','red', 'HandleVisibility','off','LineWidth',2,'LineStyle','none','Marker','o')
-distType = 'wbl';
+distType = 'Kernel';
 x = poreVolume.MIP(macroporeIndex:endIndex,1);
 p = cumtrapz(x,poreVolume.MIP(macroporeIndex:endIndex,3));
 p = p - min(p);
@@ -187,13 +188,13 @@ set(gca,'YScale','linear','XScale','log','FontSize',20,'LineWidth',0.8)
 grid on; axis square; box on
 set(gca,'fontname','arial')
 xlim([50 1e4])
-ylim([0 0.00035])
+ylim([0 1.2*max(poreVolume.MIP(macroporeIndex:end,3))])
 fprintf('Skeletal Density = %5.4e g/mL \n',poreVolume.properties.skeletalDensity);
 fprintf('Total pore volume = %5.4e mL/g \n',poreVolume.properties.totalPoreVolume);
 fprintf('Total voidage = %5.4e \n',poreVolume.properties.totalVoidage);
-[M,V] = wblstat(dist.A,dist.B);
-poreVolume.properties.meanRadius = M./2;
-poreVolume.properties.stDevRadius= sqrt(V)./2;
+% [M,V] = wblstat(dist.A,dist.B);
+% poreVolume.properties.meanRadius = M./2;
+% poreVolume.properties.stDevRadius= sqrt(V)./2;
 % 
 % vCO = poreVolume.MIP(end,3)
 % % rhoHg = 13.5

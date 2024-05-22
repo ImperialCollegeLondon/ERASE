@@ -7,6 +7,8 @@
 # Year:     2021
 # Python:   Python 3.7
 # Authors:  Ashwin Kumar Rajagopalan (AK)
+#           Hassan Azzan (HA)
+#           Tristan Spreng (TS)
 #
 # Purpose:
 # Simulates the dead volume of the ZLC setup. The function can either simualte
@@ -42,19 +44,54 @@ def deadVolumeWrapper(timeInt, flowRateDV, DV_p, flagMSDeadVolume,
     else:
         feedMoleFrac = [0.]
     
-    # Simulates the tubings and fittings
-    # Compute the dead volume response using the dead volume parameters input
-    timeDV , _ , moleFracSim = simulateDeadVolume(deadVolume_1 = DV_p[0],
-                                            deadVolume_2M = DV_p[1],
-                                            deadVolume_2D = DV_p[2],                                      
-                                            numTanks_1 = int(DV_p[3]),
-                                            flowRate_2D = DV_p[4],
-                                            initMoleFrac = initMoleFrac,
-                                            feedMoleFrac = feedMoleFrac,
-                                            timeInt = timeInt,
-                                            flowRate = flowRateDV,
-                                            expFlag = True)
-    
+    if len(DV_p) == 5:
+        # Simulates the tubings and fittings
+        # Compute the dead volume response using the dead volume parameters input
+        timeDV , _ , moleFracSim = simulateDeadVolume(deadVolume_1 = DV_p[0],
+                                                deadVolume_2M = DV_p[1],
+                                                deadVolume_2D = DV_p[2],                                      
+                                                numTanks_1 = int(DV_p[3]),
+                                                flowRate_2D = DV_p[4],
+                                                initMoleFrac = initMoleFrac,
+                                                feedMoleFrac = feedMoleFrac,
+                                                timeInt = timeInt,
+                                                flowRate = flowRateDV,
+                                                expFlag = True)
+    elif len(DV_p) == 8:
+        # Simulates the tubings and fittings
+        # Compute the dead volume response using the dead volume parameters input
+        timeDV , _ , moleFracSim = simulateDeadVolume(deadVolume_1 = DV_p[0],
+                                                deadVolume_2M = DV_p[1],
+                                                deadVolume_2D = DV_p[2],                                      
+                                                numTanks_1 = int(DV_p[3]),
+                                                flowRate_2D = DV_p[4],
+                                                deadVolume_2M_2 = DV_p[5],
+                                                deadVolume_2D_2 = DV_p[6],                                      
+                                                flowRate_2D_2 = DV_p[7],
+                                                initMoleFrac = initMoleFrac,
+                                                feedMoleFrac = feedMoleFrac,
+                                                timeInt = timeInt,
+                                                flowRate = flowRateDV,
+                                                expFlag = True)
+    else:
+        # Simulates the tubings and fittings
+        # Compute the dead volume response using the dead volume parameters input
+        timeDV , _ , moleFracSim = simulateDeadVolume(deadVolume_1 = DV_p[0],
+                                                deadVolume_2M = DV_p[1],
+                                                deadVolume_2D = DV_p[2],                                      
+                                                numTanks_1 = int(DV_p[3]),
+                                                flowRate_2D = DV_p[4],
+                                                deadVolume_2M_2 = DV_p[5],
+                                                deadVolume_2D_2 = DV_p[6],                                      
+                                                flowRate_2D_2 = DV_p[7],
+                                                deadVolume_2M_3 = DV_p[8],
+                                                deadVolume_2D_3 = DV_p[9],                                      
+                                                flowRate_2D_3 = DV_p[10],
+                                                initMoleFrac = initMoleFrac,
+                                                feedMoleFrac = feedMoleFrac,
+                                                timeInt = timeInt,
+                                                flowRate = flowRateDV,
+                                                expFlag = True)
     # Simulates the MS response
     # Pass the mole fractions to the MS model (this uses a completely
     # different flow rate) and simulate the model

@@ -7,6 +7,8 @@
 # Year:     2021
 # Python:   Python 3.7
 # Authors:  Ashwin Kumar Rajagopalan (AK)
+#           Hassan Azzan (HA)
+#           Tristan Spreng (TS)
 #
 # Purpose:
 # Find the dead volume and the number of tanks to describe the dead volume 
@@ -53,7 +55,7 @@ def extractDeadVolume(**kwargs):
     import multiprocessing # For parallel processing
     import socket
     from smt.sampling_methods import LHS
-
+    import pdb
     
     # Change path directory
     # Assumes either running from ERASE or from experimental. Either ways
@@ -74,7 +76,7 @@ def extractDeadVolume(**kwargs):
     ###### USER DEFINED PROPERTIES ###### 
     
     # Number of times optimization repeated
-    numOptRepeat = 5
+    numOptRepeat = 8
 
     # Directory of raw data    
     mainDir = 'runData'
@@ -87,6 +89,12 @@ def extractDeadVolume(**kwargs):
                     'ZLC_DeadVolume_Exp20C_Output.mat',
                     'ZLC_DeadVolume_Exp20D_Output.mat',
                     'ZLC_DeadVolume_Exp20E_Output.mat']
+        
+    # DV model type
+    if 'modelType' in kwargs:
+        modelType = kwargs["modelType"]
+    else:
+        modelType = 1
 
     # Fit MS data alone (implemented on 28.05.21)
     # Flag to fit MS data
@@ -108,7 +116,7 @@ def extractDeadVolume(**kwargs):
 
     # Downsample the data at different compositions (this is done on 
     # normalized data)
-    downsampleData = True
+    downsampleData = False
     
     #####################################
     #####################################
@@ -132,22 +140,80 @@ def extractDeadVolume(**kwargs):
         lhsPopulation = LHS(xlimits=optBounds)
         start_population = lhsPopulation(400)
         start_population[:,3] = np.round(start_population[:,3])
+        optType=np.array(['real','real','real','int','real'])
+        # Algorithm parameters for GA
+        algorithm_param = {'max_num_iteration':30,
+                           'population_size':400,
+                           'mutation_probability':0.25,
+                           'crossover_probability': 0.55,
+                           'parents_portion': 0.15,
+                           'elit_ratio': 0.01,
+                           'max_iteration_without_improv':None}
     # When the actual dead volume is used, diffusive volume allowed to change 
     else:                   
-        optBounds = np.array(([np.finfo(float).eps,10], [np.finfo(float).eps,10],
-                              [np.finfo(float).eps,10], [1,30], [np.finfo(float).eps,0.05]))
-        lhsPopulation = LHS(xlimits=optBounds)
-        start_population = lhsPopulation(400)    
-        start_population[:,3] = np.round(start_population[:,3])                 
-    optType=np.array(['real','real','real','int','real'])
-    # Algorithm parameters for GA
-    algorithm_param = {'max_num_iteration':30,
-                       'population_size':400,
-                       'mutation_probability':0.25,
-                       'crossover_probability': 0.55,
-                       'parents_portion': 0.15,
-                       'elit_ratio': 0.01,
-                       'max_iteration_without_improv':None}
+        if modelType == 1:
+     #       optBounds = np.array(([np.finfo(float).eps,20], [np.finfo(float).eps,20],
+     #                             [np.finfo(float).eps,20], [1,50], [np.finfo(float).eps,0.1]))
+            optBounds = np.array(([np.finfo(float).eps,20], [np.finfo(float).eps,20],
+                                  [np.finfo(float).eps,20], [1,50], [np.finfo(float).eps,0.1]))
+            lhsPopulation = LHS(xlimits=optBounds)
+            start_population = lhsPopulation(400)    
+            start_population[:,3] = np.round(start_population[:,3])                 
+            optType=np.array(['real','real','real','int','real'])
+            # Algorithm parameters for GA
+            algorithm_param = {'max_num_iteration':30,
+                               'population_size':400,
+                               'mutation_probability':0.25,
+                               'crossover_probability': 0.55,
+                               'parents_portion': 0.15,
+                               'elit_ratio': 0.01,
+                               'max_iteration_without_improv':None}
+        elif modelType == 2:
+            # pdb.set_trace()
+     #       optBounds = np.array(([np.finfo(float).eps,20], [np.finfo(float).eps,20],
+     #                             [np.finfo(float).eps,20], [1,50], [np.finfo(float).eps,0.1]))
+            optBounds = np.array(([np.finfo(float).eps,50], [np.finfo(float).eps,50],
+                                  [np.finfo(float).eps,50], [1,50], [np.finfo(float).eps,0.2],
+                                  [np.finfo(float).eps,50], [np.finfo(float).eps,50],
+                                                        [np.finfo(float).eps,0.2]))
+            lhsPopulation = LHS(xlimits=optBounds)
+            start_population = lhsPopulation(400)    
+            start_population[:,3] = np.round(start_population[:,3])                 
+            optType=np.array(['real','real','real','int','real','real','real','real'])
+            # Algorithm parameters for GA
+            algorithm_param = {'max_num_iteration':30,
+                               'population_size':800,
+                               'mutation_probability':0.25,
+                               'crossover_probability': 0.55,
+                               'parents_portion': 0.15,
+                               'elit_ratio': 0.01,
+                               'max_iteration_without_improv':None}    
+
+        else: 
+            
+            # pdb.set_trace()
+     #       optBounds = np.array(([np.finfo(float).eps,20], [np.finfo(float).eps,20],
+     #                             [np.finfo(float).eps,20], [1,50], [np.finfo(float).eps,0.1]))
+            optBounds = np.array(([np.finfo(float).eps,50], [np.finfo(float).eps,50],
+                                  [np.finfo(float).eps,50], [1,50], [np.finfo(float).eps,0.2],
+                                  [np.finfo(float).eps,50], [np.finfo(float).eps,50],
+                                                        [np.finfo(float).eps,0.2],
+                                  [np.finfo(float).eps,50], [np.finfo(float).eps,50],
+                                                        [np.finfo(float).eps,0.2]))
+            lhsPopulation = LHS(xlimits=optBounds)
+            start_population = lhsPopulation(400)    
+            start_population[:,3] = np.round(start_population[:,3])                 
+            optType=np.array(['real','real','real','int','real','real','real','real','real','real','real'])
+            # Algorithm parameters for GA
+            algorithm_param = {'max_num_iteration':60,
+                               'population_size':600,
+                               'mutation_probability':0.50,
+                               'crossover_probability': 0.55,
+                               'parents_portion': 0.15,
+                               'elit_ratio': 0.01,
+                               'max_iteration_without_improv':None} 
+
+
 
     # Minimize an objective function to compute the dead volume and the number of 
     # tanks for the dead volume using GA
@@ -171,7 +237,7 @@ def extractDeadVolume(**kwargs):
     # Save the dead volume parameters into a native numpy file
     # The .npz file is saved in a folder called simulationResults (hardcoded)
     filePrefix = "deadVolumeCharacteristics"
-    saveFileName = filePrefix + "_" + currentDT + "_" + gitCommitID;
+    saveFileName = filePrefix + "_" + currentDT + "_" + str(modelType) + "_" + gitCommitID;
     savePath = os.path.join('..','simulationResults',saveFileName)
     
     # Check if simulationResults directory exists or not. If not, create the folder

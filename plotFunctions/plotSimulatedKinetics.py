@@ -59,7 +59,7 @@ markerForPlot = ["o"]*20
 # ZLC parameter model path
 # Temperature (for each experiment)
 # temperatureExp = [344.69, 325.39, 306.15]*4 # AC Experiments
-temperatureExp = [298.15]
+temperatureExp = [278.15]
 
 # Legend flag
 useFlow = False
@@ -160,7 +160,7 @@ for jj in range(len(isothermModels)):
                                     ,label=str(temperatureExp[nn])+' K')
         plt.subplot(4,3,jj+1) .set(xlabel='$P$ [bar]', 
         ylabel='$n^*$ [mol kg$^\mathregular{-1}$]',
-        xlim = [0,1], ylim = [0, 6]) 
+        xlim = [0,1], ylim = [0, 7]) 
         plt.subplot(4,3,jj+1) .locator_params(axis="x", nbins=4)
         plt.subplot(4,3,jj+1) .locator_params(axis="y", nbins=4)
         if jj+1 == 1:
@@ -320,8 +320,8 @@ for jj in range(len(isothermModels)):
             if flagDesorption:
                 initMoleFrac = [moleFracExp[0]]
                 # initMoleFrac = [0.1]
-                feedMoleFrac = [0.1]
-                # feedMoleFrac = [0]
+                # feedMoleFrac = [0.05]
+                feedMoleFrac = [0]
             else:
                 initMoleFrac = [1e-7]
                 feedMoleFrac = [1]
@@ -348,7 +348,7 @@ for jj in range(len(isothermModels)):
                                                         adsorbentDensity = adsorbentDensity,
                                                         modelType = modelType)
             
-            # moleFracSim = resultMat[0,:]
+            moleFracSim = resultMat[0,:]
             flowRateSim =  resultMat[3,:]
             deadVolumePath = os.path.join('..','simulationResults',deadVolumeFileTemp)
             modelOutputTemp = load(deadVolumePath, allow_pickle=True)["modelOutput"]
@@ -376,9 +376,9 @@ for jj in range(len(isothermModels)):
                     else:
                         plt.subplot(4,3,jj+4) .semilogy(timeElapsedExp,moleFracSim,
                      color=colorsForPlot[ii],alpha = 1, linestyle = linestyle) # Simulation response 
-                    plt.subplot(4,3,jj+4) .plot(timeElapsedExp,moleFracDV,
-                    color='#118ab2',alpha=0.2,
-                    linestyle = '-') # Dead volume simulation response    
+                    # plt.subplot(4,3,jj+4) .plot(timeElapsedExp,moleFracDV,
+                    # color='#118ab2',alpha=0.2,
+                    # linestyle = '-') # Dead volume simulation response    
                     plt.subplot(4,3,jj+4) .set(xlabel='$t$ [s]', 
                         ylabel='$y$ [-]', 
                         # xlim = [0,2000], ylim =  [1e-6, 1])  
@@ -387,9 +387,9 @@ for jj in range(len(isothermModels)):
                     plt.subplot(4,3,jj+4) .semilogy(timeElapsedExp,moleFracSim,
                      color=colorsForPlot[ii],alpha = 1, linestyle = linestyle) # Simulation response 
                     # if ii==len(fileName)-1:
-                    plt.subplot(4,3,jj+4) .plot(timeElapsedExp,moleFracDV,
-                        color='#118ab2',alpha=0.2,
-                        linestyle = '-') # Dead volume simulation response    
+                    # plt.subplot(4,3,jj+4) .plot(timeElapsedExp,moleFracDV,
+                    #     color='#118ab2',alpha=0.2,
+                    #     linestyle = '-') # Dead volume simulation response    
                     plt.subplot(4,3,jj+4) .set(xlabel='$t$ [s]', 
                             ylabel='$y$ [-]', 
                             # xlim = [0,2000], ylim =  [1e-6, 1])  
@@ -398,9 +398,9 @@ for jj in range(len(isothermModels)):
                 plt.subplot(4,3,jj+4) .semilogy(timeElapsedExp,moleFracSim,
                      color=colorsForPlot[ii],label=legendStr,alpha = 1, linestyle = linestyle) # Simulation response    
                     # if ii==len(fileName)-1:
-            plt.subplot(4,3,jj+4) .plot(timeElapsedExp,moleFracDV,
-                color='#118ab2',alpha=0.2,
-                linestyle = '-') # Dead volume simulation response    
+            # plt.subplot(4,3,jj+4) .plot(timeElapsedExp,moleFracDV,
+            #     color='#118ab2',alpha=0.2,
+            #     linestyle = '-') # Dead volume simulation response    
             plt.subplot(4,3,jj+4) .set(xlabel='$t$ [s]', 
                     ylabel='$y$ [-]', ylim =  [1e-3, 1]) 
             plt.subplot(4,3,jj+4) .locator_params(axis="x", nbins=4)

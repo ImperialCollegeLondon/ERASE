@@ -28,9 +28,10 @@ Tvals = [288.15, 298.15, 308.15];
 CarrierGas = 'He';
 Ptotal = 1; % total pressure in atm
 
-poreData = load('DummtKillian.mat');
+poreData = load('Copy_of_ZYTMA_ZLC_HA.mat');
 MIP = poreData.poreVolume.MIP;
 macroporeIndex = find(poreData.poreVolume.MIP(1:end,1)>50,1,'first');
+endIndex = 81;
 macroporeVolume = poreData.poreVolume.MIP(end,4)-poreData.poreVolume.MIP(macroporeIndex,4);
 epVals = macroporeVolume./poreData.poreVolume.properties.bulkVolume;
 
@@ -78,13 +79,13 @@ legfsz = 15;
 capsz = 3;
 LineStyles = [":","-.","-"];
 
-distType = 'wbl';
+distType = 'Kernel';
 
 tiledlayout(1,1, 'Padding', 'compact', 'TileSpacing', 'compact');
 nexttile
 hold on
-x = poreData.poreVolume.MIP(macroporeIndex:77,1);
-p = cumtrapz(x,poreData.poreVolume.MIP(macroporeIndex:77,3));
+x = poreData.poreVolume.MIP(macroporeIndex:endIndex,1);
+p = cumtrapz(x,poreData.poreVolume.MIP(macroporeIndex:endIndex,3));
 p = p - min(p);
 pVals = linspace(min(p),max(p),12000)./max(p);
 % xVals = interp1(p./max(p),x,pVals)-poreData.poreVolume.MIP(macroporeIndex,1);
