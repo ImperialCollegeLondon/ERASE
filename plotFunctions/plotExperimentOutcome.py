@@ -94,8 +94,17 @@ fileParameter = 'zlcParameters_20230324_0100_59cc206.npz' # ZZYH ALL FLOW KIN ON
 
 # fileParameter = 'deadVolumeCharacteristics_20231122_1750_b571c46.npz'
 # fileParameter = 'deadVolumeCharacteristics_20231122_1804_b571c46.npz'
-fileParameter = 'deadVolumeCharacteristics_20231122_1743_b571c46.npz'
-fileParameter = 'deadVolumeCharacteristics_20231122_1757_b571c46.npz'
+# fileParameter = 'deadVolumeCharacteristics_20231122_1743_b571c46.npz'
+# fileParameter = 'deadVolumeCharacteristics_20231122_1757_b571c46.npz'
+
+# fileParameter = 'deadVolumeCharacteristics_20231122_1743_b571c46.npz'
+# fileParameter = 'deadVolumeCharacteristics_20231122_1757_b571c46.npz'
+
+
+# deadVolumeFile = [[['deadVolumeCharacteristics_20231122_1743_b571c46.npz', 
+#                     'deadVolumeCharacteristics_20231122_1757_b571c46.npz']], 
+#                   [['deadVolumeCharacteristics_20231122_1750_b571c46.npz', 
+                    # 'deadVolumeCharacteristics_20231122_1804_b571c46.npz']]] 
 
 
 # fileParameter = 'deadVolumeCharacteristicY:/ha3215/home/ERASE/simulationResults/deadVolumeCharacteristics_20230821_1639_b571c46.npzs_20230321_1137_59cc206.npz'
@@ -147,51 +156,26 @@ fileParameter = 'deadVolumeCharacteristics_20231122_1757_b571c46.npz'
 # fileParameter = 'zlcParameters_ZYNa_20231004_2035_b571c46.npz' # ZYNa ALL FLOW SBMACRO 288
 
 ## DIFFUSION FITS
-# fileParameter = 'zlcParameters_ZYH_20231023_2232_b571c46.npz' # ZYH ALL FLOW Diff
-# fileParameter = 'zlcParameters_ZYH_20231027_0641_b571c46.npz' # ZYH ALL FLOW Diff
-# fileParameter = 'zlcParameters_ZYNa_20231026_2041_b571c46.npz' # ZYNa ALL FLOW Diff
-## DIFFUSION FITS const dEFF const kEFF
-# fileParameter = 'zlcParameters_ZYH_20231101_0304_b571c46.npz' # ZYH ALL FLOW Diff
-# fileParameter = 'zlcParameters_ZYNa_20231103_0409_b571c46.npz' # ZYNa ALL FLOW Diff
-## DIFFUSION FITS const dEFF const kEFF LOW MASS mg
-# fileParameter = 'zlcParameters_ZYHCrush_20231130_2207_b571c46.npz' # ZYH ALL FLOW Diff
-# fileParameter = 'zlcParameters_ZYNaCrush_20231130_1653_b571c46.npz' # ZYNa ALL FLOW Diff
-
-## DIFFUSION FITS const dEFF const kEFF LOW MASS mg high comp
-# fileParameter = 'zlcParameters_ZYHCrush_20231206_2219_b571c46.npz' # ZYH ALL FLOW Diff
-# fileParameter = 'zlcParameters_ZYNaCrush_20231212_1216_b571c46.npz' # ZYNa ALL FLOW Diff
-# fileParameter = 'zlcParameters_ZYTMACrush_20231206_1719_b571c46.npz' # ZYTMA ALL FLOW Diff
-
-## DIFFUSION FITS const dEFF const kEFF LOW MASS mg LOW comp
-# fileParameter = 'zlcParameters_ZYHCrush_20231219_1153_b571c46.npz' # ZYH ALL FLOW Diff
-# fileParameter = 'zlcParameters_ZYNaCrush_20231218_1024_b571c46.npz' # ZYNa ALL FLOW Diff
-# fileParameter = 'zlcParameters_ZYTMACrush_20231218_1349_b571c46.npz' # ZYTMA ALL FLOW Diff
-
-## DIFFUSION FITS const dEFF const kEFF LOW MASS mg LOW comp 100 GP ISOTHERMAL
-# fileParameter = 'zlcParameters_ZYHCrush_20231219_1153_b571c46.npz' # ZYH ALL FLOW Diff
-# fileParameter = 'zlcParameters_ZYNaCrush_20231221_1725_b571c46.npz' # ZYNa ALL FLOW Diff
-# fileParameter = 'zlcParameters_ZYTMACrush_20231221_2345_b571c46.npz' # ZYTMA ALL FLOW Diff
-
 
 ## DIFFUSION FITS const dEFF const kEFF LOW MASS mg LOW comp 100 GP ISOTHERMAL TAU FIT
 # fileParameter = 'zlcParameters_ZYHCrush_20240105_1741_b571c46.npz' # ZYH ALL FLOW Diff
 # fileParameter = 'zlcParameters_ZYNaCrush_20240104_1002_b571c46.npz' # ZYNa ALL FLOW Diff
 # fileParameter = 'zlcParameters_ZYTMACrush_20240104_1116_b571c46.npz' # ZYTMA ALL FLOW Diff
 
-## DIFFUSION FITS const dEFF const kEFF LOW MASS mg LOW comp 100 GP ISOTHERMAL TAU FIT Vmix = 0.57
-# fileParameter = 'zlcParameters_ZYHCrush_20240105_1741_b571c46.npz' # ZYH ALL FLOW Diff
-# fileParameter = 'zlcParameters_ZYNaCrush_20240104_1002_b571c46.npz' # ZYNa ALL FLOW Diff
-# fileParameter = 'zlcParameters_ZYTMACrush_20240104_1116_b571c46.npz' # ZYTMA ALL FLOW Diff
+## DIFFUSION FITS const dEFF const kEFF LOW MASS mg LOW comp 100 GP ISOTHERMAL TAU FIT PARALLEL PORE
+# fileParameter = 'zlcParameters_ZYHCrush_20240405_0619_b571c46.npz' # ZYH ALL FLOW Diff
+# fileParameter = 'zlcParameters_ZYNaCrush_20240419_0302_b571c46.npz' # ZYNa ALL FLOW Diff
+# fileParameter = 'zlcParameters_ZYTMACrush_20240405_0230_b571c46.npz' # ZYTMA ALL FLOW Diff
 
-## DIFFUSION FITS const dEFF const kEFF LOW MASS mg LOW comp 100 GP NONISOTHERMAL
-# fileParameter = 'zlcParameters_ZYHCrush_20231222_0252_b571c46.npz' # ZYH ALL FLOW Diff
-# fileParameter = 'zlcParameters_ZYNaCrush_20231222_1816_b571c46.npz' # ZYNa ALL FLOW Diff
-# fileParameter = 'zlcParameters_ZYTMACrush_20231223_0104_b571c46.npz' # ZYTMA ALL FLOW Diff
-# 
-## DIFFUSION FITS const dEFF const kEFF LOW MASS mg HIGH comp 100 GP NONISOTHERMAL
-# fileParameter = 'zlcParameters_ZYHCrush_20231222_0614_b571c46.npz' # ZYH ALL FLOW Diff
-# fileParameter = 'zlcParameters_ZYNaCrush_20231222_2059_b571c46.npz' # ZYNa ALL FLOW Diff
-# fileParameter = 'zlcParameters_ZYTMACrush_20231223_0347_b571c46.npz' # ZYTMA ALL FLOW Diff
+## DIFFUSION FITS const dEFF const kEFF LOW MASS mg LOW comp 100 GP ISOTHERMAL TAU FIT PARALLEL PORE
+fileParameter = 'zlcParameters_ZYHCrush_20240421_0353_b571c46.npz' # ZYH ALL FLOW Diff
+fileParameter = 'zlcParameters_ZYNaCrush_20240418_2137_b571c46.npz' # ZYNa ALL FLOW Diff
+fileParameter = 'zlcParameters_ZYTMACrush_20240420_0519_b571c46.npz' # ZYTMA ALL FLOW Diff
+
+## DIFFUSION FITS const dEFF const kEFF LOW MASS mg LOW comp 100 GP ISOTHERMAL TAU FIT PARALLEL PORE Vcell DV
+fileParameter = 'zlcParameters_ZYHCrush_20240518_2113_b571c46.npz' # ZYH ALL FLOW Diff
+fileParameter = 'zlcParameters_ZYNaCrush_20240521_2240_b571c46.npz' # ZYNa ALL FLOW Diff
+# fileParameter = 'zlcParameters_ZYTMACrush_20240520_1927_b571c46.npz' # ZYTMA ALL FLOW Diff
 
 # Flag to plot dead volume results
 # Dead volume files have a certain name, use that to find what to plot
@@ -223,7 +207,7 @@ if flagDeadVolume:
     parameterPath = os.path.join('..','simulationResults',fileParameter)
     fileNameList = load(parameterPath, allow_pickle=True)["fileName"]
     rawFileName = fileNameList
-    rawFileName = ['ZLC_Empty_Exp62A_Output.mat']
+    # rawFileName = ['ZLC_Empty_Exp62A_Output.mat']
     # Generate .npz file for python processing of the .mat file 
     filesToProcess(True,os.path.join('..','experimental','runData'),rawFileName,'DV')
     # Get the processed file names
@@ -554,8 +538,8 @@ else:
     adsorbentDensity = load(parameterPath)["adsorbentDensity"]
     particleEpsilon = load(parameterPath)["particleEpsilon"]
     massSorbent = load(parameterPath)["massSorbent"]
-    # massSorbent = 0.025
-    # massSorbent = 0.0135
+    # massSorbent = 0.022
+    # massSorbent = 0.0123
     deadVolumeFile = load(parameterPath)["deadVolumeFile"]
  
     # Volume of sorbent material [m3]
@@ -573,6 +557,7 @@ else:
     # Load the model
     modelOutputTemp = load(parameterPath, allow_pickle=True)["modelOutput"]
     modelNonDim = modelOutputTemp[()]["variable"] 
+    # modelNonDim = [0.01025487 ,0.00195097]
     # This was added on 12.06 (not back compatible for error computation)
     downsampleData = load(parameterPath)["downsampleFlag"]
 
@@ -580,8 +565,11 @@ else:
     if modelType == 'Diffusion1Ttau' or modelType == 'Diffusion1TNItau':
         # mean pore radius from MIP
         rpore = load(parameterPath)["rpore"]
+        Dpvals = load(parameterPath)["Dpvals"]
     else:
         rpore = 107e-9
+        Dpvals = [2.35952892668521e-05,	2.42488804831046e-05	,2.48936504671912e-05]
+
     print("Objective Function",round(modelOutputTemp[()]["function"],0))
 
     numPointsExp = np.zeros(len(fileName))
@@ -675,6 +663,7 @@ else:
     timeElapsedExpFULL = np.array([])
     moleFracExpFULL = np.array([])
     moleFracSimFULL = np.array([])
+    moleFracZLCFULL = np.array([])
     moleFracDVFULL = np.array([])
     qAverageFULL = np.array([])
     flowRateSimFULL = np.array([])
@@ -779,20 +768,19 @@ else:
                                                         expFlag = True,
                                                         isothermModel = isothermModel,
                                                         rateConstant_1 = rateConstant_1,
-                                                        # rateConstant_1 = 40,
+                                                        # rateConstant_1 = 1000,
                                                         rateConstant_2 = rateConstant_2,
-                                                        # rateConstant_3 = rateConstant_3,
-                                                        rateConstant_3 = 2,
+                                                        rateConstant_3 = rateConstant_3,
+                                                        # rateConstant_1 = 1000,
+                                                        # rateConstant_2 = rateConstant_2,
+                                                        # rateConstant_3 = 1.7,
                                                         deadVolumeFile = deadVolumeFileTemp,
                                                         volSorbent = volSorbent,
                                                         volGas = volGas,
                                                         rpore = rpore,
+                                                        Dpvals = Dpvals,
                                                         temperature = temperatureExp[ii],
                                                         adsorbentDensity = adsorbentDensity,
-                                                        # modelType = 'Diffusion1TNItau')
-                                                        # modelType = 'Diffusion1Ttau')
-                                                        # modelType = 'KineticLDF')
-                                                        # modelType = 'KineticSBMacroTau')
                                                         modelType = modelType)
 
             # Print simulation volume    
@@ -808,6 +796,7 @@ else:
             
             timeElapsedExpFULL  = np.hstack((timeElapsedExpFULL, timeInt))
             moleFracSimFULL  = np.hstack((moleFracSimFULL, moleFracSim))
+            moleFracZLCFULL  = np.hstack((moleFracZLCFULL, np.transpose(resultMat[0,:])))
             moleFracExpFULL  = np.hstack((moleFracExpFULL, moleFracExp))
             qAverageFULL = np.hstack((qAverageFULL, np.transpose(resultMat[1,:])))
             flowRateSimFULL = np.hstack((flowRateSimFULL, np.transpose(resultMat[3,:])))
@@ -902,7 +891,7 @@ else:
     if simulateModel:
         computedError = computeMLEError(moleFracExpALL,moleFracSimALL, 
                                         downsampleData = downsampleData,)
-        print("Sanity check objective function: ",round(computedError,0))
+        print("Sanity check objective function: ",round(computedError,4))
     
     # fig = plt.figure
     # ax1 = plt.subplot(1,2,1)        
