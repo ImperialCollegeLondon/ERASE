@@ -199,9 +199,11 @@ def computeObjectiveFunction(mainDir, zlcParameterPath, pOpt, pRef):
         # mean pore radius from MIP
         rpore = load(zlcParameterPath)["rpore"]
         Dpvals = load(zlcParameterPath)["Dpvals"]
+        numPellets = load(zlcParameterPath)["numPellets"]
     else:
         rpore = 107e-9
         Dpvals = [3.05671321526166e-05,	3.15050794527196e-05,	3.24331710687508e-05]
+        numPellets = 1
 
     # Volume of sorbent material [m3]
     volSorbent = (massSorbent/1000)/adsorbentDensity
@@ -328,6 +330,7 @@ def computeObjectiveFunction(mainDir, zlcParameterPath, pOpt, pRef):
                                                     rateConstant_2 = 0,
                                                     rateConstant_3 = rateConstant_3,
                                                     rpore = rpore,
+                                                    numPellets = numPellets,
                                                     Dpvals = Dpvals,
                                                     deadVolumeFile = str(deadVolumeFileTemp),
                                                     volSorbent = volSorbent,
@@ -362,6 +365,7 @@ def computeObjectiveFunction(mainDir, zlcParameterPath, pOpt, pRef):
                                                     rateConstant_2 = 0,
                                                     rateConstant_3 = rateConstant_3,
                                                     rpore = rpore,
+                                                    numPellets = numPellets,
                                                     Dpvals = Dpvals,
                                                     deadVolumeFile = str(deadVolumeFileTemp),
                                                     volSorbent = volSorbent,

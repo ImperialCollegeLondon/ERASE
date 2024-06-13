@@ -164,6 +164,12 @@ def extractZLCParameters(**kwargs):
         rpore = kwargs["rpore"]
     else:
         rpore = 1e-9
+
+    # Flag to check number of pellets
+    if 'numPellets' in kwargs:
+        numPellets = kwargs["numPellets"]
+    else:
+        numPellets = 1   
     
     # Flag to check Dpvals
     if 'Dpvals' in kwargs:
@@ -502,7 +508,7 @@ def extractZLCParameters(**kwargs):
         start_population = lhsPopulation(popSize)
     # Initialize the parameters used for ZLC fitting process
     fittingParameters(True,temperature,deadVolumeFile,adsorbentDensity,particleEpsilon,
-                      massSorbent,isoRef,downsampleData,paramIso,downsampleExp,modelType,rpore,Dpvals)
+                      massSorbent,isoRef,downsampleData,paramIso,downsampleExp,modelType,rpore,Dpvals,numPellets)
     
     # Minimize an objective function to compute the equilibrium and kinetic 
     # parameters from ZLC experiments
@@ -555,7 +561,8 @@ def extractZLCParameters(**kwargs):
            hostName = socket.gethostname(),
            modelType = modelType,
            rpore = rpore,
-           Dpvals = Dpvals) # Hostname of the computer
+           Dpvals = Dpvals,
+           numPellets = numPellets) # Hostname of the computer
     
     # Remove all the .npy files genereated from the .mat
     # Load the names of the file to be used for estimating ZLC parameters
@@ -581,7 +588,7 @@ def ZLCObjectiveFunction(x):
     from computeMLEError import computeMLEError
     import pdb 
     # Get the zlc parameters needed for the solver
-    temperature, deadVolumeFile, adsorbentDensity, particleEpsilon, massSorbent, isoRef, downsampleData, paramIso, downsampleExp, modelType,rpore,Dpvals = fittingParameters(False,[],[],[],[],[],[],[],[],[],[],[],[])
+    temperature, deadVolumeFile, adsorbentDensity, particleEpsilon, massSorbent, isoRef, downsampleData, paramIso, downsampleExp, modelType,rpore,Dpvals,numPellets = fittingParameters(False,[],[],[],[],[],[],[],[],[],[],[],[],[])
 
     # Volume of sorbent material [m3]
     volSorbent = (massSorbent/1000)/adsorbentDensity
@@ -698,6 +705,7 @@ def ZLCObjectiveFunction(x):
                                                     rateConstant_3 = x[-1]*isoRef[-1], # Last element is activation energy
                                                     rpore = rpore,
                                                     Dpvals = Dpvals,
+                                                    numPellets = numPellets,
                                                     temperature = temperature[ii], # Temperature [K]
                                                     timeInt = timeInt,
                                                     initMoleFrac = [moleFracExp[0]], # Initial mole fraction assumed to be the first experimental point
@@ -783,7 +791,7 @@ def ZLCObjectiveFunction(x):
 # This is done because the ga cannot handle additional user inputs
 def fittingParameters(initFlag,temperature,deadVolumeFile,adsorbentDensity,
                       particleEpsilon,massSorbent,isoRef,downsampleData,
-                      paramIso,downsampleExp,modelType, rpore, Dpvals):
+                      paramIso,downsampleExp,modelType, rpore, Dpvals, numPellets):
     from numpy import savez
     from numpy import load
     # Process the data for python (if needed)
@@ -801,6 +809,7 @@ def fittingParameters(initFlag,temperature,deadVolumeFile,adsorbentDensity,
                downsampleExp = downsampleExp,
                modelType = modelType,
                rpore = rpore,
+               numPellets = numPellets,
                Dpvals = Dpvals)
     # Returns the path of the .npz file to be used 
     else:
@@ -819,4 +828,5 @@ def fittingParameters(initFlag,temperature,deadVolumeFile,adsorbentDensity,
         modelType = load (dummyFileName)["modelType"]
         rpore = load (dummyFileName)["rpore"]
         Dpvals = load (dummyFileName)["Dpvals"]
-        return temperature, deadVolumeFile, adsorbentDensity, particleEpsilon, massSorbent, isoRef, downsampleData, paramIso, downsampleExp, modelType, rpore, Dpvals
+        numPellets = load (dummyFileName)["numPellets"]
+        return temperature, deadVolumeFile, adsorbentDensity, particleEpsilon, massSorbent, isoRef, downsampleData, paramIso, downsampleExp, modelType, rpore, Dpvals, numPellets

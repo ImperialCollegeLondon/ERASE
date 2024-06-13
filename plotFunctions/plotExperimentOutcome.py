@@ -55,127 +55,11 @@ saveFlag = False
 saveFileExtension = ".png"
 
 # File with parameter estimates
-fileParameter = 'zlcParameters_20220510_0309_e81a19e.npz' # AC SIM
-# fileParameter = 'zlcParameters_20210823_1731_c8173b1.npz' # BN SIM
-# fileParameter = 'zlcParameters_20230131_0554_7e5a5aa.npz' # ZIF8 MT EXP
-# fileParameter = 'zlcParameters_20210824_1522_c8173b1.npz'
-# fileParameter = 'zlcParameters_20230216_2106_7e5a5aa.npz' # ZIF8 MCB30 EXP
-# fileParameter = 'zlcParameters_20230216_0638_7e5a5aa.npz' # ZIF8 MCB20 EXP
-# fileParameter = 'zlcParameters_20230221_0245_7e5a5aa.npz' # ZIF8 MT EXP LOW FLOW
-# fileParameter = 'zlcParameters_20230222_0332_7e5a5aa.npz' # ZIF8 MT EXP LOW FLOW
-# fileParameter = 'zlcParameters_20230228_0507_7e5a5aa.npz' # ZIF8 MCB20 EXP LOW FLOW
-# fileParameter = 'zlcParameters_20230225_1202_7e5a5aa.npz' # ZIF8 MCB30 EXP LOW FLOW
-# fileParameter = 'zlcParameters_20230312_2111_7e5a5aa.npz' # ZYH EXP ALL FLOW SSL HIGH COMP
-fileParameter = 'zlcParameters_20230314_0031_7e5a5aa.npz' # ZYH EXP ALL FLOW DSL HIGH COMP
-# fileParameter = 'zlcParameters_20230315_0130_59cc206.npz' # ZYH EXP ALL FLOW SSS ALL COMP
-# fileParameter = 'zlcParameters_20230315_0921_59cc206.npz' # ZYH EXP ALL FLOW SSS ALL COMP
-fileParameter = 'zlcParameters_20230318_1112_59cc206.npz' # ZZYH ALL FLOW KIN ONLY
-fileParameter = 'zlcParameters_20230324_0100_59cc206.npz' # ZZYH ALL FLOW KIN ONLY HIGH COMP
-# fileParameter = 'zlcParameters_20230330_1528_59cc206.npz' # ZZYNa ALL FLOW KIN ONLY HIGH COMP
-# deadVolumeFile = [[['deadVolumeCharacteristics_20230321_1048_59cc206.npz', # 50A
-#                     'deadVolumeCharacteristics_20230321_1238_59cc206.npz']], # 51A
-#                   [['deadVolumeCharacteristics_20230321_1137_59cc206.npz', # 50B
-#                     'deadVolumeCharacteristics_20230321_1252_59cc206.npz']]] # 51B
-# fileParameter = 'deadVolumeCharacteristics_20220726_0235_e81a19e.npz'
-# fileParameter = 'deadVolumeCharacteristics_20220714_2133_6072a85.npz'
-# fileParameter = 'deadVolumeCharacteristics_20220712_1444_e81a19e.npz'
-# fileParameter = 'deadVolumeCharacteristics_20230220_1813_7e5a5aa.npz'
-# fileParameter = 'deadVolumeCharacteristics_20230220_1752_7e5a5aa.npz'
-# fileParameter = 'deadVolumeCharacteristics_20230220_1954_7e5a5aa.npz'
-# fileParameter = 'deadVolumeCharacteristics_20230309_1626_7e5a5aa.npz' 
-# fileParameter = 'deadVolumeCharacteristics_20230924_1133_b571c46.npz'
-# fileParameter = 'deadVolumeCharacteristics_20210810_1653_eddec53.npz'
-# fileParameter = 'deadVolumeCharacteristics_20230925_1741_b571c46.npz'
-# fileParameter = 'deadVolumeCharacteristics_20230925_1810_b571c46.npz'
-
-# fileParameter = 'deadVolumeCharacteristics_20231018_1204_b571c46.npz'
-# fileParameter = 'deadVolumeCharacteristics_20231018_1231_b571c46.npz'
-# fileParameter = 'deadVolumeCharacteristics_20210810_1323_eddec53.npz' # MS
-
-# fileParameter = 'deadVolumeCharacteristics_20231122_1750_b571c46.npz'
-# fileParameter = 'deadVolumeCharacteristics_20231122_1804_b571c46.npz'
-# fileParameter = 'deadVolumeCharacteristics_20231122_1743_b571c46.npz'
-# fileParameter = 'deadVolumeCharacteristics_20231122_1757_b571c46.npz'
-
-# fileParameter = 'deadVolumeCharacteristics_20231122_1743_b571c46.npz'
-# fileParameter = 'deadVolumeCharacteristics_20231122_1757_b571c46.npz'
-
-
-# deadVolumeFile = [[['deadVolumeCharacteristics_20231122_1743_b571c46.npz', 
-#                     'deadVolumeCharacteristics_20231122_1757_b571c46.npz']], 
-#                   [['deadVolumeCharacteristics_20231122_1750_b571c46.npz', 
-                    # 'deadVolumeCharacteristics_20231122_1804_b571c46.npz']]] 
-
-
-# fileParameter = 'deadVolumeCharacteristicY:/ha3215/home/ERASE/simulationResults/deadVolumeCharacteristics_20230821_1639_b571c46.npzs_20230321_1137_59cc206.npz'
-    # deadVolumeFile = [[['deadVolumeCharacteristics_20230821_1803_b571c46.npz', #lowflow
-    #                     'deadVolumeCharacteristics_20230821_1849_b571c46.npz']],
-    #                   [['deadVolumeCharacteristics_20230821_1813_b571c46.npz', #lowflow
-    #                     'deadVolumeCharacteristics_20230821_1909_b571c46.npz']]] #highflow CMS Ar
-    
-    
-    # [[['deadVolumeCharacteristics_20231122_1743_b571c46.npz', 
-    #                 'deadVolumeCharacteristics_20231122_1757_b571c46.npz']], 
-    #               [['deadVolumeCharacteristics_20231122_1750_b571c46.npz', 
-    #                 'deadVolumeCharacteristics_20231122_1804_b571c46.npz']]] 
-    
-    
-# fileParameter = 'zlcParameters_ZYH_20230908_1249_b571c46.npz' # ZYH ALL FLOW SBMACRO
-# fileParameter = 'zlcParameters_ZYNa_20230909_0021_b571c46.npz' # ZYNa ALL FLOW SBMACRO
-# fileParameter = 'zlcParameters_ZYTMA_20230910_0442_b571c46.npz' # ZYTMA ALL FLOW SBMACRO
-# fileParameter = 'zlcParameters_CMS3KAr_20230911_0436_b571c46.npz' # CMS Ar ALL FLOW SBMACRO
-# fileParameter = 'zlcParameters_CMS3K_20230913_0550_b571c46.npz' # CMS He ALL FLOW SBMACRO
-# fileParameter = 'zlcParameters_Zeolite13X_20230913_0352_b571c46.npz' # 13X ALL FLOW SBMACRO
-# fileParameter = 'zlcParameters_CMS3KAr_20230917_0304_b571c46.npz' # CMS Ar ALL FLOW SBMACRO
-# fileParameter = 'zlcParameters_CMS3K_20230916_0105_b571c46.npz' # CMS He ALL FLOW SBMACRO
-# fileParameter = 'zlcParameters_Zeolite13X_20230924_1314_b571c46.npz' # 13X ALL FLOW SBMACRO
-# fileParameter = 'zlcParameters_ActivatedCarbon_20230918_1543_b571c46.npz' # AC ALL FLOW SBMACRO
-
-
-
-
-# fileParameter = 'zlcParameters_ZYH_20230914_0359_b571c46.npz' # ZYH ALL FLOW SBMACRO
-# fileParameter = 'zlcParameters_ZYNa_20230927_1145_b571c46.npz' # ZYNa ALL FLOW SBMACRO
-# fileParameter = 'zlcParameters_ZYTMA_20230915_1651_b571c46.npz' # ZYTMA ALL FLOW SBMACRO
-# fileParameter = 'zlcParameters_Zeolite13X_20230924_1314_b571c46.npz' # 13X ALL FLOW SBMACRO
-# fileParameter = 'zlcParameters_CMS3K_20230919_1800_b571c46.npz' # CMS He ALL FLOW SBMACRO high comp
-# fileParameter = 'zlcParameters_CMS3KAr_20230920_0458_b571c46.npz' # CMS Ar ALL FLOW SBMACRO high comp
-# fileParameter = 'zlcParameters_ActivatedCarbon_20230921_0603_b571c46.npz' # AC ALL FLOW SBMACRO high comp
-
-
-## NEW DV FITS
-# fileParameter = 'zlcParameters_ZYH_20230927_0043_b571c46.npz' # ZYH ALL FLOW SBMACRO
-# fileParameter = 'zlcParameters_ZYNa_20230927_1145_b571c46.npz' # ZYNa ALL FLOW SBMACRO
-# fileParameter = 'zlcParameters_ZYTMA_20230929_0749_b571c46.npz' # ZYTMA ALL FLOW SBMACRO
-# fileParameter = 'zlcParameters_Zeolite13X_20230924_1314_b571c46.npz' # 13X ALL FLOW SBMACRO
-# fileParameter = 'zlcParameters_CMS3K_20230919_1800_b571c46.npz' # CMS He ALL FLOW SBMACRO high comp
-# fileParameter = 'zlcParameters_CMS3KAr_20230920_0458_b571c46.npz' # CMS Ar ALL FLOW SBMACRO high comp
-# fileParameter = 'zlcParameters_ActivatedCarbon_20230930_0917_b571c46.npz' # AC ALL FLOW SBMACRO high comp
-
-## single temperature
-# fileParameter = 'zlcParameters_ZYNa_20231004_2035_b571c46.npz' # ZYNa ALL FLOW SBMACRO 288
-
-## DIFFUSION FITS
-
-## DIFFUSION FITS const dEFF const kEFF LOW MASS mg LOW comp 100 GP ISOTHERMAL TAU FIT
-# fileParameter = 'zlcParameters_ZYHCrush_20240105_1741_b571c46.npz' # ZYH ALL FLOW Diff
-# fileParameter = 'zlcParameters_ZYNaCrush_20240104_1002_b571c46.npz' # ZYNa ALL FLOW Diff
-# fileParameter = 'zlcParameters_ZYTMACrush_20240104_1116_b571c46.npz' # ZYTMA ALL FLOW Diff
-
-## DIFFUSION FITS const dEFF const kEFF LOW MASS mg LOW comp 100 GP ISOTHERMAL TAU FIT PARALLEL PORE
-# fileParameter = 'zlcParameters_ZYHCrush_20240405_0619_b571c46.npz' # ZYH ALL FLOW Diff
-# fileParameter = 'zlcParameters_ZYNaCrush_20240419_0302_b571c46.npz' # ZYNa ALL FLOW Diff
-# fileParameter = 'zlcParameters_ZYTMACrush_20240405_0230_b571c46.npz' # ZYTMA ALL FLOW Diff
-
-## DIFFUSION FITS const dEFF const kEFF LOW MASS mg LOW comp 100 GP ISOTHERMAL TAU FIT PARALLEL PORE
-fileParameter = 'zlcParameters_ZYHCrush_20240421_0353_b571c46.npz' # ZYH ALL FLOW Diff
-fileParameter = 'zlcParameters_ZYNaCrush_20240418_2137_b571c46.npz' # ZYNa ALL FLOW Diff
-fileParameter = 'zlcParameters_ZYTMACrush_20240420_0519_b571c46.npz' # ZYTMA ALL FLOW Diff
 
 ## DIFFUSION FITS const dEFF const kEFF LOW MASS mg LOW comp 100 GP ISOTHERMAL TAU FIT PARALLEL PORE Vcell DV
 fileParameter = 'zlcParameters_ZYHCrush_20240518_2113_b571c46.npz' # ZYH ALL FLOW Diff
 fileParameter = 'zlcParameters_ZYNaCrush_20240521_2240_b571c46.npz' # ZYNa ALL FLOW Diff
-# fileParameter = 'zlcParameters_ZYTMACrush_20240520_1927_b571c46.npz' # ZYTMA ALL FLOW Diff
+fileParameter = 'zlcParameters_ZYTMACrush_20240520_1927_b571c46.npz' # ZYTMA ALL FLOW Diff
 
 # Flag to plot dead volume results
 # Dead volume files have a certain name, use that to find what to plot
@@ -207,7 +91,7 @@ if flagDeadVolume:
     parameterPath = os.path.join('..','simulationResults',fileParameter)
     fileNameList = load(parameterPath, allow_pickle=True)["fileName"]
     rawFileName = fileNameList
-    # rawFileName = ['ZLC_Empty_Exp62A_Output.mat']
+
     # Generate .npz file for python processing of the .mat file 
     filesToProcess(True,os.path.join('..','experimental','runData'),rawFileName,'DV')
     # Get the processed file names
@@ -217,8 +101,7 @@ if flagDeadVolume:
     
     modelOutputTemp = load(parameterPath, allow_pickle=True)["modelOutput"]
     x = modelOutputTemp[()]["variable"]
-    # x =  [1.95749126e+00 ,1.51763159e+00 ,9.16424097e-01, 19, 1.26025728e-02]
-    # x = [2.09750138, 1.17833521, 0.90376474, 8.        , 0.01225589]
+
     # This was added on 12.06 (not back compatible for error computation)
     downsampleData = load(parameterPath)["downsampleFlag"]
     downsampleData = True
@@ -246,7 +129,6 @@ if flagDeadVolume:
     
     # Downsample intervals
     downsampleInt = numPointsExp/np.min(numPointsExp)
-    # downsampleInt = np.array([2])
 
     # Print the objective function and volume from model parameters
     print("Objective Function",round(modelOutputTemp[()]["function"],0))
@@ -398,137 +280,8 @@ else:
     useFlow = False
     
     rawFileName = load(parameterPath)["fileName"]
-    # rawFileName = ['ZLC_ZYNa_Exp05B_Output_2.mat',
-    #         'ZLC_ZYNa_Exp06B_Output_2.mat',]
-    # rawFileName = ['ZLC_ZYNaCrush_Exp03A_Output.mat',
-    #                 'ZLC_ZYNaCrush_Exp04A_Output.mat',]
-    # rawFileName = ['ZLC_ZYNa_Exp05B_Output2.mat',
-    #         'ZLC_ZYNa_Exp03B_Output2.mat',
-    #         'ZLC_ZYNa_Exp09B_Output2.mat',
-    #         'ZLC_ZYNa_Exp06B_Output2.mat',
-    #         'ZLC_ZYNa_Exp04B_Output2.mat',
-    #         'ZLC_ZYNa_Exp10B_Output2.mat',]  
-    # rawFileName =  ['ZLC_ZYHCrush_Exp05B_Output.mat',
-    #                 'ZLC_ZYHCrush_Exp07B_Output.mat',
-    #                 'ZLC_ZYHCrush_Exp09B_Output.mat',
-    #                 'ZLC_ZYHCrush_Exp06B_Output.mat',
-    #                 'ZLC_ZYHCrush_Exp08B_Output.mat',
-    #                 'ZLC_ZYHCrush_Exp10B_Output.mat',] 
-    # rawFileName = ['ZLC_ZYHCrush_Exp06B_Output.mat',
-    #         'ZLC_ZYHCrush_Exp08B_Output.mat',
-    #         'ZLC_ZYHCrush_Exp10B_Output.mat',] 
-    # rawFileName = ['ZLC_ZYHCrush_Exp05B_Output.mat',
-    #         'ZLC_ZYHCrush_Exp06B_Output.mat',] 
-    # rawFileName = ['ZLC_ZYNaCrush_Exp05B_Output.mat',
-    #         'ZLC_ZYNaCrush_Exp09B_Output.mat',
-    #         'ZLC_ZYNaCrush_Exp11B_Output.mat',
-    #         'ZLC_ZYNaCrush_Exp06B_Output.mat',
-    #         'ZLC_ZYNaCrush_Exp10B_Output.mat',
-    #         'ZLC_ZYNaCrush_Exp12B_Output.mat',] 
-    # rawFileName = ['ZLC_ZYTMACrush_Exp09B_Output.mat',
-    #         'ZLC_ZYTMACrush_Exp05B_Output.mat',
-    #         'ZLC_ZYTMACrush_Exp03B_Output.mat',
-    #         'ZLC_ZYTMACrush_Exp10B_Output.mat',
-    #         'ZLC_ZYTMACrush_Exp06B_Output.mat',
-    #         'ZLC_ZYTMACrush_Exp04B_Output.mat',]
-    # rawFileName = ['ZLC_ZYTMACrush_Exp09B_Output.mat',
-    #         'ZLC_ZYTMACrush_Exp10B_Output.mat',]
-    # rawFileName = ['ZLC_ZYNaCrush_Exp05B_Output.mat',
-    #         'ZLC_ZYNaCrush_Exp09B_Output.mat',
-    #         'ZLC_ZYNaCrush_Exp11B_Output.mat',
-    #         'ZLC_ZYNaCrush_Exp06B_Output.mat',
-    #         'ZLC_ZYNaCrush_Exp10B_Output.mat',
-    #         'ZLC_ZYNaCrush_Exp12B_Output.mat',]
     
-    # rawFileName = ['ZLC_ZYTMACrush_Exp10A_Output.mat',
-    #         'ZLC_ZYTMACrush_Exp06A_Output.mat',
-    #         'ZLC_ZYTMACrush_Exp04A_Output.mat',]
-    
-    # rawFileName = ['ZLC_ZYTMACrush_Exp09B_Output.mat',
-    #         'ZLC_ZYTMACrush_Exp05B_Output.mat',
-    #         'ZLC_ZYTMACrush_Exp03B_Output.mat',
-    #         'ZLC_ZYTMACrush_Exp10B_Output.mat',
-    #         'ZLC_ZYTMACrush_Exp06B_Output.mat',
-    #         'ZLC_ZYTMACrush_Exp04B_Output.mat',]
-    
-    # rawFileName = ['ZLC_ZYHCrush_Exp05A_Output.mat',
-    #         'ZLC_ZYHCrush_Exp07A_Output.mat',
-    #         'ZLC_ZYHCrush_Exp09A_Output.mat',
-    #         'ZLC_ZYHCrush_Exp06A_Output.mat',
-    #         'ZLC_ZYHCrush_Exp08A_Output.mat',
-    #         'ZLC_ZYHCrush_Exp10A_Output2.mat',]
-    # rawFileName = ['ZLC_ZYHCrush_Exp05A_Output_new.mat',]
-
-    # rawFileName = ['ZLC_ZYHCrush_Exp05B_Output_new.mat',
-    #         'ZLC_ZYHCrush_Exp07B_Output_new.mat',
-    #         'ZLC_ZYHCrush_Exp09B_Output_new.mat',
-    #         'ZLC_ZYHCrush_Exp06B_Output_new.mat',
-    #         'ZLC_ZYHCrush_Exp08B_Output_new.mat',
-    #         'ZLC_ZYHCrush_Exp10B_Output_new.mat',]
-    
-    # rawFileName = ['ZLC_ZYHCrush_Exp06A_Output_new.mat',
-    #         'ZLC_ZYHCrush_Exp08A_Output_new.mat',
-    #         'ZLC_ZYHCrush_Exp10A_Output_new.mat',] 
-    
-    # rawFileName = ['ZLC_ZYNaCrush_Exp05B_Output.mat',
-    #         'ZLC_ZYNaCrush_Exp09B_Output.mat',
-    #         'ZLC_ZYNaCrush_Exp11B_Output.mat',
-    #         'ZLC_ZYNaCrush_Exp06B_Output.mat',
-    #         'ZLC_ZYNaCrush_Exp10B_Output.mat',
-    #         'ZLC_ZYNaCrush_Exp12B_Output.mat',]
-    # rawFileName = ['ZLC_ZYNaCrush_Exp05A_Output.mat',
-    #         'ZLC_ZYNaCrush_Exp09A_Output.mat',
-    #         'ZLC_ZYNaCrush_Exp11A_Output.mat',
-    #         'ZLC_ZYNaCrush_Exp06A_Output.mat',
-    #         'ZLC_ZYNaCrush_Exp10A_Output.mat',
-    #         'ZLC_ZYNaCrush_Exp12A_Output.mat',
-    #         'ZLC_ZYNaCrush_Exp05B_Output.mat',
-    #         'ZLC_ZYNaCrush_Exp09B_Output.mat',
-    #         'ZLC_ZYNaCrush_Exp11B_Output.mat',
-    #         'ZLC_ZYNaCrush_Exp06B_Output.mat',
-    #         'ZLC_ZYNaCrush_Exp10B_Output.mat',
-    #         'ZLC_ZYNaCrush_Exp12B_Output.mat',]
-    # rawFileName = ['ZLC_ZYNaCrush_Exp06B_Output.mat',
-    #         'ZLC_ZYNaCrush_Exp10B_Output.mat',
-    #         'ZLC_ZYNaCrush_Exp12B_Output.mat',] 
-    # rawFileName = ['ZLC_ZYNaCrush_Exp05B_Output.mat',
-    #         'ZLC_ZYNaCrush_Exp06B_Output.mat',] 
-    # rawFileName = ['ZLC_ZYNa_Exp05A_Output.mat',
-    #         'ZLC_ZYNa_Exp03A_Output.mat',
-    #         'ZLC_ZYNa_Exp09A_Output.mat',
-    #         'ZLC_ZYNa_Exp06A_Output.mat',
-    #         'ZLC_ZYNa_Exp04A_Output.mat',
-    #         'ZLC_ZYNa_Exp10A_Output.mat',]  
-    # rawFileName = ['ZLC_ZYNa_Exp05B_Output.mat',
-    #         'ZLC_ZYNa_Exp06B_Output.mat',]
-    # rawFileName = ['ZLC_ZYNaCrush_Exp09B_Output.mat',
-    #                 'ZLC_ZYNaCrush_Exp10B_Output.mat',]
-    # rawFileName = ['ZLC_ZYNaCrush_Exp09A_Output.mat',
-    #                 'ZLC_ZYNaCrush_Exp10A_Output.mat',]
-    # rawFileName = ['ZLC_ZYHCrush_Exp05B_Output.mat',
-    #                 'ZLC_ZYHCrush_Exp06B_Output.mat',]
-    # rawFileName = ['ZLC_ZYHCrush_Exp02B_Output.mat',]
-    # rawFileName = ['ZLC_ZYH_Exp09B_Output.mat',
-    #                 'ZLC_ZYH_Exp10B_Output.mat',]
-    # rawFileName = ['ZLC_ZYH_Exp09B_Output2.mat',
-    #         'ZLC_ZYH_Exp11B_Output2.mat',
-    #         'ZLC_ZYH_Exp13B_Output2.mat',
-    #         'ZLC_ZYH_Exp10B_Output2.mat',
-    #         'ZLC_ZYH_Exp12B_Output2.mat',
-    #         'ZLC_ZYH_Exp14B_Output2.mat',]
-    # rawFileName = ['ZLC_ZYH_Exp09B_Output2.mat',
-    #                 'ZLC_ZYH_Exp10B_Output2.mat',]
-    # rawFileName = ['ZLC_ZYTMA_Exp01B_Output.mat',
-    #         'ZLC_ZYTMA_Exp02B_Output.mat',]
-    # rawFileName = ['ZLC_ZYH_Exp09B_Output.mat',
-    #         'ZLC_ZYH_Exp11B_Output.mat',
-    #         'ZLC_ZYH_Exp13B_Output.mat',
-    #         'ZLC_ZYH_Exp10B_Output.mat',
-    #         'ZLC_ZYH_Exp12B_Output.mat',
-    #         'ZLC_ZYH_Exp14B_Output.mat',]
-    # rawFileName = rawFileName[0:3]
     temperatureExp = load(parameterPath)["temperature"]
-    # temperatureExp = [288.15]*8
 
     # Generate .npz file for python processing of the .mat file 
     filesToProcess(True,os.path.join('..','experimental','runData'),rawFileName,'ZLC')
@@ -538,8 +291,6 @@ else:
     adsorbentDensity = load(parameterPath)["adsorbentDensity"]
     particleEpsilon = load(parameterPath)["particleEpsilon"]
     massSorbent = load(parameterPath)["massSorbent"]
-    # massSorbent = 0.022
-    # massSorbent = 0.0123
     deadVolumeFile = load(parameterPath)["deadVolumeFile"]
  
     # Volume of sorbent material [m3]
@@ -557,7 +308,7 @@ else:
     # Load the model
     modelOutputTemp = load(parameterPath, allow_pickle=True)["modelOutput"]
     modelNonDim = modelOutputTemp[()]["variable"] 
-    # modelNonDim = [0.01025487 ,0.00195097]
+
     # This was added on 12.06 (not back compatible for error computation)
     downsampleData = load(parameterPath)["downsampleFlag"]
 
@@ -566,9 +317,11 @@ else:
         # mean pore radius from MIP
         rpore = load(parameterPath)["rpore"]
         Dpvals = load(parameterPath)["Dpvals"]
+        numPellets = load(parameterPath)["numPellets"]
     else:
         rpore = 107e-9
-        Dpvals = [2.35952892668521e-05,	2.42488804831046e-05	,2.48936504671912e-05]
+        Dpvals = [3.05671321526166e-05,	3.15050794527196e-05,	3.24331710687508e-05]
+        numPellets = 3
 
     print("Objective Function",round(modelOutputTemp[()]["function"],0))
 
@@ -768,16 +521,13 @@ else:
                                                         expFlag = True,
                                                         isothermModel = isothermModel,
                                                         rateConstant_1 = rateConstant_1,
-                                                        # rateConstant_1 = 1000,
                                                         rateConstant_2 = rateConstant_2,
                                                         rateConstant_3 = rateConstant_3,
-                                                        # rateConstant_1 = 1000,
-                                                        # rateConstant_2 = rateConstant_2,
-                                                        # rateConstant_3 = 1.7,
                                                         deadVolumeFile = deadVolumeFileTemp,
                                                         volSorbent = volSorbent,
                                                         volGas = volGas,
                                                         rpore = rpore,
+                                                        numPellets = numPellets,
                                                         Dpvals = Dpvals,
                                                         temperature = temperatureExp[ii],
                                                         adsorbentDensity = adsorbentDensity,

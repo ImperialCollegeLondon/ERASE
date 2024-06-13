@@ -147,6 +147,13 @@ def simulateCombinedModel(**kwargs):
         rpore = kwargs["rpore"]
     else:
         rpore = 1e-9
+
+    # Flag to check number of pellets
+    if 'numPellets' in kwargs:
+        numPellets = kwargs["numPellets"]
+    else:
+        numPellets = 1   
+        
         
     # Flag to check Dpvals
     if 'Dpvals' in kwargs:
@@ -166,6 +173,7 @@ def simulateCombinedModel(**kwargs):
                                         timeInt = timeInt,
                                         expFlag=expFlag,
                                         rpore = rpore,
+                                        numPellets = numPellets,
                                         Dpvals = Dpvals,
                                         volSorbent = volSorbent,
                                         volGas = volGas,
