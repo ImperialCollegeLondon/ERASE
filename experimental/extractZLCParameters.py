@@ -449,7 +449,7 @@ def extractZLCParameters(**kwargs):
         lhsPopulation = LHS(xlimits=optBounds)
         start_population = lhsPopulation(popSize)  
     elif modelType == 'Diffusion1TNItau':
-        optBounds = np.array(([35.2e-3,40e-3],[1e-3,10e-3]))
+        optBounds = np.array(([15*0.1e-3,15*20e-3],[0.1e-3,10e-3]))
         optType=np.array(['real','real'])
         problemDimension = len(optType)
         isoRef = [1000, 1000] # Reference for the parameter (has to be a list)
@@ -724,6 +724,7 @@ def ZLCObjectiveFunction(x):
                                                     rateConstant_3 = x[-1]*isoRef[-1], # Last element is activation energy
                                                     rpore = rpore,
                                                     Dpvals = Dpvals,
+                                                    numPellets = numPellets,
                                                     temperature = temperature[ii], # Temperature [K]
                                                     timeInt = timeInt,
                                                     initMoleFrac = [moleFracExp[0]], # Initial mole fraction assumed to be the first experimental point

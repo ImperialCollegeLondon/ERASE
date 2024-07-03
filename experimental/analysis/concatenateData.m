@@ -65,16 +65,17 @@ volFlow_CO2 = round(volFlow_MFC2*calibrationFlow.MFC_CO2,1);
 % Create file identifier
 fileId = fopen(fileToLoad.MS);
 % Determine whether the detector used is MS
-if isempty(strfind(fileToLoad.MS,'DA'))
-    % Load the MS Data into a cell array
-    rawMSData = textscan(fileId,repmat('%s',1,9),'HeaderLines',8,'Delimiter','\t');
-    % Get the date time for CO2
-    dateTimeHe = datetime(rawMSData{1,4},...
-        'InputFormat','MM/dd/yyyy hh:mm:ss.SSS a');
-    % Get the date time for He
-    dateTimeCO2 = datetime(rawMSData{1,1},...
-        'InputFormat','MM/dd/yyyy hh:mm:ss.SSS a');
-else
+if ~isempty(strfind(fileToLoad.MS,'IR'))
+    rawMSData = textscan(fileId,repmat('%s',1,5),'HeaderLines',0,'Delimiter',' ');
+    % Get the date for CO2
+    dateCO2 = datetime(rawMSData{1,1},...
+        'InputFormat','dd/MM/yyyy');
+    % Get the date for CO2
+    timeCO2 = datetime(rawMSData{1,2},...
+        'InputFormat','HH:mm:ss');
+    dateTimeCO2 = dateCO2+timeofday(timeCO2);
+    dateTimeHe = dateTimeCO2; 
+elseif ~isempty(strfind(fileToLoad.MS,'DA'))
     rawMSData = textscan(fileId,repmat('%s',1,11),'HeaderLines',2,'Delimiter','\t');
     % Get the date for CO2
     dateCO2 = datetime(rawMSData{1,1},...
@@ -84,6 +85,23 @@ else
         'InputFormat','HH:mm:ss');
     dateTimeCO2 = dateCO2+timeofday(timeCO2);
     dateTimeHe = dateTimeCO2;
+elseif ~isempty(strfind(fileToLoad.MS,'TCD'))
+    rawMSData = textscan(fileId,repmat('%s',1,11),'HeaderLines',14,'Delimiter','\t');
+    a = rawMSData(1,2);
+    dateTimeInit = datetime(a{1}{1},'InputFormat','dd/MM/yyyy HH:mm:ss');
+    % Get the date for CO2
+    timeElapsedTCD  = str2double(rawMSData{1,1}); timeElapsedTCD = [0; timeElapsedTCD(50:end-3)];
+    dateTimeCO2 = dateTimeInit+minutes(timeElapsedTCD);
+    dateTimeHe = dateTimeCO2;
+else
+    % Load the MS Data into a cell array
+    rawMSData = textscan(fileId,repmat('%s',1,9),'HeaderLines',8,'Delimiter','\t');
+    % Get the date time for CO2
+    dateTimeHe = datetime(rawMSData{1,4},...
+        'InputFormat','MM/dd/yyyy hh:mm:ss.SSS a');
+    % Get the date time for He
+    dateTimeCO2 = datetime(rawMSData{1,1},...
+        'InputFormat','MM/dd/yyyy hh:mm:ss.SSS a');
 end
 % Reconcile all the data
 % Initial time
@@ -120,7 +138,30 @@ concantenateLastInd = indexInitial_MS + min([size(dateTimeHe(indexInitial_MS:end
 reconciledData.raw.dateTimeMS_He = dateTimeHe(indexInitial_MS:concantenateLastInd);
 reconciledData.raw.dateTimeMS_CO2 = dateTimeCO2(indexInitial_MS:concantenateLastInd);
 
-if isempty(strfind(fileToLoad.MS,'DA'))
+if ~isempty(strfind(fileToLoad.MS,'IR'))
+    % Check if any element is negative for concatenation (ONLY FOR DA)
+    for ii=indexInitial_MS:concantenateLastInd
+        % CO2
+        if ~isempty(str2num(cell2mat(rawMSData{1,5}(ii))))
+            reconciledData.raw.signalCO2(ii-indexInitial_MS+1) = 1e-4*str2num(cell2mat(rawMSData{1,5}(ii)));
+        else
+            reconciledData.raw.signalCO2(ii-indexInitial_MS+1) = 1e-4*str2num(cell2mat(rawMSData{1,5}(ii-1)));
+        end
+    end
+elseif ~isempty(strfind(fileToLoad.MS,'DA'))
+    % Check if any element is negative for concatenation (ONLY FOR DA)
+    for ii=indexInitial_MS:concantenateLastInd
+        % CO2
+        reconciledData.raw.signalCO2(ii-indexInitial_MS+1) = 1e-6.*str2num(cell2mat(rawMSData{1,3}(ii)));
+    end
+elseif ~isempty(strfind(fileToLoad.MS,'TCD'))
+    % Check if any element is negative for concatenation (ONLY FOR DA)
+    CO2signalTCD = str2double(rawMSData{1,2}); CO2signalTCD = [0; CO2signalTCD(50:end-3)];
+    for ii=indexInitial_MS:concantenateLastInd
+        % CO2
+        reconciledData.raw.signalCO2(ii-indexInitial_MS+1) = CO2signalTCD(ii);
+    end
+else
     % Check if any element is negative for concatenation (ONLY FOR MS)
     for ii=indexInitial_MS:concantenateLastInd
         % He
@@ -139,12 +180,6 @@ if isempty(strfind(fileToLoad.MS,'DA'))
         else
             reconciledData.raw.signalCO2(ii-indexInitial_MS+1) = str2num(cell2mat(rawMSData{1,3}(ii)));
         end
-    end
-else
-    % Check if any element is negative for concatenation (ONLY FOR DA)
-    for ii=indexInitial_MS:concantenateLastInd
-        % CO2
-        reconciledData.raw.signalCO2(ii-indexInitial_MS+1) = 1e-6.*str2num(cell2mat(rawMSData{1,3}(ii)));
     end
 end
 
@@ -172,7 +207,7 @@ if fileToLoad.interpMS
         - reconciledData.raw.dateTimeMS_CO2(1)); % Time elapsed CO2 [s]
     % Interpolate the MS signal at the times of flow meter/controller
     reconciledData.MS(:,1) = reconciledData.flow(:,1); % Use the time of the flow meter [s]
-    if isempty(strfind(fileToLoad.MS,'DA'))
+    if ~isempty(strfind(fileToLoad.MS,'CalibrateMS'))
         reconciledData.MS(:,2) = interp1(rawTimeElapsedHe,reconciledData.raw.signalHe,...
             reconciledData.MS(:,1)); % Interpoloted MS signal He [-]
     end
@@ -188,9 +223,13 @@ if fileToLoad.interpMS
     end
     tempData(any(isnan(tempData), 2), :) = [];
 
-    reconciledData.MS(:,3) = interp1(tempData(:,1),tempData(:,2),...
+    reconciledData.MS(:,3) = interp1(unique(tempData(:,1)),[tempData(find(unique(tempData(:,1))),2); 0],...
         reconciledData.MS(:,1)); % Interpoloted MS signal CO2 [-]
     if ~isempty(strfind(fileToLoad.MS,'DA'))
+        reconciledData.MS(:,2) = 1-reconciledData.MS(:,3); % Interpoloted MS signal He [-]
+    elseif ~isempty(strfind(fileToLoad.MS,'IR'))
+        reconciledData.MS(:,2) = 1-reconciledData.MS(:,3); % Interpoloted MS signal He [-]
+    elseif ~isempty(strfind(fileToLoad.MS,'TCD'))
         reconciledData.MS(:,2) = 1-reconciledData.MS(:,3); % Interpoloted MS signal He [-]
     end
     % Interpolate based on MS
@@ -202,7 +241,7 @@ else
         - reconciledData.raw.dateTimeMS_CO2(1)); % Time elapsed CO2 [s]
     % Interpolate the MS signal at the times of flow meter/controller
 %     reconciledData.MS(:,1) = rawTimeElapsedHe; % Use the time of He [s]
-    if isempty(strfind(fileToLoad.MS,'DA'))
+    if ~or(isempty(strfind(fileToLoad.MS,'DA')), isempty(strfind(fileToLoad.MS,'IR')))
         reconciledData.MS(:,2) = reconciledData.raw.signalHe; % Raw signal He [-]
     end
     tempData = [rawTimeElapsedCO2 reconciledData.raw.signalCO2'];
@@ -216,10 +255,11 @@ else
     end
     tempData(any(isnan(tempData), 2), :) = [];
     reconciledData.MS(:,1) = tempData(:,1);
-    reconciledData.MS(:,3) = interp1(tempData(:,1),tempData(:,2),...
-        reconciledData.MS(:,1)); % Interpoloted MS signal CO2 [-]
-    if ~isempty(strfind(fileToLoad.MS,'DA'))
-        reconciledData.MS(:,2) = 1-reconciledData.MS(:,3); % Interpoloted MS signal He [-]
+    reconciledData.MS(:,3) = tempData(:,2); % Interpoloted MS signal CO2 [-]
+    if ~isempty(strfind(fileToLoad.MS,'CalibrateMS'))
+        reconciledData.MS(:,2) = reconciledData.raw.signalHe; % Interpoloted MS signal He [-]
+    else
+        reconciledData.MS(:,2) = 1 - reconciledData.MS(:,3);
     end
     % Meters and the controllers
     rawTimeElapsedFlow = seconds(reconciledData.raw.dateTimeFlow...
@@ -269,19 +309,26 @@ else
         % Convert the raw signal to concentration
         % Parse out the fitting parameters
         paramFit = calibrationMS.ratioHeCO2;
-        if isempty(strfind(fileToLoad.MS,'DA'))
-            % Use a fourier series model to obtain the mole fraction
-            reconciledData.moleFracIndCalib(:,ii) = paramFit(reconciledData.MS(:,2)./...
-                (reconciledData.MS(:,2)+reconciledData.MS(:,3))); % He [-]
-        else
+        if ~isempty(strfind(fileToLoad.MS,'DA'))
             % Use a fourier series model to obtain the mole fraction
             reconciledData.moleFracIndCalib(:,ii) = 1-paramFit(reconciledData.MS(:,3)./...
+                (reconciledData.MS(:,2)+reconciledData.MS(:,3))); % He [-]
+        elseif ~isempty(strfind(fileToLoad.MS,'IR'))
+            % Use a fourier series model to obtain the mole fraction
+            reconciledData.moleFracIndCalib(:,ii) = 1-reconciledData.MS(:,3); % He [-]
+        else
+            % Use a fourier series model to obtain the mole fraction
+            reconciledData.moleFracIndCalib(:,ii) = paramFit(reconciledData.MS(:,2)./...
                 (reconciledData.MS(:,2)+reconciledData.MS(:,3))); % He [-]
         end
     end
     % Take the mean of all the compositions obtained from the different
     % calibrations
-    reconciledData.moleFrac(:,1) = mean(reconciledData.moleFracIndCalib,2);  % He [-]
+    if ~isempty(strfind(fileToLoad.MS,'IR'))
+        reconciledData.moleFrac(:,1) = reconciledData.moleFracIndCalib;
+    else
+        reconciledData.moleFrac(:,1) = mean(reconciledData.moleFracIndCalib,2);  % He [-]
+    end
     reconciledData.moleFrac(:,2) = 1 - reconciledData.moleFrac(:,1); % CO2 [-]
 end
 end

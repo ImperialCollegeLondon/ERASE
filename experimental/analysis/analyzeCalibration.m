@@ -154,11 +154,17 @@ if ~isempty(parametersMS)
     numDataPoints = length(reconciledData.flow(:,1));
     % Total number of points per set point
     numPointsSetPt = expInfo.maxTime/expInfo.samplingTime;
-    if isempty(strfind(parametersMS.MS,'DA'))
+    
+    if ~isempty(strfind(parametersMS.MS,'DA'))
+        numRepetitions = 1;
+    elseif ~isempty(strfind(parametersMS.MS,'IR'))
+        numRepetitions = 1;
+    elseif ~isempty(strfind(parametersMS.MS,'TCD'))
+        numRepetitions = 1;
+    else 
         % Number of repetitions per set point (assuming repmat in calibrateMS)
         numRepetitions = floor((numDataPoints/numPointsSetPt)/length(setPtMFC));
-    else
-        numRepetitions = 1;
+        % numRepetitions = 1;
     end
     % Remove the 5 min idle time between repetitions
     % For two repetitions
@@ -177,8 +183,12 @@ if ~isempty(parametersMS)
     % Find indices that corresponds to a given set point
     indList = ones(numRepetitions*length(setPtMFC),2);
     % Loop over all the set points
-    if isempty(strfind(parametersMS.MS,'DA'))
+    if ~isempty(strfind(parametersMS.MS,'DA'))
         rangeVals = length(setPtMFC);
+    elseif ~isempty(strfind(parametersMS.MS,'IR'))
+        rangeVals = numDataPoints/numPointsSetPt;
+    elseif ~isempty(strfind(parametersMS.MS,'TCD'))
+        rangeVals = numDataPoints/numPointsSetPt;
     else
         rangeVals = numDataPoints/numPointsSetPt;
     end
@@ -192,12 +202,12 @@ if ~isempty(parametersMS)
             % for each set point
             indMean = (finalInd-parametersMS.numMean+1):finalInd;
             % MS Signal mean
-            if isempty(strfind(parametersMS.MS,'DA'))
+            if ~isempty(strfind(parametersMS.MS,'CalibrateMS'))
                 meanHeSignal((kk-1)*length(setPtMFC)+ii) = mean(reconciledData.MS(indMean,2)); % He
             end
             meanCO2Signal((kk-1)*length(setPtMFC)+ii) = mean(reconciledData.MS(indMean,3)); % CO2
             % Mole fraction mean
-            if isempty(strfind(parametersMS.MS,'DA'))
+            if ~isempty(strfind(parametersMS.MS,'CalibrateMS'))
                 meanMoleFrac(((kk-1)*length(setPtMFC)+ii),1) = mean(reconciledData.moleFrac(indMean,1)); % He
             end
             meanMoleFrac(((kk-1)*length(setPtMFC)+ii),2) = mean(reconciledData.moleFrac(indMean,2)); % CO2
@@ -205,10 +215,16 @@ if ~isempty(parametersMS)
     end
     % Use a linear interpolation to fit the calibration data of the signal
     % ratio w.r.t He composition
-    if isempty(strfind(parametersMS.MS,'DA'))
-        calibrationMS.ratioHeCO2 = fit((meanHeSignal./(meanCO2Signal+meanHeSignal))',meanMoleFrac(:,1),'linearinterp');
+    if ~isempty(strfind(parametersMS.MS,'DA'))
+        calibrationMS.ratioHeCO2 = fit(meanCO2Signal',meanMoleFrac(:,2),'cubicspline');
+    elseif ~isempty(strfind(parametersMS.MS,'IR'))
+        calibrationMS.ratioHeCO2 = fit(meanCO2Signal',meanMoleFrac(:,2),'cubicspline');
+    elseif ~isempty(strfind(parametersMS.MS,'TCD'))
+        meanCO2Signal = meanCO2Signal-min(meanCO2Signal);
+        calibrationMS.ratioHeCO2 = fit(meanCO2Signal'./max(meanCO2Signal),meanMoleFrac(:,2),'cubicspline');
     else
-        calibrationMS.ratioHeCO2 = fit(meanCO2Signal',meanMoleFrac(:,2),'linearinterp');
+        calibrationMS.ratioHeCO2 = fit((meanHeSignal./(meanCO2Signal+meanHeSignal))',meanMoleFrac(:,1),'cubicspline');
+        % calibrationMS.ratioHeCO2 = fit((meanHeSignal./(meanCO2Signal+meanHeSignal))',meanMoleFrac(:,1),'linearinterp');
     end
     % Save the calibration data into a .mat file
     % Check if calibration data folder exists
@@ -229,17 +245,7 @@ if ~isempty(parametersMS)
 
     % Plot the raw and the calibrated data
     figure(1)
-    if isempty(strfind(parametersMS.MS,'DA'))
-        plot(meanHeSignal./(meanHeSignal+meanCO2Signal),meanMoleFrac(:,1),'or') % Experimental
-        hold on
-        plot(0:0.001:1,calibrationMS.ratioHeCO2(0:0.001:1),'b')
-        xlim([0 1]);
-        ylim([0 1]);
-        box on; grid on;
-        xlabel('Helium Signal/(CO2 Signal+Helium Signal) [-]')
-        ylabel('Helium mole frac [-]')
-        set(gca,'FontSize',8)
-    else
+    if ~isempty(strfind(parametersMS.MS,'DA'))
         plot(meanCO2Signal,meanMoleFrac(:,2),'or') % Experimental
         hold on
         plot(0:1e-5:2e-2,calibrationMS.ratioHeCO2(0:1e-5:2e-2),'b')
@@ -248,6 +254,36 @@ if ~isempty(parametersMS)
         box on; grid on;
         xlabel('CO_{2} Measured mole frac [-]')
         ylabel('CO_{2} Feed mole frac[-]')
+        set(gca,'FontSize',8)
+    elseif ~isempty(strfind(parametersMS.MS,'IR'))
+        plot(meanCO2Signal,meanMoleFrac(:,2),'or') % Experimental
+        hold on
+        plot(0:0.001:1,calibrationMS.ratioHeCO2(0:0.001:1),'b')
+        xlim([0 1]);
+        ylim([0 1]);
+        box on; grid on;
+        xlabel('Helium Signal/(CO2 Signal+Helium Signal) [-]')
+        ylabel('Helium mole frac [-]')
+        set(gca,'FontSize',8)
+    elseif ~isempty(strfind(parametersMS.MS,'TCD'))
+        plot(meanCO2Signal./max(meanCO2Signal),meanMoleFrac(:,2),'or') % Experimental
+        hold on
+        plot(0:0.001:1,calibrationMS.ratioHeCO2(0:0.001:1),'b')
+        xlim([0 1]);
+        ylim([0 1]);
+        box on; grid on;
+        xlabel('V/V_{max} [-]')
+        ylabel('CO_{2} mole frac [-]')
+        set(gca,'FontSize',8)
+    else
+        plot(meanHeSignal./(meanHeSignal+meanCO2Signal),meanMoleFrac(:,1),'or') % Experimental
+        hold on
+        plot(0:0.001:1,calibrationMS.ratioHeCO2(0:0.001:1),'b')
+        xlim([0 1]);
+        ylim([0 1]);
+        box on; grid on;
+        xlabel('Helium Signal/(CO2 Signal+Helium Signal) [-]')
+        ylabel('Helium mole frac [-]')
         set(gca,'FontSize',8)
     end
 end

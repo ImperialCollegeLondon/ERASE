@@ -171,13 +171,19 @@ end
 
 figure
 hold on
-macroporeIndex = find(poreVolume.MIP(1:end,1)>50,1,'first');
-endIndex = 81;
-plot(poreVolume.MIP(:,1),poreVolume.MIP(:,3),'Color','red', 'HandleVisibility','off','LineWidth',2,'LineStyle','none','Marker','o')
+macroporeIndex = find(poreVolume.MIP(1:end,1)<50,1,'last');
+endIndex = length(poreVolume.MIP(:,1)); % For rods
+% endIndex = 140; % For SA beads
+plot(poreVolume.MIP(:,1),poreVolume.MIP(:,3),'Color','red', 'HandleVisibility','off','LineWidth',1,'LineStyle',':','Marker','o')
 distType = 'Kernel';
 x = poreVolume.MIP(macroporeIndex:endIndex,1);
-p = cumtrapz(x,poreVolume.MIP(macroporeIndex:endIndex,3));
-p = p - min(p);
+diff = poreVolume.MIP(macroporeIndex:endIndex,3);
+p = cumtrapz(x,diff);
+for jj = 1:length(p)-1
+    if p(jj) == p(jj+1)
+        p(jj) = p(jj)+jj*eps;
+    end
+end
 pVals = linspace(min(p),max(p),12000)./max(p);
 xVals = interp1(p./max(p),x,pVals);
 dist = fitdist(xVals',distType);
