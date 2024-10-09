@@ -53,13 +53,14 @@ git clone https://github.com/ImperialCollegeLondon/ERASE.git
 
 ### Maintainers of the repository
 * Dr. Ashwin Kumar Rajagopalan (a.rajagopalan@imperial.ac.uk)
-* Mr. Hassan Azzan (hassan.azzan15@imperial.ac.uk)
+* Dr. Hassan Azzan (hassan.azzan15@imperial.ac.uk)
 
 ### Project contributors
-* Dr. Camille Petit (camille.petit@imperial.ac.uk)
-* Dr. Ronny Pini (r.pini@imperial.ac.uk)
+* Prof. Camille Petit (camille.petit@imperial.ac.uk)
+* Prof. Ronny Pini (r.pini@imperial.ac.uk)
 * Dr. Ashwin Kumar Rajagopalan
-* Mr. Hassan Azzan (hassan.azzan15@imperial.ac.uk)
+* Dr. Hassan Azzan (hassan.azzan15@imperial.ac.uk)
+* Mr. Killian Gmyrek (killian.gmyrek18@imperial.ac.uk)
 
 ## LICENSE
 ERASE
