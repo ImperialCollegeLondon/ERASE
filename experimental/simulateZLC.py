@@ -34,7 +34,7 @@
 
 def simulateZLC(**kwargs):
     import numpy as np
-    from scipy.integrate import odeint, solve_ivp, ode
+    from scipy.integrate import solve_ivp
     from computeEquilibriumLoading import computeEquilibriumLoading
     import auxiliaryFunctions
     import os
@@ -231,6 +231,77 @@ def simulateZLC(**kwargs):
         # pdb.set_trace()
         # Parse out the time
         timeSim = tspan
+    elif modelType == 'DV':
+        # Compute the initial sensor loading [mol/m3] @ initMoleFrac
+        equilibriumLoading  = computeEquilibriumLoading(pressureTotal=pressureTotal,
+                                                        temperature=temperature,
+                                                        moleFrac=initMoleFrac,
+                                                        isothermModel=isothermModel)*adsorbentDensity # [mol/m3]
+        
+        # Prepare tuple of input parameters for the ode solver
+        inputParameters = (adsorbentDensity, isothermModel, rateConstant_1, rateConstant_2, rateConstant_3,
+                           flowIn, feedMoleFrac, initMoleFrac, pressureTotal, 
+                           temperature, volSorbent, volGas, modelType, rpore)
+                
+        # Solve the system of ordinary differential equations
+        # Stiff solver used for the problem: BDF or Radau
+        # The output is print out every 0.1 s
+        # Solves the model assuming constant/negligible pressure across the sensor
+        # Prepare initial conditions vector
+        initialConditions = np.zeros([2])
+        initialConditions[0] = initMoleFrac[0] # Gas mole fraction
+        initialConditions[1] = 0 # Initial Loading
+        
+        # pdb.set_trace()
+        
+        ##########################################################################
+        outputSol = solve_ivp(solveSorptionEquation, timeInt, initialConditions, 
+                              method='Radau', t_eval = t_eval,
+                              rtol = 1e-8, args = inputParameters, first_step =0.0001, dense_output=True)
+        # Presure vector in output
+        pressureVec =  pressureTotal * np.ones(len(outputSol.t)) # Constant pressure
+        # pdb.set_trace()
+        # Compute the outlet flow rate
+        # if outputSol.y[1,:].size != 0:
+        sum_dqdt = np.gradient(outputSol.y[1,:],
+                            outputSol.t) # Compute gradient of loading
+        flowOut = flowIn - ((volSorbent*(8.314*temperature)/pressureTotal)*(sum_dqdt))
+        # else:
+        #     flowOut = flowIn
+        
+        # Parse out the output matrix and add flow rate
+        resultMat = np.row_stack((outputSol.y,pressureVec,flowOut))
+    
+        # Parse out the time
+        timeSim = outputSol.t
+        ##########################################################################
+        # ode15s = ode(solveSorptionEquation)
+        # ode15s.set_integrator('vode', method='bdf', order=15, nsteps=3000)
+        # ode15s.set_initial_value(initialConditions, 0)
+        # ode15s.set_f_params(*adsorbentDensity, isothermModel, rateConstant_1, rateConstant_2,
+        #                    flowIn, feedMoleFrac, initMoleFrac, pressureTotal, 
+        #                    temperature, volSorbent, volGas)
+        # pdb.set_trace()
+        # ode15s.integrate(timeInt[-1])
+        # tVals =  np.arange(timeInt[0],timeInt[-1],0.01)
+        # pdb.set_trace()
+        # tVals = t_eval
+        # outputSol = odeint(solveSorptionEquation, initialConditions, tVals, inputParameters,tfirst=True, h0 = 0.01)
+        
+        # # Presure vector in output
+        # pressureVec =  pressureTotal * np.ones(len(outputSol)) # Constant pressure
+    
+        # # Compute the outlet flow rate
+        # sum_dqdt = np.gradient(outputSol[:,1],
+        #                    tVals) # Compute gradient of loading
+        # flowOut = flowIn - ((volSorbent*(8.314*temperature)/pressureTotal)*(sum_dqdt))
+        
+        # # Parse out the output matrix and add flow rate
+        # resultMat = np.row_stack((np.transpose(outputSol),pressureVec,flowOut))
+    
+        # # Parse out the time
+        # timeSim = tVals
+        # Call the plotting function
     else:
         # Compute the initial sensor loading [mol/m3] @ initMoleFrac
         equilibriumLoading  = computeEquilibriumLoading(pressureTotal=pressureTotal,
@@ -391,7 +462,24 @@ def solveSorptionEquation(t, f, *inputParameters):
         # If both resistances are present
         else:
             rateConstant = 1/(1/k1 + 1/k2)
-            
+    elif modelType == 'DV':
+    # Rate constant 1 (analogous to micropore resistance)
+        k1 = rateConstant_1/dlnqbydlnp
+    
+        # Rate constant 2 (analogous to macropore resistance)
+        k2 = rateConstant_2/(1+(1/epsilonp)*dqbydc)
+        
+        # Overall rate constant
+        # The following conditions are done for purely numerical reasons
+        # If pure (analogous) macropore
+        if k1<1e-9:
+            rateConstant = k2
+        # If pure (analogous) micropore
+        elif k2<1e-9:
+            rateConstant = k1
+        # If both resistances are present
+        else:
+                rateConstant = 1/(1/k1 + 1/k2)        
     elif modelType == 'KineticMacro':
         k1 = rateConstant_1/(1+(1/epsilonp)*dqbydc)*np.power(temperature,0.5)
         k2 = rateConstant_2/(1+(1/epsilonp)*dqbydc)*np.power(temperature,1.5)/partialPressure
@@ -411,7 +499,7 @@ def solveSorptionEquation(t, f, *inputParameters):
 
     elif modelType == 'KineticSBMacro':
         k1 = rateConstant_1*np.exp(-rateConstant_2*1000/(Rg*temperature))/dlnqbydlnp
-        # k1 = rateConstant_1*np.exp(-rateConstant_2*1000/(Rg*temperature))
+        k1 = rateConstant_1*np.exp(-rateConstant_2*1000/(Rg*temperature))
         # k1 = rateConstant_1*np.exp(-rateConstant_2*1000/(Rg*temperature))
         # Rate constant 2 (analogous to macropore resistance)
         k2 = rateConstant_3*temperature**0.5/(1+(1/epsilonp)*dqbydc)
@@ -433,8 +521,8 @@ def solveSorptionEquation(t, f, *inputParameters):
         else:
             rateConstant = 1/(1/k1 + 1/k2)
     
-        if rateConstant<1e-8:
-            rateConstant = 1e-8    
+        # if rateConstant<1e-8:
+        #     rateConstant = 1e-8    
     elif modelType == 'KineticSBMacroTau':
         Rp = ((volSorbent + volGas) / (4/3 * np.pi))**(1/3)  # pellet radius [m]]
 
@@ -502,20 +590,38 @@ def solveSorptionEquation(t, f, *inputParameters):
         if rateConstant<1e-8:
             rateConstant = 1e-8    
             
-    # Linear driving force model (derivative of solid phase loadings)
-    df[1] = rateConstant*(equilibriumLoading-f[1])
-    
-    # Quadratic driving force model (derivative of solid phase loadings)
-    # df[1] = rateConstant*(equilibriumLoading**2-f[1]**2)/(2*f[1])
-
-    # Total mass balance
-    # Assumes constant pressure, so flow rate evalauted
-    flowOut = flowIn - (volSorbent*(Rg*temperature)/pressureTotal)*df[1]
-    
-    # Component mass balance
-    term1 = 1/volGas
-    term2 = ((flowIn*feedMoleFrac - flowOut*f[0]) - (volSorbent*(Rg*temperature)/pressureTotal)*df[1])
-    df[0] = term1*term2
+    if modelType == 'DV':
+            
+        # Linear driving force model (derivative of solid phase loadings)
+        df[1] = 0
+        
+        # Quadratic driving force model (derivative of solid phase loadings)
+        # df[1] = rateConstant*(equilibriumLoading**2-f[1]**2)/(2*f[1])
+        
+        # Total mass balance
+        # Assumes constant pressure, so flow rate evalauted
+        flowOut = flowIn - (volSorbent*(Rg*temperature)/pressureTotal)*df[1]
+        
+        # Component mass balance
+        term1 = 1/volGas
+        term2 = ((flowIn*feedMoleFrac - flowOut*f[0]) - (volSorbent*(Rg*temperature)/pressureTotal)*df[1])
+        df[0] = term1*term2
+    else:
+            
+        # Linear driving force model (derivative of solid phase loadings)
+        df[1] = rateConstant*(equilibriumLoading-f[1])
+        
+        # Quadratic driving force model (derivative of solid phase loadings)
+        # df[1] = rateConstant*(equilibriumLoading**2-f[1]**2)/(2*f[1])
+        
+        # Total mass balance
+        # Assumes constant pressure, so flow rate evalauted
+        flowOut = flowIn - (volSorbent*(Rg*temperature)/pressureTotal)*df[1]
+        
+        # Component mass balance
+        term1 = 1/volGas
+        term2 = ((flowIn*feedMoleFrac - flowOut*f[0]) - (volSorbent*(Rg*temperature)/pressureTotal)*df[1])
+        df[0] = term1*term2
     # pdb.set_trace()
 
     # Return the derivatives for the solver

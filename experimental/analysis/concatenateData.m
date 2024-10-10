@@ -86,11 +86,11 @@ elseif ~isempty(strfind(fileToLoad.MS,'DA'))
     dateTimeCO2 = dateCO2+timeofday(timeCO2);
     dateTimeHe = dateTimeCO2;
 elseif ~isempty(strfind(fileToLoad.MS,'TCD'))
-    rawMSData = textscan(fileId,repmat('%s',1,11),'HeaderLines',14,'Delimiter','\t');
+    rawMSData = textscan(fileId,repmat('%s',1,11),'HeaderLines',16,'Delimiter','\t');
     a = rawMSData(1,2);
-    dateTimeInit = datetime(a{1}{1},'InputFormat','dd/MM/yyyy HH:mm:ss');
+    dateTimeInit = datetime(a{1}{1},'InputFormat','M/dd/yyyy h:mm:ss a');
     % Get the date for CO2
-    timeElapsedTCD  = str2double(rawMSData{1,1}); timeElapsedTCD = [0; timeElapsedTCD(50:end-3)];
+    timeElapsedTCD  = str2double(rawMSData{1,1}); timeElapsedTCD = [0; timeElapsedTCD(90:end-3)];
     dateTimeCO2 = dateTimeInit+minutes(timeElapsedTCD);
     dateTimeHe = dateTimeCO2;
 else
@@ -156,7 +156,7 @@ elseif ~isempty(strfind(fileToLoad.MS,'DA'))
     end
 elseif ~isempty(strfind(fileToLoad.MS,'TCD'))
     % Check if any element is negative for concatenation (ONLY FOR DA)
-    CO2signalTCD = str2double(rawMSData{1,2}); CO2signalTCD = [0; CO2signalTCD(50:end-3)];
+    CO2signalTCD = str2double(rawMSData{1,2}); CO2signalTCD = [0; CO2signalTCD(90:end-3)];
     for ii=indexInitial_MS:concantenateLastInd
         % CO2
         reconciledData.raw.signalCO2(ii-indexInitial_MS+1) = CO2signalTCD(ii);
@@ -316,6 +316,9 @@ else
         elseif ~isempty(strfind(fileToLoad.MS,'IR'))
             % Use a fourier series model to obtain the mole fraction
             reconciledData.moleFracIndCalib(:,ii) = 1-reconciledData.MS(:,3); % He [-]
+        elseif ~isempty(strfind(fileToLoad.MS,'TCD'))
+            % Use a fourier series model to obtain the mole fraction
+            reconciledData.moleFracIndCalib(:,ii) = 1-paramFit(reconciledData.MS(:,3)./calibrationMS.maxVoltage); % He [-]
         else
             % Use a fourier series model to obtain the mole fraction
             reconciledData.moleFracIndCalib(:,ii) = paramFit(reconciledData.MS(:,2)./...

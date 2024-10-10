@@ -32,6 +32,7 @@ import matplotlib.pyplot as plt
 import auxiliaryFunctions
 from simulateCombinedModel import simulateCombinedModel
 from computeEquilibriumLoading import computeEquilibriumLoading
+import pdb
 
 plt.style.use('doubleColumn4Row.mplstyle') # Custom matplotlib style file
 
@@ -59,7 +60,7 @@ markerForPlot = ["o"]*20
 # ZLC parameter model path
 # Temperature (for each experiment)
 # temperatureExp = [344.69, 325.39, 306.15]*4 # AC Experiments
-temperatureExp = [278.15]
+temperatureExp = [298.15]
 
 # Legend flag
 useFlow = False
@@ -67,11 +68,21 @@ useFlow = False
 # Mass of sorbent and particle epsilon
 adsorbentDensity = 1750 #
 particleEpsilon = 0.5 # 
-massSorbent = 0.020 # 
+massSorbent = 0.10 # 
 Rg = 8.314            
-Fin = 60/60
+Fin = 5/60
 flagDesorption = True
+flagDesorption = False
 
+if flagDesorption:
+    timeExp = 8000
+else:
+    timeExp = 8000
+adsFraction = [0.05]
+desFraction = 0.1
+desFraction = 0.1
+
+moleFracThres = 1e-8
 # Volume of sorbent material [m3]
 volSorbent = (massSorbent/1000)/adsorbentDensity
 
@@ -79,10 +90,10 @@ volSorbent = (massSorbent/1000)/adsorbentDensity
 volGas = volSorbent/(1-particleEpsilon)*particleEpsilon
 
 # Dead volume model
-deadVolumeFile = [[['deadVolumeCharacteristics_20230321_1036_59cc206.npz', # 50A
-                  'deadVolumeCharacteristics_20230321_1245_59cc206.npz']], # 51A
-                  [['deadVolumeCharacteristics_20230321_1137_59cc206.npz', # 50B
-                  'deadVolumeCharacteristics_20230321_1252_59cc206.npz']]] # 51B ZEOLITE Y CMS
+deadVolumeFile = [[['deadVolumeCharacteristics_20231122_1743_b571c46.npz', 
+                    'deadVolumeCharacteristics_20231122_1757_b571c46.npz']], 
+                  [['deadVolumeCharacteristics_20231122_1750_b571c46.npz', 
+                    'deadVolumeCharacteristics_20231122_1804_b571c46.npz']]] 
 
 # deadVolumeFile = 'deadVolumeCharacteristics_20220823_1542_e81a19e.npz' # DA LV
 # Isotherm parameter reference
@@ -91,7 +102,7 @@ deadVolumeFile = [[['deadVolumeCharacteristics_20230321_1036_59cc206.npz', # 50A
 downsampleData = True
 ##############
 
-# modelType = 'KineticSBMacro'
+# modelType = 'KineticMacro'
 # modelType = 'KineticOld'
 modelType = 'KineticOld'
 # modelType = 'Diffusion1Ttau'
@@ -99,19 +110,25 @@ modelType = 'KineticOld'
 isothermModels = [[995*6/4,0.0001/np.exp(2.9e4/(Rg*298.15)),2.9e4,0,0,0],
                   [6.5*6/4,0.04/np.exp(4.6e4/(Rg*298.15)),4.6e4,0,0,0],
                   [4.18*6/4,0.5/np.exp(17.7e4/(Rg*298.15)),17.7e4,0,0,0]]
-isothermModels = [[3.83, 1.33e-08, 40.0e3, 2.57, 4.88e-06, 35.16e3],
-                  [3.75,5.3767e-6,1.5472e4,0,0,0],
-                  [4.18*6/4,0.5/np.exp(17.7e4/(Rg*298.15)),17.7e4,0,0,0]]
+
+# isothermModels = [[995*6/4,0.0001/np.exp(2.9e4/(Rg*298.15)),2.9e4,0,0,0],
+#                   [6.5*6/4,0.04/np.exp(4.6e4/(Rg*298.15)),4.6e4,0,0,0],
+#                   [6,500/np.exp(4.6e4/(Rg*298.15)),4.6e4,0,0,0]]
+
+# [[6],[80/np.exp(4.6e4/(Rg*298.15))],[-4.6e4]]
+# isothermModels = [[3.83, 1.33e-08, 40.0e3, 2.57, 4.88e-06, 35.16e3],
+#                   [3.75,5.3767e-6,1.5472e4,0,0,0],
+#                   [4.18*6/4,0.5/np.exp(17.7e4/(Rg*298.15)),17.7e4,0,0,0]]
 if modelType == 'KineticSBMacro':
-    KineticModels =[[0.021/np.exp(-2e4/(Rg*298.15)),2e1,0,],
-                [0.021/np.exp(-2e4/(Rg*298.15)),2e1,6/(288**0.5),],
-                [0.021/np.exp(-2e4/(Rg*298.15)),2e1,6/(288**0.5),]]
-    KineticModels =[[99,0,6/(288**0.5),],
-                [99,0,1/(288**0.5),],
-                [99,0,1.4/(288**0.5),]]
-    KineticModels =[[0.01,0,0,],
-                [0.1,0,0,],
-                [1,0,0,]]
+    KineticModels =[[0.04/np.exp(-2e4/(Rg*298.15)),2e1,0,],
+                [0.04/np.exp(-2e4/(Rg*298.15)),2e1,41/(288**0.5),],
+                [0.04/np.exp(-2e4/(Rg*298.15)),20,41/(288**0.5),]]
+    # KineticModels =[[99,0,6/(288**0.5),],
+    #             [99,0,1/(288**0.5),],
+    #             [99,0,1.4/(288**0.5),]]
+    # KineticModels =[[0.01,0,0,],
+    #             [0.1,0,0,],
+    #             [1,0,0,]]
 elif modelType == 'KineticMacro':
     KineticModels =[[0.21/np.power(298.15,0.5),0],
                 [0.21/np.power(298.15,0.5),0],
@@ -120,18 +137,21 @@ elif modelType == 'Diffusion1Ttau':
     KineticModels =[[100,2],
                 [100,5,]]
 else:
-    KineticModels =[[0.1,0],
-                [1,0,]]
+    KineticModels =[[10,0],
+                [10,0,],
+                [10,0,],]
 legendLines = ['$k_{micro}$ << $k_{macro}$',
                '$k_{micro}$ ~= $k_{macro}$',
                '$k_{micro}$ >> $k_{macro}$']
-legendLines = ['$k = 0.1$ s$^\mathregular{-1}$',
-               '$k = 1$ s$^\mathregular{-1}$',]
+legendLines = ['$k = 1$ s$^\mathregular{-1}$',
+                '$k = 10$ s$^\mathregular{-1}$',
+                '$k = 30$ s$^\mathregular{-1}$',]
 
 # legendLines = ['$τ = 2$',
 #                 '$τ = 5$',]
 lineStyles = ['-','dashed']
 
+MassBalanceALL = []
 
 y = np.linspace(0,1,4000)
 isoLoading = np.zeros(len(y))
@@ -185,10 +205,7 @@ for jj in range(len(isothermModels)):
                 rateConstant_1 = x[-2]
                 rateConstant_2 = x[-1]
                 rateConstant_3 = 0     
-                isothermModel = x[0:-2]
-                rateConstant_1 = x[-2]
-                rateConstant_2 = x[-1]
-                rateConstant_3 = 0
+
             rateConstantZLC = np.zeros(len(y))
             temperature = temperatureExp[nn]
             for mm in range(len(y)):
@@ -217,7 +234,7 @@ for jj in range(len(isothermModels)):
                 
                 rpore = 107e-9
                 Dpvals = [2.35952892668521e-05,	2.42488804831046e-05	,2.48936504671912e-05]
-                
+                Dpvals = [4.655e-5,	4.778e-05	,4.899e-05]
                 if modelType == 'KineticOld':
                 # Rate constant 1 (analogous to micropore resistance)
                     k1 = rateConstant_1
@@ -296,13 +313,13 @@ for jj in range(len(isothermModels)):
                     
                 
             if jj == 0:
-                timeElapsedExp = np.linspace(0,200,2000)
+                timeElapsedExp = np.linspace(0,timeExp,4000)
             else:
-                timeElapsedExp = np.linspace(0,2000,2000)
+                timeElapsedExp = np.linspace(0,timeExp,4000)
             timeInt = timeElapsedExp
-            moleFracExp = np.linspace(1,1,2000)
-            flowRateExp = np.linspace(Fin,Fin,2000)
-            flowRateExp = np.linspace(Fin,Fin,2000)
+            moleFracExp = np.linspace(desFraction,desFraction,4000)
+            flowRateExp = np.linspace(Fin,Fin,4000)
+            flowRateExp = np.linspace(Fin,Fin,4000)
             
             if moleFracExp[0] > 0.5:
                 deadVolumeFlow = deadVolumeFile[1]
@@ -324,11 +341,31 @@ for jj in range(len(isothermModels)):
                 feedMoleFrac = [0]
             else:
                 initMoleFrac = [1e-7]
-                feedMoleFrac = [1]
+                feedMoleFrac = adsFraction
             
             # initMoleFrac = [1e-6]
             # feedMoleFrac = [1]
             
+            # _ , moleFracSim , resultMat = simulateCombinedModel(timeInt = timeInt,
+            #                                             initMoleFrac = initMoleFrac, # Initial mole fraction assumed to be the first experimental point
+            #                                             flowIn = np.mean(flowRateExp[-1:-2:-1]*1e-6), # Flow rate for ZLC considered to be the mean of last 10 points (equilibrium)
+            #                                             feedMoleFrac = feedMoleFrac,
+            #                                             expFlag = True,
+            #                                             isothermModel = isothermModel,
+            #                                             rateConstant_1 = rateConstant_1,
+            #                                             rateConstant_2 = rateConstant_2,
+            #                                             rateConstant_3 = rateConstant_3,
+            #                                             rpore = rpore,
+            #                                             Dpvals = Dpvals,
+            #                                             deadVolumeFile = deadVolumeFileTemp,
+            #                                             volSorbent = volSorbent,
+            #                                             volGas = volGas,
+            #                                             temperature = temperatureExp[nn],
+            #                                             adsorbentDensity = adsorbentDensity,
+            #                                             modelType = 'DV')
+            
+            # flowInDV = resultMat[3,:]    
+            # pdb.set_trace()
             # Compute the combined zlc and dead volume response using the optimizer parameters
             _ , moleFracSim , resultMat = simulateCombinedModel(timeInt = timeInt,
                                                         initMoleFrac = initMoleFrac, # Initial mole fraction assumed to be the first experimental point
@@ -348,7 +385,7 @@ for jj in range(len(isothermModels)):
                                                         adsorbentDensity = adsorbentDensity,
                                                         modelType = modelType)
             
-            moleFracSim = resultMat[0,:]
+            moleFracSim[moleFracSim<moleFracThres] = moleFracThres
             flowRateSim =  resultMat[3,:]
             deadVolumePath = os.path.join('..','simulationResults',deadVolumeFileTemp)
             modelOutputTemp = load(deadVolumePath, allow_pickle=True)["modelOutput"]
@@ -358,8 +395,8 @@ for jj in range(len(isothermModels)):
             msDeadVolumeFile = dvFileLoadTemp["msDeadVolumeFile"]
             flowInDV = np.zeros((len(resultMat[1,:])))          
             flowInDV[:] = np.mean(flowRateExp[-1:-2:-1]*1e-6)
-            moleFracDV = deadVolumeWrapper(timeInt, flowInDV*1e6, pDV, flagMSDeadVolume, msDeadVolumeFile, initMoleFrac = initMoleFrac, feedMoleFrac = feedMoleFrac)
-            
+            moleFracDV = deadVolumeWrapper(timeInt, flowRateSim*1e6, pDV, flagMSDeadVolume, msDeadVolumeFile, initMoleFrac = initMoleFrac, feedMoleFrac = feedMoleFrac)
+            FeedFlow = Fin/(1e6)
             internalLoading = resultMat[1,:]
             if flagDesorption:
                 fractionalLoading = resultMat[1,:]/resultMat[1,0]
@@ -371,79 +408,88 @@ for jj in range(len(isothermModels)):
             if flagDesorption:
                 if jj+4 == 4:
                     if nn == 0:
-                        plt.subplot(4,3,jj+4) .semilogy(timeElapsedExp,moleFracSim,
+                        plt.subplot(4,3,jj+4) .plot(timeElapsedExp,moleFracSim,
                      color=colorsForPlot[ii],label=legendStr,alpha = 1, linestyle = linestyle) # Simulation response 
                     else:
-                        plt.subplot(4,3,jj+4) .semilogy(timeElapsedExp,moleFracSim,
+                        plt.subplot(4,3,jj+4) .plot(timeElapsedExp,moleFracSim,
                      color=colorsForPlot[ii],alpha = 1, linestyle = linestyle) # Simulation response 
-                    # plt.subplot(4,3,jj+4) .plot(timeElapsedExp,moleFracDV,
-                    # color='#118ab2',alpha=0.2,
-                    # linestyle = '-') # Dead volume simulation response    
+                    plt.subplot(4,3,jj+4) .plot(timeElapsedExp-1e-3*massSorbent/(adsorbentDensity*FeedFlow),moleFracDV,
+                    color='#118ab2',alpha=0.2,
+                    linestyle = '-') # Dead volume simulation response    
                     plt.subplot(4,3,jj+4) .set(xlabel='$t$ [s]', 
                         ylabel='$y$ [-]', 
                         # xlim = [0,2000], ylim =  [1e-6, 1])  
-                        xlim = [0,100], ylim =  [1e-2, 1])  
+                        xlim = [0,1000], ylim =  [1e-2, 1])  
                 else:
-                    plt.subplot(4,3,jj+4) .semilogy(timeElapsedExp,moleFracSim,
+                    plt.subplot(4,3,jj+4) .plot(timeElapsedExp,moleFracSim,
                      color=colorsForPlot[ii],alpha = 1, linestyle = linestyle) # Simulation response 
                     # if ii==len(fileName)-1:
-                    # plt.subplot(4,3,jj+4) .plot(timeElapsedExp,moleFracDV,
-                    #     color='#118ab2',alpha=0.2,
-                    #     linestyle = '-') # Dead volume simulation response    
+                    plt.subplot(4,3,jj+4) .plot(timeElapsedExp-1e-3*massSorbent/(adsorbentDensity*FeedFlow),moleFracDV,
+                        color='#118ab2',alpha=0.2,
+                        linestyle = '-') # Dead volume simulation response    
                     plt.subplot(4,3,jj+4) .set(xlabel='$t$ [s]', 
                             ylabel='$y$ [-]', 
                             # xlim = [0,2000], ylim =  [1e-6, 1])  
-                            xlim = [0,100], ylim =  [1e-3, 1])  
+                            xlim = [0,1000], ylim =  [1e-3, 1])  
             else:
-                plt.subplot(4,3,jj+4) .semilogy(timeElapsedExp,moleFracSim,
+                plt.subplot(4,3,jj+4) .plot(timeElapsedExp,moleFracSim,
                      color=colorsForPlot[ii],label=legendStr,alpha = 1, linestyle = linestyle) # Simulation response    
                     # if ii==len(fileName)-1:
-            # plt.subplot(4,3,jj+4) .plot(timeElapsedExp,moleFracDV,
-            #     color='#118ab2',alpha=0.2,
-            #     linestyle = '-') # Dead volume simulation response    
+            plt.subplot(4,3,jj+4) .plot(timeElapsedExp-1e-3*massSorbent/(adsorbentDensity*FeedFlow),moleFracDV,
+                color='#118ab2',alpha=0.2,
+                linestyle = '-') # Dead volume simulation response    
             plt.subplot(4,3,jj+4) .set(xlabel='$t$ [s]', 
-                    ylabel='$y$ [-]', ylim =  [1e-3, 1]) 
+                    ylabel='$y$ [-]', ylim =  [0, 1]) 
             plt.subplot(4,3,jj+4) .locator_params(axis="x", nbins=4)
             plt.subplot(4,3,4) .legend()
             
-            # y - Ft log scale
+            # Qy/(Qy)in - t log scale
             legendStr = legendLines[ii]
+            
             # plt.subplot(3,3,jj+4) .semilogy(timeElapsedExp,resultMat[0,:],
             if flagDesorption:
                 if jj+7 == 7:
                     if nn == 0:
-                        plt.subplot(4,3,jj+7) .semilogy(flowRateSim*timeElapsedExp*1e6,moleFracSim,
-                     color=colorsForPlot[ii],label=legendStr,alpha = 1, linestyle = linestyle) # Simulation response 
+                        plt.subplot(4,3,jj+7) .semilogy(timeElapsedExp,moleFracSim*flowRateSim/(initMoleFrac[0]*flowRateSim[0]),
+                            color=colorsForPlot[ii],label=legendStr,alpha = 1, linestyle = linestyle) # Simulation response 
                     else:
-                        plt.subplot(4,3,jj+7) .semilogy(flowRateSim*timeElapsedExp*1e6,moleFracSim,
+                        plt.subplot(4,3,jj+7) .semilogy(timeElapsedExp,moleFracSim*flowRateSim/(initMoleFrac[0]*flowRateSim[0]),
                      color=colorsForPlot[ii],alpha = 1, linestyle = linestyle) # Simulation response 
-                    plt.subplot(4,3,jj+7) .plot(flowRateSim*timeElapsedExp*1e6,moleFracDV,
+                    plt.subplot(4,3,jj+7) .semilogy(timeElapsedExp-1e-3*massSorbent/(adsorbentDensity*FeedFlow),moleFracDV*flowInDV/(initMoleFrac[0]*flowRateSim[0]),
                     color='#118ab2',alpha=0.2,
                     linestyle = '-') # Dead volume simulation response    
-                    plt.subplot(4,3,jj+7) .set(xlabel='$Ft$ [cc]', 
-                        ylabel='$y$ [-]', 
-                        # xlim = [0,2000], ylim =  [1e-6, 1])  
-                        xlim = [0,100], ylim =  [1e-3, 1])  
+                    plt.subplot(4,3,jj+7) .set(xlabel='$t$ [s]', 
+                            ylabel='$Q(t)y(t)/QinYin$ [-]') 
+                    plt.fill_between(timeElapsedExp-1e-3*massSorbent/(adsorbentDensity*FeedFlow),moleFracSim*flowRateSim/(initMoleFrac[0]*flowRateSim[0]),
+                                     moleFracDV*flowInDV/(initMoleFrac[0]*flowRateSim[0]),alpha = 0.1,color = 'red')
+                    plt.subplot(4,3,jj+7) .set(xlabel='$t$ [s]', 
+                            ylabel='$Q(t)y(t)/QinYin$ [-]', ylim =  [1e-5, 1]) 
                 else:
-                    plt.subplot(4,3,jj+7) .semilogy(flowRateSim*timeElapsedExp*1e6,moleFracSim,
+                    plt.subplot(4,3,jj+7) .semilogy(timeElapsedExp,moleFracSim*flowRateSim/(initMoleFrac[0]*flowRateSim[0]),
                      color=colorsForPlot[ii],alpha = 1, linestyle = linestyle) # Simulation response 
                     # if ii==len(fileName)-1:
-                    plt.subplot(4,3,jj+7) .plot(flowRateSim*timeElapsedExp*1e6,moleFracDV,
-                        color='#118ab2',alpha=0.2,
-                        linestyle = '-') # Dead volume simulation response    
-                    plt.subplot(4,3,jj+7) .set(xlabel='$Ft$ [cc]', 
-                            ylabel='$y$ [-]', 
-                            # xlim = [0,2000], ylim =  [1e-6, 1])  
-                            xlim = [0,100], ylim =  [1e-3, 1])  
+                    # plt.subplot(4,3,jj+7) .plot(timeElapsedExp,moleFracDV*flowInDV/(feedMoleFrac[0]*FeedFlow),
+                    #     color='#118ab2',alpha=0.2,
+                    #     linestyle = '-') # Dead volume simulation response    
+                    plt.subplot(4,3,jj+7) .set(xlabel='$t$ [s]', 
+                            ylabel='$Q(t)y(t)/QinYin$ [-]') 
+                    plt.fill_between(timeElapsedExp-1e-3*massSorbent/(adsorbentDensity*FeedFlow),moleFracSim*flowRateSim/(initMoleFrac[0]*flowRateSim[0]),
+                                     moleFracDV*flowInDV/(initMoleFrac[0]*flowRateSim[0]),alpha = 0.1,color = 'red')
+                    plt.subplot(4,3,jj+7) .set(xlabel='$t$ [s]', 
+                            ylabel='$Q(t)y(t)/QinYin$ [-]', ylim =  [1e-5, 1]) 
+                    
             else:
-                plt.subplot(4,3,jj+7) .semilogy(timeElapsedExp,moleFracSim,
+                plt.subplot(4,3,jj+7) .plot(timeElapsedExp,moleFracSim*flowRateSim/(feedMoleFrac[0]*FeedFlow),
                      color=colorsForPlot[ii],label=legendStr,alpha = 1, linestyle = linestyle) # Simulation response    
                     # if ii==len(fileName)-1:
-            plt.subplot(4,3,jj+7) .plot(flowRateSim*timeElapsedExp*1e6,moleFracDV,
+                plt.subplot(4,3,jj+7) .set(xlabel='$t$ [s]', 
+                        ylabel='$Q(t)y(t)/QinYin$ [-]', ylim =  [0, 1]) 
+            plt.subplot(4,3,jj+7) .plot(timeElapsedExp-1e-3*massSorbent/(adsorbentDensity*FeedFlow),moleFracDV*flowInDV/(feedMoleFrac[0]*FeedFlow),
                 color='#118ab2',alpha=0.2,
                 linestyle = '-') # Dead volume simulation response    
-            plt.subplot(4,3,jj+7) .set(xlabel='$Ft$ [cc]', 
-                    ylabel='$y$ [-]', ylim =  [1e-3, 1]) 
+            plt.fill_between(timeElapsedExp-1e-3*massSorbent/(adsorbentDensity*FeedFlow),moleFracSim*flowRateSim/(feedMoleFrac[0]*FeedFlow),
+                             moleFracDV*flowInDV/(feedMoleFrac[0]*FeedFlow),alpha = 0.1,color = 'red')
+            
             plt.subplot(4,3,jj+7) .locator_params(axis="x", nbins=4)
             plt.subplot(4,3,7) .legend()
             
@@ -454,12 +500,31 @@ for jj in range(len(isothermModels)):
      
             if flagDesorption:
                 plt.subplot(4,3,jj+10) .set(xlabel='$t$ [s]', 
-                        ylabel='Fractional loading [-]',  
-                        xlim = [0,200], ylim =  [0, 1])   
+                        ylabel='Fractional loading [-]', ylim =  [0, 1]  )
+                        # xlim = [0,3000], ylim =  [0, 1])   
             else:
                 plt.subplot(4,3,jj+10) .set(xlabel='$t$ [s]', 
-                        ylabel='$Fractional loading [-]',  
-                        xlim = [0,30], ylim =  [0, 1])  
+                        ylabel='Fractional loading [-]', ylim =  [0, 1] ) 
+                        # xlim = [0,3000], ylim =  [0, 1])  
             plt.subplot(4,3,jj+10) .locator_params(axis="x", nbins=4)
-        
+            
+            if flagDesorption:
+                tpync = 1e-3*massSorbent/(adsorbentDensity*flowRateSim[0])
+                tads = np.trapz(moleFracSim*flowRateSim/(moleFracSim[0]*flowRateSim[0]),timeElapsedExp+tpync)
+                tblank = np.trapz(moleFracDV*flowInDV/(moleFracSim[0]*flowRateSim[0]),timeElapsedExp+tpync)
+                
+                
+                MassBalance = pressureTotal*moleFracSim[0]*flowRateSim[0]/(Rg*temperatureExp[nn]*massSorbent*1e-3)*(tads-tblank-tpync)
+                MassBalanceALL = np.hstack((MassBalanceALL,MassBalance))
+                
+                plt.subplot(4,3,jj+1) .scatter(moleFracSim[0],MassBalance,s=20,color=colorsForPlot[ii])
+            else:
+                tads = np.trapz(1-moleFracSim*flowRateSim/(feedMoleFrac[0]*FeedFlow),timeElapsedExp)
+                tblank = np.trapz(1-moleFracDV*flowInDV/(feedMoleFrac[0]*FeedFlow),timeElapsedExp)
+                tpync =1e-3* massSorbent/(adsorbentDensity*FeedFlow)
+
+                MassBalance = pressureTotal*feedMoleFrac[0]*FeedFlow/(Rg*temperatureExp[nn]*massSorbent*1e-3)*(tads-tblank-tpync)
+                MassBalanceALL = np.hstack((MassBalanceALL,MassBalance))
+                
+                plt.subplot(4,3,jj+1) .scatter(feedMoleFrac[0],MassBalance,s=20,color=colorsForPlot[ii])
 plt.show()

@@ -25,7 +25,7 @@ clc;clear all;
 % Define Temperatures for evaluation
 Tvals = [288.15, 298.15, 308.15];
 
-CarrierGas = 'He';
+CarrierGas = 'Ar';
 Ptotal = 1; % total pressure in atm
 
 poreData = load('Copy_of_ZYTMA_ZLC_HA.mat');

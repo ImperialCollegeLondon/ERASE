@@ -61,6 +61,9 @@ fileParameter = 'zlcParameters_ZYHCrush_20240518_2113_b571c46.npz' # ZYH ALL FLO
 fileParameter = 'zlcParameters_ZYNaCrush_20240521_2240_b571c46.npz' # ZYNa ALL FLOW Diff
 fileParameter = 'zlcParameters_ZYTMACrush_20240520_1927_b571c46.npz' # ZYTMA ALL FLOW Diff
 
+
+fileParameter = 'deadVolumeCharacteristics_20231122_1743_b571c46.npz'
+
 # Flag to plot dead volume results
 # Dead volume files have a certain name, use that to find what to plot
 if fileParameter[0:10] == 'deadVolume':
@@ -313,15 +316,16 @@ else:
     downsampleData = load(parameterPath)["downsampleFlag"]
 
     modelType = load(parameterPath)["modelType"]
+    # modelType = 'Diffusion1TNItau'
     if modelType == 'Diffusion1Ttau' or modelType == 'Diffusion1TNItau':
         # mean pore radius from MIP
         rpore = load(parameterPath)["rpore"]
         Dpvals = load(parameterPath)["Dpvals"]
-        numPellets = load(parameterPath)["numPellets"]
+        # numPellets = load(parameterPath)["numPellets"]
     else:
         rpore = 107e-9
         Dpvals = [3.05671321526166e-05,	3.15050794527196e-05,	3.24331710687508e-05]
-        numPellets = 3
+    numPellets = 1  
 
     print("Objective Function",round(modelOutputTemp[()]["function"],0))
 
@@ -560,6 +564,7 @@ else:
         
             flowInDV = np.zeros((len(resultMat[1,:])))          
             flowInDV[:] = np.mean(flowRateExp[-1:-2:-1]*1e-6)
+            # flowInDV[:] = resultMat[3,:]
             # Call the deadVolume Wrapper function to obtain the outlet mole fraction
             deadVolumePath = os.path.join('..','simulationResults',deadVolumeFileTemp)
             modelOutputTemp = load(deadVolumePath, allow_pickle=True)["modelOutput"]

@@ -81,16 +81,20 @@ adsorbentID = np.array([sensorID]) # Do this for consistency
 adsorbentIsotherm = adsorbentIsothermTemp[:,:,adsorbentID]
 adsorbentDensity = adsorbentDensityTemp[adsorbentID]
 equilibriumLoadings = np.zeros([moleFraction.shape[1],adsorbentIsotherm.shape[0]])
+Rg = 8.314
 # Loop through all the gases so that the single component isotherm is 
 # generated. If not multicomponent genretaed. Additionally, several 
 # transpose operations are performed to be self-consistent with other codes
-adsorbentIsotherm[0][0] = 6.8*3/4
-adsorbentIsotherm[0][1] = 0.05/np.exp(2.5e4/(8.314*298.15))
-adsorbentIsotherm[0][2] = -2.5e4
+adsorbentIsotherm[0][0] = [8.9*6/4]
+adsorbentIsotherm[0][1] = [0.02/np.exp(4.6e4/(Rg*298.15))]
+adsorbentIsotherm[0][2] = [-4.6e4]
 
 adsorbentIsotherm[1][0] = 4.23*3/4
 adsorbentIsotherm[1][1] = 0.5/np.exp(17.7e4/(8.314*298.15))
 adsorbentIsotherm[1][2] = -17.7e4
+
+adsorbentIsotherm[0] = [[995*6/4],[0.0001/np.exp(2.9e4/(Rg*298.15))],[-2.9e4]]
+adsorbentIsotherm[1] = [[6],[80/np.exp(4.6e4/(Rg*298.15))],[-4.6e4]]
 
 # [1000*3/4,0.0001/np.exp(2e4/(Rg*298.15)),2e4,0,0,0],
 # [9*3/4,0.02/np.exp(2e4/(Rg*298.15)),2e4,0,0,0],
@@ -121,7 +125,7 @@ if numGases == 3:
             linewidth=1.5,color='g', label = '$g_3$')
 ax.set(xlabel='$P$ [bar]', 
        ylabel='$q^*$ [mol kg$^{\mathregular{-1}}$]',
-       xlim = [0, 1], ylim = [0, 5])
+       xlim = [0, 1], ylim = [0, 6])
 ax.legend()
 
 #  Save the figure

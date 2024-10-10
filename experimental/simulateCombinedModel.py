@@ -35,7 +35,7 @@ def simulateCombinedModel(**kwargs):
     from numpy import load
     import os
     import numpy as np
-
+    import pdb 
     # Move to top level folder (to avoid path issues)    
     os.chdir("..")
     import auxiliaryFunctions    
@@ -188,6 +188,7 @@ def simulateCombinedModel(**kwargs):
     
     # File with parameter estimates for the dead volume
     deadVolumeDir = '..' + os.path.sep + 'simulationResults/'
+    # pdb.set_trace()
     modelOutputTemp = load(deadVolumeDir+deadVolumeFile, allow_pickle=True)["modelOutput"]
     # Parse out dead volume parameters
     x = modelOutputTemp[()]["variable"]

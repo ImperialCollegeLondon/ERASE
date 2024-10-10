@@ -222,6 +222,7 @@ if ~isempty(parametersMS)
     elseif ~isempty(strfind(parametersMS.MS,'TCD'))
         meanCO2Signal = meanCO2Signal-min(meanCO2Signal);
         calibrationMS.ratioHeCO2 = fit(meanCO2Signal'./max(meanCO2Signal),meanMoleFrac(:,2),'cubicspline');
+        calibrationMS.maxVoltage = max(meanCO2Signal);
     else
         calibrationMS.ratioHeCO2 = fit((meanHeSignal./(meanCO2Signal+meanHeSignal))',meanMoleFrac(:,1),'cubicspline');
         % calibrationMS.ratioHeCO2 = fit((meanHeSignal./(meanCO2Signal+meanHeSignal))',meanMoleFrac(:,1),'linearinterp');
@@ -266,6 +267,7 @@ if ~isempty(parametersMS)
         ylabel('Helium mole frac [-]')
         set(gca,'FontSize',8)
     elseif ~isempty(strfind(parametersMS.MS,'TCD'))
+        figure(1)
         plot(meanCO2Signal./max(meanCO2Signal),meanMoleFrac(:,2),'or') % Experimental
         hold on
         plot(0:0.001:1,calibrationMS.ratioHeCO2(0:0.001:1),'b')
@@ -275,12 +277,22 @@ if ~isempty(parametersMS)
         xlabel('V/V_{max} [-]')
         ylabel('CO_{2} mole frac [-]')
         set(gca,'FontSize',8)
+        figure(2)
+        hold on
+        box on; grid on;
+        ylabel('V [uV]')
+        xlabel('time [s]')
+        ylim([0 1.05*max(reconciledData.MS(:,3))])
+        set(gca,'FontSize',8)
+        plot(reconciledData.MS(:,1),reconciledData.MS(:,3),'LineWidth',2,'DisplayName',[convertCharsToStrings(parametersMS.flow)]); 
+        legend('Interpreter','latex','Location','southeast','FontSize',6);
+%         yline(meanCO2Signal,'HandleVisibility','off','LineStyle','--','LineWidth',1)
     else
         plot(meanHeSignal./(meanHeSignal+meanCO2Signal),meanMoleFrac(:,1),'or') % Experimental
         hold on
         plot(0:0.001:1,calibrationMS.ratioHeCO2(0:0.001:1),'b')
         xlim([0 1]);
-        ylim([0 1]);
+        ylim([0 1]);    
         box on; grid on;
         xlabel('Helium Signal/(CO2 Signal+Helium Signal) [-]')
         ylabel('Helium mole frac [-]')

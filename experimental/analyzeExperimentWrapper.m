@@ -87,6 +87,15 @@ numExpForEachRawFile = [1,1,1]; % Number of experiments that use the same raw MS
 % msCalibrationFiles = {'ZLCCalibrateMS_20240518_60ccm', 'ZLCCalibrateMS_20240519_60ccm'};
 msCalibrationFiles = {'ZLCCalibrateTCD_20240628_60ccm_old','ZLCCalibrateTCD_20240701_60ccm_old','ZLCCalibrateTCD_20240702_40ccm'};
 
+msRawFiles = {'ZLCCalibrateTCD_010724_old.txt'};
+
+% numExpForEachRawFile = [2]; % Number of experiments that use the same raw MS file (vector corresponding to number of MS files). i.e. how many flowrates within same calibration file
+numExpForEachRawFile = [1]; % Number of experiments that use the same raw MS file (vector corresponding to number of MS files). i.e. how many flowrates within same calibration file
+
+% Flow rate files for calibration 
+% msCalibrationFiles = {'ZLCCalibrateMS_20240518_60ccm', 'ZLCCalibrateMS_20240519_60ccm'};
+msCalibrationFiles = {'ZLCCalibrateTCD_20240701_60ccm_old'};
+
 % msRawFiles = {'ZLCCalibrateTCD_010724_old.txt','ZLCCalibrateTCD_010724.txt'};
 % 
 % % numExpForEachRawFile = [2]; % Number of experiments that use the same raw MS file (vector corresponding to number of MS files). i.e. how many flowrates within same calibration file
@@ -118,16 +127,16 @@ msCalibrationFiles = {'ZLCCalibrateTCD_20240628_60ccm_old','ZLCCalibrateTCD_2024
 % MS Raw data should contain only two gases and the pressure. For now
 % cannot handle more gases.
 
-msExpFile = 'ZLC_Empty_Exp72_73.asc'; % Raw MS data file name
+msExpFile = 'uDCB_ActivatedCarbon_TCD_Exp03.txt'; % Raw MS data file name
 % Flow rate files for experiments
 % experimentFiles =  {'ZLC_HCP-DETA-2_Exp01A',...
 %                     'ZLC_HCP-DETA-2_Exp01B',...
 %                     'ZLC_HCP-DETA-2_Exp02A',...
 %                     'ZLC_HCP-DETA-2_Exp02B'};
-experimentFiles =  {'ZLC_Empty_Exp72A',...
-                    'ZLC_Empty_Exp72B',...
-                    'ZLC_Empty_Exp73A',...
-                    'ZLC_Empty_Exp73B'};
+experimentFiles =  {'uDCB_ActivatedCarbon_Exp03_des_TCD_20ccm',...
+                    'uDCB_ActivatedCarbon_Exp03_ads_TCD_20ccm',...
+                    'uDCB_Empty_Exp01_ads_TCD_20ccm',...
+                    'uDCB_Empty_Exp01_des_TCD_20ccm'};
 
 
 % msExpFile = 'ZLC_ZYNaCrush_Exp05_06.asc'; % Raw MS data file name
@@ -265,7 +274,7 @@ for ii = 1:length(msCalibrationFiles)
     calibrationStruct.MS = [msFileDir,filesep,msRawFileALL{ii}]; % Experimental MS file (.asc)
     calibrationStruct.interpMS = true; % Flag for interpolating MS data (true) or flow data (false)
     if ~contains(msExpFile,'IR')
-        calibrationStruct.numMean = 50; % Number of points for averaging
+        calibrationStruct.numMean = 60; % Number of points for averaging
     else
         calibrationStruct.numMean = 200; % Number of points for averaging
     end
@@ -284,7 +293,7 @@ if ~isempty(experimentFiles)
         experimentStruct.flow = experimentFiles{ii}; % Experimental flow file (.mat)
         experimentStruct.MS = [msFileDir,filesep,msExpFile]; % Experimental MS file (.asc). Assumes name of file to be the date of the first flow rate
         experimentStruct.calibrationMS = msCalibrationFiles; % Experimental calibration file list
-        experimentStruct.interpMS = false; % Flag for interpolating flow data, to have a higher resolution for actual experiments
+        experimentStruct.interpMS = true; % Flag for interpolating flow data, to have a higher resolution for actual experiments
         if ~contains(msExpFile,'TCD')
             % experimentStruct.moleFracThreshold = 1e-2; % Threshold for cutting off data below a given mole fraction FOR MS
             experimentStruct.moleFracThreshold = 8e-3; % Threshold for cutting off data below a given mole fraction FOR MS

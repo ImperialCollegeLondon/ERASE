@@ -61,8 +61,13 @@ pressureTotal = np.array([1.e5]);
 # Define temperature
 # temperature = [ 363.15, 348.15, 333.15, 318.15, 303.15,]
 temperature = [308.15, 328.15, 348.15]
+temperature = [308.15]
+temperature = [307.15]
+temperature = [45+273.15]
+temperature = [35+273.15]
+# temperature = [298.15]
 # temperature = [ 283.15, 293.15, 303.15,  ] # ZIF8 BN
-temperature = [ 288.15, 298.15, 308.15, ] # ZYH 
+# temperature = [ 288.15, 298.15, 308.15, ] # ZYH 
 
 # CO2 molecular diffusivity
 molDiffusivity = 1.6e-5 # m2/s
@@ -74,7 +79,20 @@ tortuosity = 3
 particleRadius = 2e-3
 
 # AC Isotherm parameters
-x_VOL = [4.65e-1, 1.02e-5 , 2.51e4, 6.51, 3.51e-7, 2.57e4] # (Hassan, QC)
+x_VOL = [4.7982e-01, 1.3219e-06 , 3.0246e+04, 6.7306e+00, 4.1199e-07, 2.5112e+04] # (Hassan, QC)
+# x_VOL = [2.13439205162503, 1.80856274945894e-05 , 12084.1647573458, 2.55627072631662, 1.17421078433853e-07, 19533.8362773021] # (Hassan, N2 MSB)
+# x_VOL = [0.504092573419353, 1.05045850819496e-10 , 40991.2504764961, 2.21115212663745, 1.68639170257557e-05, 12471.6408395543] # (Hassan, N2 MSB)
+# x_VOL = [17.4791671215619, 7.73502327338559e-07 , 11684.5703031636, 1.05387145558652, 1.82549826524957e-06, 20061.3344796481] # (Hassan, N2 MSB)
+# x_VOL = [1.74164373852037, 1.49647717248660e-05 , 13904.4144670737, 0, 0, 0] # (Hassan, N2 MSB)
+# x_VOL = [2.45403498286636, 8.68370498957626e-06  , 14214.7140173896, 0, 0, 0] # (Hassan, AC N2 MSB)
+# x_VOL = [2.45403498286636, 8.68370498957626e-06  , 14214.7140173896, 0, 0, 0] # (Hassan, AC N2 MSB)
+x_VOL = [3.7531, 5.3767e-06  ,1.5472e+04, 0, 0, 0] # (HEFTI, 13X N2 MSB)
+
+
+
+
+
+
 
 # Lewatit Isotherm parameters
 # x_VOL = [1.02, 2.18e-10,  5e4, 1.46, 1.92e-13, 8.44e4] # (Hassan, QC)
@@ -93,11 +111,11 @@ x_VOL = [4.65e-1, 1.02e-5 , 2.51e4, 6.51, 3.51e-7, 2.57e4] # (Hassan, QC)
 # x_VOL = [7.94, 3.42794467426045e-07, 21424.1416899692,0, 0, 0] # (Hassan, QC)
 # 
 # ZYH Isotherm parameters
-x_VOL =  [4.3418e-01, 1.0555e-06 , 3.2322e+04, 6.6351e+00, 2.0803e-07, 2.6108e+04] # ZYH DSL 1 bara new
+# x_VOL =  [4.3418e-01, 1.0555e-06 , 3.2322e+04, 6.6351e+00, 2.0803e-07, 2.6108e+04] # ZYH DSL 1 bara new
 # x_VOL =  [20, 2.0760e-08, 2.7017e+04, 6.6713e-01] # ZYH SSS 1 bara
 # 
 # ZYNa Isotherm parameters
-x_VOL =  [6.4975e+00, 3.5355e-07, 3.1108e+04, 9.0420e-01, 5.1101e-05, 2.3491e+04] # ZYNa DSL 1 bara new
+# x_VOL =  [6.4975e+00, 3.5355e-07, 3.1108e+04, 9.0420e-01, 5.1101e-05, 2.3491e+04] # ZYNa DSL 1 bara new
 # ZYTMA VOL
 # x_VOL = [5.1394e+00, 2.7760e-07, 2.8886e+04, 2.6934e+00, 1.2966e-06, 2.9451e+04] # ZYTMA DSL 1 bara new
 
@@ -105,13 +123,13 @@ x_VOL =  [6.4975e+00, 3.5355e-07, 3.1108e+04, 9.0420e-01, 5.1101e-05, 2.3491e+04
 # x_VOL =  [6.1805e+00, 3.5221e-07, 3.1113e+04, 8.6948e-01, 4.9984e-05, 2.3522e+04] # ZYNa DSL 1 bara
 
 # CMS 3K Isotherm parameters
-x_VOL =  [9.7667e-01, 1.0749e-05, 2.4312e+04, 3.4760e+00, 2.2254e-07, 2.7095e+04]  # CMS3K DSL 1 bara new
-
+# x_VOL =  [9.7667e-01, 1.0749e-05, 2.4312e+04, 3.4760e+00, 2.2254e-07, 2.7095e+04]  # CMS3K DSL 1 bara new
+# 
 # ZIF8 MCB30 Isotherm parameters
 # x_VOL = [10,4.41e-8,2.57e4,0, 0, 0] # (Hassan, QC)
 
 # 13X Isotherm parameters (L pellet)
-x_VOL = [2.80321673e+00, 2.35760556e-08, 4.54444851e+04, 3.50928608e+00, 3.73556076e-10, 4.72948894e+04,]
+# x_VOL = [2.80321673e+00, 2.35760556e-08, 4.54444851e+04, 3.50928608e+00, 3.73556076e-10, 4.72948894e+04,]
 # ZLC Parameter estimates
 # New kinetic model
 # Both k1 and k2 present
@@ -133,13 +151,17 @@ zlcFileName = ['zlcParameters_20210822_0926_c8173b1.npz',
                 'zlcParameters_20210823_1007_c8173b1.npz',
                 'zlcParameters_20210823_1810_c8173b1.npz']
 
-zlcFileName = ['zlcParameters_ZYH_20230914_0359_b571c46.npz',] 
+# zlcFileName = ['zlcParameters_ZYH_20230914_0359_b571c46.npz',] 
 # zlcFileName = ['zlcParameters_ZYTMA_20230915_1651_b571c46.npz',] 
 # zlcFileName = ['zlcParameters_ZYNa_20230914_1950_b571c46.npz',] 
 # zlcFileName = ['zlcParameters_Zeolite13X_20230924_1314_b571c46.npz',] 
 # zlcFileName = ['zlcParameters_CMS3K_20230919_1800_b571c46.npz',] 
 # zlcFileName = ['zlcParameters_CMS3KAr_20230920_0458_b571c46.npz',] 
 # zlcFileName = ['zlcParameters_ActivatedCarbon_20230921_0603_b571c46.npz',] 
+
+## DIFFUSION FITS const dEFF
+# zlcFileName = ['zlcParameters_ZYH_20231101_0304_b571c46.npz'] # ZYH ALL FLOW Diff
+# zlcFileName = ['zlcParameters_ZYNa_20231101_2355_b571c46.npz'] # ZYNa ALL FLOW Diff
 
 # Activated Carbon Experiments - dqbydc = Henry's constant
 # zlcFileName = ['zlcParameters_20211002_0057_c8173b1.npz',
@@ -276,7 +298,7 @@ zlcFileName = ['zlcParameters_ZYH_20230914_0359_b571c46.npz',]
 
 # # Zeolite YH experiments (SSS) ALL
 # zlcFileName = ['zlcParameters_20230314_1720_59cc206.npz',
-#                 'zlcParameters_20230315_0130_59cc206.npz',
+                # 'zlcParameters_20230315_0130_59cc206.npz',
 #                 'zlcParameters_20230315_0921_59cc206.npz',
 #                 'zlcParameters_20230315_1700_59cc206.npz',
 #                 'zlcParameters_20230316_0108_59cc206.npz']
@@ -320,7 +342,7 @@ k2valsFull = np.zeros([len(zlcFileName),len(y),len(temperature)])
 # Initialize isotherms 
 parameterPath = os.path.join('..','simulationResults',zlcFileName[0])
 temperatureExp = load(parameterPath)["temperature"]
-temperature = np.unique(temperatureExp)
+# temperature = np.unique(temperatureExp)
 isoLoading_VOL = np.zeros([len(y),len(temperature)])
 isoLoading_ZLC = np.zeros([len(zlcFileName),len(y),len(temperature)])
 kineticConstant_ZLC = np.zeros([len(zlcFileName),len(y),len(temperature)])
@@ -344,8 +366,10 @@ for kk in range(len(zlcFileName)):
     modelOutputTemp = load(parameterPath, allow_pickle=True)["modelOutput"]
     objectiveFunction[kk] = round(modelOutputTemp[()]["function"],0)
     modelNonDim = modelOutputTemp[()]["variable"] 
-    modelType = load(parameterPath)["modelType"]
-    paramIso = load(parameterPath)["paramIso"]
+    # modelType = load(parameterPath)["modelType"]
+    modelType = 'KineticOld'
+    # paramIso = load(parameterPath)["paramIso"]
+    paramIso = [4.65e-1, 1.02e-5 , 2.51e4, 6.51, 3.51e-7, 2.57e4, 0, 0]
  #    modelNonDim = [0.19988476, 0.50978288 ,0.64060534, 0.42589773, 0.00479913 ,0.87887948,
  # 0.59783281, 0.02982962]
     # modelNonDim = [0.62367463, 0.03599396, 0.64567045, 0.28883399, 0.24600739, 0.03936779]
@@ -457,8 +481,8 @@ for kk in range(len(zlcFileName)):
             
             # Compute the gradient (delq*/dc)
             dqbydc = (equilibriumLoadingUp-isoLoading_ZLC[kk,ii,jj])/(delP/(Rg*temperature[jj])) # [-]
-            dellogc = np.log(partialPressure+delP)-np.log((partialPressure))
-            dlnqbydlnc = (np.log(equilibriumLoadingUp)-np.log(isoLoading_ZLC[kk,ii,jj]))/dellogc
+            dellogp = np.log(partialPressure+delP)-np.log((partialPressure))
+            dlnqbydlnp = (np.log(equilibriumLoadingUp)-np.log(isoLoading_ZLC[kk,ii,jj]))/dellogp
             
             # Overall rate constant
             # The following conditions are done for purely numerical reasons
@@ -484,7 +508,7 @@ for kk in range(len(zlcFileName)):
                     
             if modelType == 'Kinetic':
             # Rate constant 1 (analogous to micropore resistance)
-                k1 = rateConstant_1/dlnqbydlnc
+                k1 = rateConstant_1/dlnqbydlnp
             
                 # Rate constant 2 (analogous to macropore resistance)
                 k2 = rateConstant_2/(1+(1/epsilonp)*dqbydc)
@@ -514,18 +538,42 @@ for kk in range(len(zlcFileName)):
                     rateConstant = 1/(1/k1 + 1/k2)
                     
             elif modelType == 'KineticSB':
-                rateConstant = rateConstant_1*np.exp(-rateConstant_2*1000/(Rg*temperature[jj]))/dlnqbydlnc
-                k1 = rateConstant
-                k2 = 0
+                rateConstant = rateConstant_1*np.exp(-rateConstant_2*1000/(Rg*temperature[jj]))/dlnqbydlnp
                 if rateConstant<1e-8:
                     rateConstant = 1e-8
         
             elif modelType == 'KineticSBMacro':
-                k1 = rateConstant_1*np.exp(-rateConstant_2*1000/(Rg*temperature[jj]))/dlnqbydlnc
+                k1 = rateConstant_1*np.exp(-rateConstant_2*1000/(Rg*temperature[jj]))/dlnqbydlnp
+                # k1 = rateConstant_1*np.exp(-rateConstant_2*1000/(Rg*temperature))
                 # Rate constant 2 (analogous to macropore resistance)
-                k2 = rateConstant_3*np.power(temperature[jj],0.5)/(1+(1/epsilonp)*dqbydc)
+                k2 = rateConstant_3*temperature[jj]**0.5/(1+(1/epsilonp)*dqbydc)
+                k2 = rateConstant_3*np.power(temperature[jj],0.5)*epsilonp/(epsilonp+(1-epsilonp)*dqbydc)        
+                k2 = 15*rateConstant_3*(temperature[jj]/288.15)**1.75/(epsilonp+(1-epsilonp)*dqbydc)
+                # k2 = 15*rateConstant_3*(temperature/288.15)**1.75*epsilonp/(1+(1/epsilonp)*dqbydc)
+                # k2 = 15*rateConstant_3*(temperature/288.15)**1.75*epsilonp
+        
+                # k2 = rateConstant_3
                 # k2 = rateConstant_3/(1+(1/epsilonp)*dqbydc)
+                if k1<1e-9:
+                    rateConstant = k2
+                # If pure (analogous) micropore
+                elif k2<1e-9:
+                    rateConstant = k1
+                # If both resistances are present
+                else:
+                    rateConstant = 1/(1/k1 + 1/k2)
+            
+                if rateConstant<1e-8:
+                    rateConstant = 1e-8    
                 
+            elif modelType == 'KineticSBMacro2':
+                k1 = rateConstant_1*np.exp(-rateConstant_2*1000/(Rg*temperature[jj]))/dlnqbydlnp
+                # Rate constant 2 (analogous to macropore resistance)
+                tc = 0.01/(rateConstant_3*temperature[jj]**0.5*1/(1+(1/epsilonp)*dqbydc))
+                k2 = 5.14/(tc*(1+(1/epsilonp)*dqbydc)/(rateConstant_3*temperature[jj]**0.5))**0.5
+                # pdb.set_trace()
+                # k2 = rateConstant_3*np.power(temperature,0.5)*epsilonp/(epsilonp+(1-epsilonp)*dqbydc)
+                # k2 = rateConstant_3/(1+(1/epsilonp)*dqbydc)        
                 # Overall rate constant
                 # The following conditions are done for purely numerical reasons
                 # If pure (analogous) macropore
@@ -539,7 +587,7 @@ for kk in range(len(zlcFileName)):
                     rateConstant = 1/(1/k1 + 1/k2)
             
                 if rateConstant<1e-8:
-                    rateConstant = 1e-8   
+                    rateConstant = 1e-8    
             k1valsFull[kk,ii,jj] =  k1
             k2valsFull[kk,ii,jj] =  k2
             
