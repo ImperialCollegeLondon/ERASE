@@ -210,8 +210,9 @@ def simulateZLC(**kwargs):
 
         yOut = np.transpose(yOut)
         flowOut = np.transpose(flowOut)
+        # pdb.set_trace()
         # Parse out the output matrix and add flow rate
-        resultMat = np.row_stack((yOut,qAverage,pressureVec,flowOut))
+        resultMat = np.row_stack((yOut,qAverage,pressureVec,flowOut,np.transpose(Y)))
         # pdb.set_trace()
         # Parse out the time
         timeSim = tspan
@@ -226,8 +227,9 @@ def simulateZLC(**kwargs):
 
         yOut = np.transpose(yOut)
         flowOut = np.transpose(flowOut)
+        tempVals = np.transpose(tempVals)
         # Parse out the output matrix and add flow rate
-        resultMat = np.row_stack((yOut,qAverage,pressureVec,flowOut))
+        resultMat = np.row_stack((yOut,qAverage,pressureVec,flowOut,tempVals))
         # pdb.set_trace()
         # Parse out the time
         timeSim = tspan
@@ -650,7 +652,7 @@ def plotFullModelResult(timeSim, resultMat, inputParameters,
     ax.plot(timeSim, resultMat[1,:]/adsorbentDensity,
              linewidth=1.5,color='r')
     ax.set(xlabel='$t$ [s]', 
-           ylabel='$q_1$ [mol kg$^{\mathregular{-1}}$]',
+           # ylabel='$q_1$ [mol kg$^{\mathregular{-1}}$]',
            xlim = [timeSim[0], timeSim[-1]], ylim = [0, 1.1*np.max(resultMat[1,:]/adsorbentDensity)])
     
     ax = plt.subplot(1,3,2)
@@ -671,7 +673,7 @@ def plotFullModelResult(timeSim, resultMat, inputParameters,
     ax2 = plt.twinx()
     ax2.plot(timeSim, resultMat[3,:],
              linewidth=1.5,color='b')
-    ax2.set_ylabel('$F$ [m$^{\mathregular{3}}$ s$^{\mathregular{-1}}$]', color='b')
+    # ax2.set_ylabel('$F$ [m$^{\mathregular{3}}$ s$^{\mathregular{-1}}$]', color='b')
     ax2.tick_params(axis='y', labelcolor='b')
     ax2.set(xlim = [timeSim[0], timeSim[-1]], 
            ylim = [0, 1.1*np.max(resultMat[3,:])])
@@ -881,9 +883,9 @@ def DiffusionAdsorption1Dtau(Y0, tspan, volSorbent, volGas, adsorbentDensity, ep
         moleSolid = np.zeros(len(tspan))
         qAverage_i = np.zeros(len(tspan))
         for jj in range(len(tspan)):
-            qAverage_i[jj] = 3 / (Rp**3) *             np.trapz(Y[jj, n:2*n-2] * r[0:-2] ** 2, r[0:-2])
-            moleGas[jj] = volGas * 3 / (Rp**3) *       np.trapz(Y[jj, 0:n-2]   * r[0:-2] ** 2, r[0:-2])
-            moleSolid[jj] = volSorbent * 3 / (Rp**3) * np.trapz(Y[jj, n:2*n-2] * r[0:-2] ** 2, r[0:-2])
+            qAverage_i[jj] = 3 / (Rp**3) *             np.trapz(Y[jj, n:2*n-3] * r[0:-3] ** 2, r[0:-3])
+            moleGas[jj] = volGas * 3 / (Rp**3) *       np.trapz(Y[jj, 0:n-3]   * r[0:-3] ** 2, r[0:-3])
+            moleSolid[jj] = volSorbent * 3 / (Rp**3) * np.trapz(Y[jj, n:2*n-3] * r[0:-3] ** 2, r[0:-3])
         moleTotal = numPellets*(moleSolid + moleGas)
         moleRate = np.gradient(moleTotal, tspan)
         volRate = np.absolute(moleRate * Rg * temperature / Ptotal)
@@ -951,8 +953,8 @@ def radialDiffusionAdsorption1Dtau(x, t, r, n, isothermModel, temperature, rateC
 
     volMix = 0.785e-6-numPellets*(volGas+volSorbent)
 
-    DnDt = (volSorbent*3 / ( (Rp)**3 ) * np.trapz(DqDt[0:n-2] * r[0:-2] ** 2, r[0:-2])+
-            volGas*3 /     ( (Rp)**3 ) * np.trapz(DcDt[0:n-2] * r[0:-2] ** 2, r[0:-2]))/(volSorbent+volGas)
+    DnDt = (volSorbent*3 / ( (Rp)**3 ) * np.trapz(DqDt[0:n-3] * r[0:-3] ** 2, r[0:-3])+
+            volGas*3 /     ( (Rp)**3 ) * np.trapz(DcDt[0:n-3] * r[0:-3] ** 2, r[0:-3]))/(volSorbent+volGas)
     flowOut = volFlow - (numPellets*(volSorbent+volGas)*(Rg*temperature)/Ptotal)*DnDt
     DyDt = 1/(volMix) * ((volFlow*0 - flowOut*c[-2]*(Rg*temperature)/Ptotal) - (numPellets*(volSorbent+volGas)*(Rg*temperature)/Ptotal)*DnDt)
     
@@ -976,7 +978,7 @@ def DiffusionAdsorption1DNItau(Y0, tspan, volSorbent, volGas, adsorbentDensity, 
     volSorbent = volSorbent/numPellets
     volGas = volGas/numPellets
     Rp = ((volSorbent + volGas) / (4/3 * np.pi))**(1/3)  # pellet radius [m]]
-    n = 50
+    n = 60
     r = np.linspace(0,Rp+2*Rp/n, n)  # discretize radial domain
     
     # pdb.set_trace()
@@ -1001,15 +1003,15 @@ def DiffusionAdsorption1DNItau(Y0, tspan, volSorbent, volGas, adsorbentDensity, 
         moleSolid = np.zeros(len(tspan))
         qAverage_i = np.zeros(len(tspan))
         tempVals = Y[:,2*n:3*n]
-        Tvals = tempVals[:,-1]
+        tempVals = tempVals[:,-1]
         for jj in range(len(tspan)):
-            qAverage_i[jj] = 3 / (Rp**3) *             np.trapz(Y[jj, n:2*n-2] * r[0:-2] ** 2, r[0:-2])
-            moleGas[jj] = volGas * 3 / (Rp**3) *       np.trapz(Y[jj, 0:n-2]   * r[0:-2] ** 2, r[0:-2])
-            moleSolid[jj] = volSorbent * 3 / (Rp**3) * np.trapz(Y[jj, n:2*n-2] * r[0:-2] ** 2, r[0:-2])
+            qAverage_i[jj] = 3 / (Rp**3) *             np.trapz(Y[jj, n:2*n-3] * r[0:-3] ** 2, r[0:-3])
+            moleGas[jj] = volGas * 3 / (Rp**3) *       np.trapz(Y[jj, 0:n-3]   * r[0:-3] ** 2, r[0:-3])
+            moleSolid[jj] = volSorbent * 3 / (Rp**3) * np.trapz(Y[jj, n:2*n-3] * r[0:-3] ** 2, r[0:-3])
         moleTotal = moleSolid + moleGas
         moleRate = np.gradient(moleTotal, tspan)
-        volRate = -moleRate * Rg * Tvals / Ptotal
-        yOut = Y[:,n-2]*(Rg*Tvals)/Ptotal
+        volRate = -moleRate * Rg * tempVals / Ptotal
+        yOut = Y[:,n-2]*(Rg*tempVals)/Ptotal
         volFlowOut = (volRate + volFlow)
         qAverage = qAverage_i
         yOut[yOut < 1e-5] = 1e-5
@@ -1052,24 +1054,29 @@ def radialDiffusionAdsorption1DNItau(x, t, r, n, isothermModel, temperature, rat
     else:
         Dmol = 0
         Dp = Dpvals[1]
+        
+    Dp = (T[0]-288.15)*1.3e-7+Dp
 
     Dmaceff[:] =  epsilon/rateConstant_3*(Dp) 
     kmiceff[:] =  kmic
     
     D2cDx2[0] = 6 * Dmaceff[0] / (epsilon * deltar ** 2) * (c[1] - c[0]) 
     heatAds = heatofAdsorption(c, T[0], isothermModel, adsorbentDensity)
-    Cs =  1344*adsorbentDensity;
+    Cs =  920;
     a = 3/Rp
     conductivity = 0.15
-    kinVis = 11.69e-5
+    # kinVis = 11.69e-5
+    kinVis = 14.81e-6;
     crossArea = (np.pi*0.008**2)/4
     Diameter = 2*Rp
-    U = volFlow/(crossArea-np.pi*Rp**2)
+    # U = volFlow/(crossArea-np.pi*Rp**2)
+    U = volFlow/(crossArea)
     Re = U*Diameter/kinVis
     Pr = 0.67
     Nu = 2 + (0.4*Re**0.5 + 0.06*Re**0.4)*Pr**0.4
-    ha = conductivity*Nu/(2*Rp)*a
-    # ha = 3*conductivity/(Rp**2)
+    # ha = conductivity*a*Nu/(2*Rp)
+    # pdb.set_trace()
+    ha = 3*conductivity/(Rp**2)
 
     for i in range(1, n-1):   
         D2cDx2[i] = (Dmaceff[i] / (epsilon * 2 * (i) * deltar ** 2)) * ((i + 2) * c[i + 1] - 2 * (i) * c[i] + (i - 2) * c[i - 1])
@@ -1079,16 +1086,19 @@ def radialDiffusionAdsorption1DNItau(x, t, r, n, isothermModel, temperature, rat
         DcDt[i] = D2cDx2[i] - ((1 - epsilon) / epsilon) * DqDt[i]    
 
     volMix = 0.785e-6-numPellets*(volGas+volSorbent)
-    DnDt = (volSorbent*3 / ( (Rp)**3 ) * np.trapz(DqDt[0:n-2] * r[0:-2] ** 2, r[0:-2])+
-            volGas*3 /     ( (Rp)**3 ) * np.trapz(DcDt[0:n-2] * r[0:-2] ** 2, r[0:-2]))/(volSorbent+volGas)
+
+    DnDt = (volSorbent*3 / ( (Rp)**3 ) * np.trapz(DqDt[0:n-3] * r[0:-3] ** 2, r[0:-3])+
+            volGas*3 /     ( (Rp)**3 ) * np.trapz(DcDt[0:n-3] * r[0:-3] ** 2, r[0:-3]))/(volSorbent+volGas)
     flowOut = volFlow - (numPellets*(volSorbent+volGas)*(Rg*T[0])/Ptotal)*DnDt
     DyDt = 1/(volMix) * ((volFlow*0 - flowOut*c[-2]*(Rg*T[0])/Ptotal) - (numPellets*(volSorbent+volGas)*(Rg*T[0])/Ptotal)*DnDt)
-    DQDt = 3 / ( (Rp)**3 ) * np.trapz(DqDt[0:n-2] * r[0:-2] ** 2, r[0:-2])
-    
-    DcDt[-2] = DyDt*Ptotal/(Rg*T[0])
+    DQDt = (volSorbent+volGas)*(3 / ( (Rp)**3 ) * np.trapz(DqDt[0:n-3] * r[0:-3] ** 2, r[0:-3]))
+    # DQDt = (volSorbent+volGas)* 3 /(Rp**3) * np.trapz(DqDt[0:n-3] * r[0:-3] ** 2, r[0:-3])
+    # pdb.set_trace()
+    DcDt[-2] = DyDt*Ptotal/(Rg*temperature)
     DcDt[-1] = 0
     DqDt[-2:] = 0
-    DTDt[:] = 1/Cs *(DQDt*np.mean(heatAds)+(ha)*(temperature-T[0]))
+    DTDt[:] = 1/(volSorbent*adsorbentDensity*Cs) *(DQDt*np.mean(heatAds)+(ha)*(temperature-T[0]))
+    # DTDt[:] = 1/(volSorbent*adsorbentDensity*Cs) *(DQDt*np.mean(heatAds)+ha*(temperature-T[0]))
 
     DfDt = np.concatenate([DcDt, DqDt, DTDt])
 
@@ -1186,3 +1196,15 @@ def heatofAdsorption(c, temperature, isothermModel, adsorbentDensity):
     delH = isonumeratorTotal/isoDenominatorTotal
     return delH
 
+def ChapmanEnskog(kTbyeps12,temperature,MwCar,sigma12):
+    import pandas as pd
+    import os
+    import numpy as np
+    data = np.array(pd.read_csv(os.path.join('..','ERASE','experimental','ChapmanEnskogVals.csv')))
+    MwCO2 = 44.01
+    sigma12
+    omegaD = np.interp(kTbyeps12,data[:,0],data[:,1])
+    Ptotal = 1e5
+    DmVal = (0.001858*temperature**1.5 *(1/MwCO2 + 1/MwCar)**0.5) /(Ptotal*(sigma12*1e10)**2*omegaD)*1e-4
+    return DmVal
+    

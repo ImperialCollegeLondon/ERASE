@@ -20,24 +20,26 @@
 % Output arguments:
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-clc;clear all;
+clc;clear all; close all;
 
 % Define Temperatures for evaluation
 Tvals = [288.15, 298.15, 308.15];
+% Tvals = linspace(273.15,373.15,10);
 
-CarrierGas = 'Ar';
+CarrierGas = 'He';
 Ptotal = 1; % total pressure in atm
-
-poreData = load('Copy_of_ZYTMA_ZLC_HA.mat');
+Rg = 8.314;
+poreData = load('Copy_of_ZYNa_ZLC_HA.mat');
 MIP = poreData.poreVolume.MIP;
 macroporeIndex = find(poreData.poreVolume.MIP(1:end,1)>50,1,'first');
-endIndex = 81;
+% endIndex = find(poreData.poreVolume.MIP(1:end,1)>50,1,'first');
+endIndex = 82;
 macroporeVolume = poreData.poreVolume.MIP(end,4)-poreData.poreVolume.MIP(macroporeIndex,4);
 epVals = macroporeVolume./poreData.poreVolume.properties.bulkVolume;
-
+Rp = 0.5./(((sum(poreData.poreVolume.MIP(macroporeIndex:endIndex,2)./poreData.poreVolume.MIP(macroporeIndex:endIndex,1))))./(sum(poreData.poreVolume.MIP(macroporeIndex:endIndex,2)))).*(1e-9);
 % Chapman-Enskog equation
 ChapmanEnskogVals = UnpackCEVals;
-MwCO2 = 44; % molecular weight of CO2 [kg/mol]
+MwCO2 = 44.01; % molecular weight of CO2 [kg/mol]
 switch CarrierGas
     case 'He'
         sigmaCar = 2.551e-10; % collision diameter for Carrier (He) [m]
@@ -57,14 +59,16 @@ sigma12 = 1./2.*(sigmaCO2+sigmaCar);
 epskCO2 = 195.2; %  force constant for CO2 from Lennard Jones potential divided by boltzmann constant [K]
 kb = 1.38e-23; % boltzmann constant [J/K]
 eps12 = sqrt(epskCO2.*kb.*epskCar.*kb); %  force constant for CO2 and Carrier (He) from Lennard Jones potential divided by boltzmann constant [K]
-kTbyeps12 = kb./eps12.*Tvals; %  kT divided by eps12 for interpolation
+kTbyeps12 = kb.*Tvals./eps12; %  kT divided by eps12 for interpolation
 DmVal = zeros(1,length(Tvals));
+omegaDVals = zeros(1,length(Tvals));
 for ii = 1:length(Tvals)
     omegaD = interp1(ChapmanEnskogVals(:,1),ChapmanEnskogVals(:,2),kTbyeps12(ii));
     DmVal(ii) = (0.001858.*Tvals(ii).^1.5 .*(1./MwCO2 + 1./MwCar).^0.5) ./(Ptotal*(sigma12*1e10)^2.*omegaD)*1e-4; % Equimolar counter diffusivity [m2/s]
+    omegaDVals(ii) = omegaD;
 end
 
-
+Ddg = [];
 DpVal = zeros(1,length(Tvals));
 
 set(groot,'defaulttextInterpreter','latex') %latex axis labels
@@ -87,24 +91,28 @@ hold on
 x = poreData.poreVolume.MIP(macroporeIndex:endIndex,1);
 p = cumtrapz(x,poreData.poreVolume.MIP(macroporeIndex:endIndex,3));
 p = p - min(p);
-pVals = linspace(min(p),max(p),12000)./max(p);
+pVals = linspace(min(p),max(p),20000)./max(p);
 % xVals = interp1(p./max(p),x,pVals)-poreData.poreVolume.MIP(macroporeIndex,1);
 xVals = interp1(p./max(p),x,pVals);
-dist = fitdist(xVals',distType)
-dvals = linspace(MIP(macroporeIndex,1),MIP(end,1),100000);
+dist = fitdist(xVals',distType);
+dvals = linspace(MIP(macroporeIndex,1),MIP(end,1),200000);
 distribPDF = pdf(dist,dvals);
 figure(1)
 hold on
 for kk = 1:length(Tvals)
-    DkVals = 97.*9./13./2.*dvals.*(1e-9).*sqrt(Tvals(kk)./44.01);
+%     DkVals = 97.*9./13./2.*dvals.*(1e-9).*sqrt(Tvals(kk)./44.01);
+    DkVals = 9./13.*2./3.*dvals.*(1e-9)./2.*sqrt(8.*Rg.*Tvals(kk)./(pi.*0.04401));
     Drvals = 1./(1./DkVals + 1./DmVal(kk));
+    Ddg(kk) = 1./(1./(9./13.*2./3.*Rp.*sqrt(8.*Rg.*Tvals(kk)./(pi.*0.04401)))+1./DmVal(kk));
     frvals = distribPDF;
+    frvals = frvals./sum(distribPDF);
     yyaxis right
     hold on
     DrFr = Drvals.*frvals;
-    semilogx(dvals,cumtrapz(dvals,DrFr)./epVals,'LineWidth',2, 'LineStyle',LineStyles(kk), 'HandleVisibility','off')
+    semilogx(dvals,cumtrapz(dvals,DrFr),'LineWidth',2, 'LineStyle','-', 'HandleVisibility','off')
     DpVal(kk) = trapz(dvals,DrFr)./epVals;
     ylabel('$$\frac{1}{\epsilon_{\mathrm{p}}}$$$$\int_{50\mathrm{ nm}}^{W}\mathit{D(W)f(W)  \,dW}$$ [m$$^2$$s$$^{-1}$$]','FontSize',15)
+    ylabel('$$\int_{50\mathrm{ nm}}^{W}\mathit{D(W)f(W)  \,dW}$$ [m$$^2$$s$$^{-1}$$]','FontSize',15)
 
     yyaxis left
     semilogx(dvals,frvals,'LineWidth',2)
@@ -116,18 +124,20 @@ for kk = 1:length(Tvals)
     grid on; axis square; box on
     set(gca,'fontname','arial')
     yyaxis left
-    ylim([0 0.005])
+%     ylim([0 0.005])
 
 end
 
 figure(2)
 for kk = 1:length(Tvals)
-    DkVals = 97.*9./13./2.*dvals.*(1e-9).*sqrt(Tvals(kk)./44.01);
+%     DkVals = 97.*9./13./2.*dvals.*(1e-9).*sqrt(Tvals(kk)./44.01);
+    DkVals = 9./13.*2./3.*dvals.*(1e-9)./2.*sqrt(8.*Rg.*Tvals(kk)./(pi.*0.04401));
     Drvals = 1./(1./DkVals + 1./DmVal(kk));
     frvals = distribPDF;
+    frvals = frvals./sum(distribPDF);
     hold on
     set(gcf,'Position',  [0 0 350 350])
-    semilogx(dvals,Drvals,'LineWidth',2,'Color','black', 'LineStyle',LineStyles(kk),'DisplayName',[num2str(Tvals(kk)),' K'])
+    semilogx(dvals,Drvals,'LineWidth',2,'Color','black', 'LineStyle',':','DisplayName',[num2str(Tvals(kk)),' K'])
     set(gca,'YScale','linear','XScale','log','FontSize',fsz,'LineWidth',0.8)
     grid on; axis square; box on
     set(gca,'fontname','arial')
@@ -136,14 +146,34 @@ for kk = 1:length(Tvals)
     ylim([0 7e-5])
     xlim([50 3e5])
     legend('Location','northwest')
+    xline(DmVal(kk),"")
 end
 
-tauVals = 1.42;
+tauVals = 1.39;
 tauDelta = 0.016;
 tauFac = epVals./tauVals;
 tauFac2 = epVals'./(tauVals'+tauDelta);
 DeVals = tauFac.*DpVal;
 DeValsDelta = abs(tauFac2'.*DpVal-DeVals);
+% 
+% figure
+% scatter(Tvals,Ddg)
+% hold on
+% p = polyfit(Tvals, Ddg,1);
+% plot(linspace(0, 340), polyval(p, linspace(0, 340)),'Color',ColorsForPlot(2,:),'LineWidth',2,'LineStyle','-','HandleVisibility','off')
+% scatter(Tvals,DpVal)
+% 
+% figure
+% scatter(ChapmanEnskogVals(10:45,1).*eps12./kb,ChapmanEnskogVals(10:45,2))
+% hold on
+% fun = @(x) log(sum(((x(1).* ((ChapmanEnskogVals(10:45,1).*eps12./kb)./288).^x(2)+x(3)) - ChapmanEnskogVals(10:45,2)).^2)); 
+% x0 = [0,0,0];
+% % options = optimoptions('lsqnonlin','Algorithm','levenberg-marquardt')
+% % [x fval] = lsqnonlin(fun,x0,[-10,-10,-10],[10,10,10],options)
+% [x fval] = ga(fun,3,[],[],[],[],[-100,-100,-100],[100,100,100])
+% TvalsCE = linspace(100,400,1000);
+% plot(TvalsCE,x(1).*(TvalsCE./288).^x(2)+x(3))
+
 
 function ChapmanEnskogVals = UnpackCEVals
 % tabulated values for kT/eps12 vs OmegaD from Mass Transfer in

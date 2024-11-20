@@ -181,27 +181,38 @@ def simulateDeadVolume(**kwargs):
     # pdb.set_trace()
     ##########################################################################
     # Solve the system of equations
-    outputSol = solve_ivp(solveTanksInSeries, timeInt, initialConditions, 
-                          method='Radau', t_eval = t_eval,
-                          rtol = 1e-8, args = inputParameters, first_step =0.0001, dense_output=True)
+    try:
+        outputSol = solve_ivp(solveTanksInSeries, timeInt, initialConditions, 
+                              method='Radau', t_eval = t_eval,
+                              rtol = 1e-5, args = inputParameters, first_step =0.00001, dense_output=True)
+        
+        # Parse out the time
+        timeSim = outputSol.t
+        
+        # Inlet concentration
+        moleFracIn = np.ones((len(outputSol.t),1))*feedMoleFrac
     
-    # Parse out the time
-    timeSim = outputSol.t
+        # Mole fraction at the outlet
+        # Mixing volume
+        moleFracMix = outputSol.y[numTanks_1]
+        # Diffusive volume
+        moleFracDiff = outputSol.y[-1]
     
-    # Inlet concentration
-    moleFracIn = np.ones((len(outputSol.t),1))*feedMoleFrac
-
-    # Mole fraction at the outlet
-    # Mixing volume
-    moleFracMix = outputSol.y[numTanks_1]
-    # Diffusive volume
-    moleFracDiff = outputSol.y[-1]
-
-    # Composition after mixing
-    flowRate_M = flowRate - flowRate_2D
-    moleFracOut = np.divide(np.multiply(flowRate_M,moleFracMix)
-                    + np.multiply(flowRate_2D,moleFracDiff),flowRate)
-    
+        # Composition after mixing
+        flowRate_M = flowRate - flowRate_2D
+        moleFracOut = np.divide(np.multiply(flowRate_M,moleFracMix)
+                        + np.multiply(flowRate_2D,moleFracDiff),flowRate)
+        
+        # print(inputParameters)
+        
+        # pdb.set_trace()
+    except:
+        timeSim = t_eval
+        moleFracIn = np.ones((len(timeSim)))*initMoleFrac
+        moleFracOut = np.ones((len(timeSim)))*initMoleFrac
+        moleFracOut = np.transpose(moleFracOut)
+        # print(inputParameters)
+        
     # pdb.set_trace()
     ##########################################################################
     # # Solve the system of equations
@@ -270,7 +281,6 @@ def solveTanksInSeries(t, f, *inputParameters):
 
    # Initialize the derivatives to zero
     df = np.zeros([numTanksTotal])
-
     # Volume 1: Mixing volume
     # Volume of each tank in the mixing volume
     volTank_1 = deadVolume_1/numTanks_1

@@ -71,6 +71,7 @@ def extractDeadVolume(**kwargs):
 
     # Find out the total number of cores available for parallel processing
     num_cores = multiprocessing.cpu_count()
+    num_cores = 50
     
     #####################################
     ###### USER DEFINED PROPERTIES ###### 
@@ -84,17 +85,15 @@ def extractDeadVolume(**kwargs):
     if 'fileName' in kwargs:
         fileName = kwargs["fileName"]
     else:
-        fileName = ['ZLC_DeadVolume_Exp20A_Output.mat',
-                    'ZLC_DeadVolume_Exp20B_Output.mat',
-                    'ZLC_DeadVolume_Exp20C_Output.mat',
-                    'ZLC_DeadVolume_Exp20D_Output.mat',
-                    'ZLC_DeadVolume_Exp20E_Output.mat']
+        fileName = ['ZLC_Empty_Exp83A_Output.mat',
+                    'ZLC_Empty_Exp84A_Output.mat',
+                    'ZLC_Empty_Exp85A_Output.mat']
         
     # DV model type
     if 'modelType' in kwargs:
         modelType = kwargs["modelType"]
     else:
-        modelType = 1
+        modelType = 2
 
     # Fit MS data alone (implemented on 28.05.21)
     # Flag to fit MS data
@@ -105,10 +104,12 @@ def extractDeadVolume(**kwargs):
     
     # MS dead volume model
     msDeadVolumeFile = [] # DO NOT CHANGE (initialization)
-    if "DA" not in fileName[0]:
-        flagMSDeadVolume = True # It should be the opposite of flagMSfit (if used)
+    if "DA" in fileName[0]:
+        flagMSDeadVolume = False # It should be the opposite of flagMSfit (if used)
+    elif "TCD" in fileName[0]:
+        flagMSDeadVolume = False # It should be the opposite of flagMSfit (if used)
     else:
-        flagMSDeadVolume = False
+        flagMSDeadVolume = True
     # If MS dead volume used separately, use the file defined here with ms 
     # parameters
     if flagMSDeadVolume:
@@ -134,7 +135,7 @@ def extractDeadVolume(**kwargs):
     # MS does not have diffusive pockets, so setting the bounds for the diffusive
     # volumes to be very very small
     if flagMSFit:
-        optBounds = np.array(([np.finfo(float).eps,10], [np.finfo(float).eps,2*np.finfo(float).eps],
+        optBounds = np.array(([0.787,10], [np.finfo(float).eps,2*np.finfo(float).eps],
                               [np.finfo(float).eps,2*np.finfo(float).eps], [1,30], 
                               [np.finfo(float).eps,2*np.finfo(float).eps]))
         lhsPopulation = LHS(xlimits=optBounds)
@@ -162,57 +163,56 @@ def extractDeadVolume(**kwargs):
             optType=np.array(['real','real','real','int','real'])
             # Algorithm parameters for GA
             algorithm_param = {'max_num_iteration':30,
-                               'population_size':400,
-                               'mutation_probability':0.25,
+                               'population_size':500,
+                               'mutation_probability':0.0,
                                'crossover_probability': 0.55,
                                'parents_portion': 0.15,
                                'elit_ratio': 0.01,
-                               'max_iteration_without_improv':None}
+                               'max_iteration_without_improv':None} 
         elif modelType == 2:
             # pdb.set_trace()
      #       optBounds = np.array(([np.finfo(float).eps,20], [np.finfo(float).eps,20],
      #                             [np.finfo(float).eps,20], [1,50], [np.finfo(float).eps,0.1]))
-            optBounds = np.array(([np.finfo(float).eps,50], [np.finfo(float).eps,50],
-                                  [np.finfo(float).eps,50], [1,50], [np.finfo(float).eps,0.2],
-                                  [np.finfo(float).eps,50], [np.finfo(float).eps,50],
-                                                        [np.finfo(float).eps,0.2]))
+            optBounds = np.array(([0.787,5], [np.finfo(float).eps,5],
+                                  [np.finfo(float).eps,20], [1,50], [np.finfo(float).eps,0.5],
+                                  [np.finfo(float).eps,10], [np.finfo(float).eps,20],
+                                                        [np.finfo(float).eps,0.5]))
             lhsPopulation = LHS(xlimits=optBounds)
             start_population = lhsPopulation(400)    
             start_population[:,3] = np.round(start_population[:,3])                 
             optType=np.array(['real','real','real','int','real','real','real','real'])
             # Algorithm parameters for GA
             algorithm_param = {'max_num_iteration':30,
-                               'population_size':800,
-                               'mutation_probability':0.25,
+                               'population_size':500,
+                               'mutation_probability':0.0,
                                'crossover_probability': 0.55,
                                'parents_portion': 0.15,
                                'elit_ratio': 0.01,
-                               'max_iteration_without_improv':None}    
+                               'max_iteration_without_improv':None} 
 
         else: 
             
             # pdb.set_trace()
      #       optBounds = np.array(([np.finfo(float).eps,20], [np.finfo(float).eps,20],
      #                             [np.finfo(float).eps,20], [1,50], [np.finfo(float).eps,0.1]))
-            optBounds = np.array(([np.finfo(float).eps,50], [np.finfo(float).eps,50],
-                                  [np.finfo(float).eps,50], [1,50], [np.finfo(float).eps,0.2],
-                                  [np.finfo(float).eps,50], [np.finfo(float).eps,50],
-                                                        [np.finfo(float).eps,0.2],
-                                  [np.finfo(float).eps,50], [np.finfo(float).eps,50],
-                                                        [np.finfo(float).eps,0.2]))
+            optBounds = np.array(([0.787,5], [np.finfo(float).eps,5],
+                                  [np.finfo(float).eps,20], [1,50], [np.finfo(float).eps,0.5],
+                                  [np.finfo(float).eps,10], [np.finfo(float).eps,20],
+                                                        [np.finfo(float).eps,0.5],
+                                  [np.finfo(float).eps,70], [np.finfo(float).eps,20],
+                                                        [np.finfo(float).eps,0.5]))
             lhsPopulation = LHS(xlimits=optBounds)
             start_population = lhsPopulation(400)    
             start_population[:,3] = np.round(start_population[:,3])                 
             optType=np.array(['real','real','real','int','real','real','real','real','real','real','real'])
             # Algorithm parameters for GA
-            algorithm_param = {'max_num_iteration':60,
-                               'population_size':600,
-                               'mutation_probability':0.50,
+            algorithm_param = {'max_num_iteration':30,
+                               'population_size':500,
+                               'mutation_probability':0.0,
                                'crossover_probability': 0.55,
                                'parents_portion': 0.15,
                                'elit_ratio': 0.01,
                                'max_iteration_without_improv':None} 
-
 
 
     # Minimize an objective function to compute the dead volume and the number of 
@@ -314,6 +314,17 @@ def deadVolObjectiveFunction(x):
         moleFracExp = moleFracExpTemp[::int(np.round(downsampleInt[ii]))]
         flowRateExp = flowRateTemp[::int(np.round(downsampleInt[ii]))]
         
+        # find index for threshold
+        for ii in range(len(moleFracExp)):
+            if moleFracExp[ii] < 1e-4:
+                endIndex = ii
+                break
+        
+        # Assign new threshold to experimental data
+        timeElapsedExp = timeElapsedExp[0:endIndex]
+        moleFracExp = moleFracExp[0:endIndex]
+        flowRateExp = flowRateExp[0:endIndex]
+        
         # Change the flow rate if fit only MS data
         if flagMSFit:
             flowRateDV = msFlowRate
@@ -321,6 +332,9 @@ def deadVolObjectiveFunction(x):
              # Flow rate for dead volume considered the mean of last 10 points 
              # (to avoid delay issues)
             flowRateDV = np.mean(flowRateExp[-1:-3:-1])
+            # flowRateDV = np.mean(flowRateExp[3:10])
+            
+        
         
         # Integration and ode evaluation time (check simulateDeadVolume)
         timeInt = timeElapsedExp

@@ -30,7 +30,7 @@ def processExpMatFile(mainDir, fileName):
     import os
     from numpy import savez
     import socket
-
+    # import pdb
     # Get the commit ID of the current repository
     gitCommitID = auxiliaryFunctions.getCommitID()
 
@@ -47,7 +47,9 @@ def processExpMatFile(mainDir, fileName):
     timeElapsed = tempListData[0]
     moleFrac = tempListData[1]
     flowRate = tempListData[2]
-    
+    volFlowRate = tempListData[3]
+    volFlowRate = volFlowRate/60
+    # pdb.set_trace()
     # Save the array concentration into a native numpy file
     # The .npz file is saved in a folder called simulationResults (hardcoded)
     saveFileName = fileName[0:-4] + "_" + gitCommitID + ".npz";
@@ -55,5 +57,6 @@ def processExpMatFile(mainDir, fileName):
     savez (savePath, timeElapsed = timeElapsed, # Time elapsed [s]
             moleFrac = moleFrac, # Mole fraction of CO2 [-]
             flowRate = flowRate, # Total flow rate [ccs]
+            volFlowRate = volFlowRate, # Volumetric flow rate [ccs]
             hostName = socket.gethostname()) # Hostname of the computer
     return savePath
