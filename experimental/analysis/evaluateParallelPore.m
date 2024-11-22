@@ -20,7 +20,7 @@
 % Output arguments:
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-clc;clear all; close all;
+% clc;clear all; close all;
 
 % Define Temperatures for evaluation
 Tvals = [288.15, 298.15, 308.15];
@@ -29,11 +29,25 @@ Tvals = [288.15, 298.15, 308.15];
 CarrierGas = 'He';
 Ptotal = 1; % total pressure in atm
 Rg = 8.314;
-poreData = load('Copy_of_ZYNa_ZLC_HA.mat');
+poreData = load('Copy_of_ZYH_ZLC_HA.mat');
+MIP = poreData.poreVolume.MIP;
+macroporeIndex = find(poreData.poreVolume.MIP(1:end,1)>1,1,'first');
+% macroporeIndex = 2;
+% endIndex = find(poreData.poreVolume.MIP(1:end,1)>50,1,'first');
+endIndex = length(poreData.poreVolume.MIP(1:end,1))-1;
+for ii = 2:length(poreData.poreVolume.MIP(macroporeIndex:endIndex,4))
+    if poreData.poreVolume.MIP(ii,4) == poreData.poreVolume.MIP(ii-1,4)
+        poreData.poreVolume.MIP(ii,4) = 99;
+    end
+end
+
+poreData.poreVolume.MIP(find(poreData.poreVolume.MIP(:,4)==99),:) = [];
+
 MIP = poreData.poreVolume.MIP;
 macroporeIndex = find(poreData.poreVolume.MIP(1:end,1)>50,1,'first');
-% endIndex = find(poreData.poreVolume.MIP(1:end,1)>50,1,'first');
-endIndex = 82;
+% macroporeIndex = 3;
+endIndex = length(poreData.poreVolume.MIP(1:end,1))-1;
+
 macroporeVolume = poreData.poreVolume.MIP(end,4)-poreData.poreVolume.MIP(macroporeIndex,4);
 epVals = macroporeVolume./poreData.poreVolume.properties.bulkVolume;
 Rp = 0.5./(((sum(poreData.poreVolume.MIP(macroporeIndex:endIndex,2)./poreData.poreVolume.MIP(macroporeIndex:endIndex,1))))./(sum(poreData.poreVolume.MIP(macroporeIndex:endIndex,2)))).*(1e-9);
@@ -83,41 +97,49 @@ legfsz = 15;
 capsz = 3;
 LineStyles = [":","-.","-"];
 
-distType = 'Kernel';
+distType = 'kernel';
 
 tiledlayout(1,1, 'Padding', 'compact', 'TileSpacing', 'compact');
 nexttile
 hold on
-x = poreData.poreVolume.MIP(macroporeIndex:endIndex,1);
-p = cumtrapz(x,poreData.poreVolume.MIP(macroporeIndex:endIndex,3));
-p = p - min(p);
+x_old = poreData.poreVolume.MIP(macroporeIndex:endIndex,1);
+p_old = cumtrapz(x_old,poreData.poreVolume.MIP(macroporeIndex:endIndex,3));
+p_old = p_old - min(p_old);
+p = p_old(find(diff(p_old)~=0)+1);
+x = x_old(find(diff(p_old)~=0)+1);
 pVals = linspace(min(p),max(p),20000)./max(p);
 % xVals = interp1(p./max(p),x,pVals)-poreData.poreVolume.MIP(macroporeIndex,1);
 xVals = interp1(p./max(p),x,pVals);
 dist = fitdist(xVals',distType);
-dvals = linspace(MIP(macroporeIndex,1),MIP(end,1),200000);
+dvals = logspace(log10(MIP(macroporeIndex,1)),log10(MIP(end,1)),200000);
+% dvals = linspace((MIP(macroporeIndex,1)),(MIP(end,1)),200000);
 distribPDF = pdf(dist,dvals);
+distribPDF(distribPDF<1e-5) = 0;
 figure(1)
 hold on
 for kk = 1:length(Tvals)
 %     DkVals = 97.*9./13./2.*dvals.*(1e-9).*sqrt(Tvals(kk)./44.01);
-    DkVals = 9./13.*2./3.*dvals.*(1e-9)./2.*sqrt(8.*Rg.*Tvals(kk)./(pi.*0.04401));
-    Drvals = 1./(1./DkVals + 1./DmVal(kk));
+    DkVals = @(x) 9./13.*2./3.*(x).*(1e-9)./2.*sqrt(8.*Rg.*Tvals(kk)./(pi.*0.04401));
+    Drvals = @(x) 1./(1./DkVals(x) + 1./DmVal(kk));
     Ddg(kk) = 1./(1./(9./13.*2./3.*Rp.*sqrt(8.*Rg.*Tvals(kk)./(pi.*0.04401)))+1./DmVal(kk));
-    frvals = distribPDF;
-    frvals = frvals./sum(distribPDF);
+    % frvals = distribPDF;
+    % frvals(frvals<1e-6) = 0;
+    % frvals = frvals./sum(distribPDF);
     yyaxis right
     hold on
-    DrFr = Drvals.*frvals;
+    DrFr = Drvals(dvals).*distribPDF;
     semilogx(dvals,cumtrapz(dvals,DrFr),'LineWidth',2, 'LineStyle','-', 'HandleVisibility','off')
+    % semilogx(dvals,cumsum((dvals(2)-dvals(1)).*DrFr),'LineWidth',2, 'LineStyle','--', 'HandleVisibility','off')
     DpVal(kk) = trapz(dvals,DrFr)./epVals;
     ylabel('$$\frac{1}{\epsilon_{\mathrm{p}}}$$$$\int_{50\mathrm{ nm}}^{W}\mathit{D(W)f(W)  \,dW}$$ [m$$^2$$s$$^{-1}$$]','FontSize',15)
     ylabel('$$\int_{50\mathrm{ nm}}^{W}\mathit{D(W)f(W)  \,dW}$$ [m$$^2$$s$$^{-1}$$]','FontSize',15)
 
     yyaxis left
-    semilogx(dvals,frvals,'LineWidth',2)
+    semilogx(dvals,distribPDF,'LineWidth',2,'Marker','none')
     hold on
-    DrFr = Drvals.*frvals;
+    plot(poreData.poreVolume.MIP(:,1),poreData.poreVolume.MIP(:,3), 'HandleVisibility','off','LineWidth',1,'LineStyle','none','Marker','o')
+    xlim([50 350000])
+    % DrFr = Drvals.*frvals;
     DpVal(kk) = trapz(dvals,DrFr)./epVals;
     ylabel('$$\mathit{f(W)}$$ [-]','FontSize',15)
     set(gca,'YScale','linear','XScale','log','FontSize',fsz,'LineWidth',0.8)
@@ -130,11 +152,8 @@ end
 
 figure(2)
 for kk = 1:length(Tvals)
-%     DkVals = 97.*9./13./2.*dvals.*(1e-9).*sqrt(Tvals(kk)./44.01);
     DkVals = 9./13.*2./3.*dvals.*(1e-9)./2.*sqrt(8.*Rg.*Tvals(kk)./(pi.*0.04401));
     Drvals = 1./(1./DkVals + 1./DmVal(kk));
-    frvals = distribPDF;
-    frvals = frvals./sum(distribPDF);
     hold on
     set(gcf,'Position',  [0 0 350 350])
     semilogx(dvals,Drvals,'LineWidth',2,'Color','black', 'LineStyle',':','DisplayName',[num2str(Tvals(kk)),' K'])
@@ -155,6 +174,8 @@ tauFac = epVals./tauVals;
 tauFac2 = epVals'./(tauVals'+tauDelta);
 DeVals = tauFac.*DpVal;
 DeValsDelta = abs(tauFac2'.*DpVal-DeVals);
+
+DpVal.*epVals
 % 
 % figure
 % scatter(Tvals,Ddg)

@@ -201,12 +201,19 @@ fprintf('Total voidage = %5.4e \n',poreVolume.properties.totalVoidage);
 % [M,V] = wblstat(dist.A,dist.B);
 % poreVolume.properties.meanRadius = M./2;
 % poreVolume.properties.stDevRadius= sqrt(V)./2;
-% 
-% vCO = poreVolume.MIP(end,3)
-% % rhoHg = 13.5
-% S = 7.5 % HY and TMAY = 200, NaY = 230;
-% sumdelV = sum((poreVolume.MIP(2:end,2).*1e-6)./(poreVolume.MIP(2:end,1).*1e-9));
-% yVal = 4./S .* sumdelV;
-% tau = (2.23 - 1.13.*vCO.*poreVolume.properties.bulkDensity).*(0.92.*yVal).^2
-% % tau = (2.23 - 1.13.*vCO*poreVolume.properties.bulkDensity)
-% Rp = 0.5./(((sum(poreVolume.MIP(50:end,2)./poreVolume.MIP(50:end,1))))./(sum(poreVolume.MIP(50:end,2))));
+
+vCO = poreVolume.MIP(end,4)-poreVolume.MIP(50,4)
+% rhoHg = 13.5
+% S = 7.96 % NaY;
+prompt = "What is macropore SA? ";
+% S = input(prompt);
+% S = 7.65; % NaY
+% S = 9.74; % HY;
+S = 7.22; % TMAY;
+sumdelV = sum((poreVolume.MIP(50:end,2).*1e-6)./(poreVolume.MIP(50:end,1).*1e-9));
+yVal = 4./S .* sumdelV;
+tau = (2.23 - 1.13.*vCO.*poreVolume.properties.bulkDensity).*(0.92.*yVal).^(1+1)
+% tau = (2.23 - 1.13.*vCO*poreVolume.properties.bulkDensity)
+Rp = 0.5./(((sum(poreVolume.MIP(50:end,2)./poreVolume.MIP(50:end,1))))./(sum(poreVolume.MIP(50:end,2))));
+porosity = (poreVolume.MIP(end,4)-poreVolume.MIP(50,4))./poreVolume.properties.bulkVolume;
+Rp2 = 2.*porosity./(S./(poreVolume.properties.bulkVolume.*1e-6))*1e9
