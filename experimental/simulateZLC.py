@@ -822,8 +822,8 @@ def radialDiffusionAdsorption1D(x, t, r, n, isothermModel, temperature, rateCons
     # volMix = volGas
     volMix = (volGas+volSorbent)
     volMix = 0.785e-6
-    DnDt = (volSorbent*3 / ( (Rp)**3 ) * np.trapz(DqDt[0:n-2] * r[0:-2] ** 2, r[0:-2])+
-            volGas*3 /     ( (Rp)**3 ) * np.trapz(DcDt[0:n-2] * r[0:-2] ** 2, r[0:-2]))/(volSorbent+volGas)
+    DnDt = (volSorbent*3 / ( (Rp)**3 ) * np.trapz(DqDt[0:n-3] * r[0:-3] ** 2, r[0:-3])+
+            volGas*3 /     ( (Rp)**3 ) * np.trapz(DcDt[0:n-3] * r[0:-3] ** 2, r[0:-3]))/(volSorbent+volGas)
     flowOut = volFlow - ((volSorbent+volGas)*(Rg*temperature)/Ptotal)*DnDt;
     DyDt = 1/(volMix) * ((volFlow*0 - flowOut*c[-2]*(Rg*temperature)/Ptotal) - ((volSorbent+volGas)*(Rg*temperature)/Ptotal)*DnDt);
     DcDt[-2] = DyDt*Ptotal/(Rg*temperature)
@@ -855,7 +855,7 @@ def DiffusionAdsorption1Dtau(Y0, tspan, volSorbent, volGas, adsorbentDensity, ep
     volSorbent = volSorbent/numPellets
     volGas = volGas/numPellets
     Rp = ((volSorbent + volGas) / (4/3 * np.pi))**(1/3)  # pellet radius [m]]
-    n = 60
+    n = 100
     r = np.linspace(0,Rp+2*Rp/n, n)  # discretize radial domain
     
     # pdb.set_trace()
@@ -883,19 +883,28 @@ def DiffusionAdsorption1Dtau(Y0, tspan, volSorbent, volGas, adsorbentDensity, ep
         moleSolid = np.zeros(len(tspan))
         qAverage_i = np.zeros(len(tspan))
         for jj in range(len(tspan)):
-            qAverage_i[jj] = 3 / (Rp**3) *             np.trapz(Y[jj, n:2*n-3] * r[0:-3] ** 2, r[0:-3])
-            moleGas[jj] = volGas * 3 / (Rp**3) *       np.trapz(Y[jj, 0:n-3]   * r[0:-3] ** 2, r[0:-3])
-            moleSolid[jj] = volSorbent * 3 / (Rp**3) * np.trapz(Y[jj, n:2*n-3] * r[0:-3] ** 2, r[0:-3])
-        moleTotal = numPellets*(moleSolid + moleGas)
-        moleRate = np.gradient(moleTotal, tspan)
+            qAverage_i[jj] = 3 / (r[-3]**3) *             np.trapz(Y[jj, n:2*n-3] * r[0:-3] ** 2, r[0:-3])
+            moleGas[jj] = volGas * 3 / (r[-3]**3) *       np.trapz(Y[jj, 0:n-3]   * r[0:-3] ** 2, r[0:-3])
+            moleSolid[jj] = volSorbent * 3 / (r[-3]**3) * np.trapz(Y[jj, n:2*n-3] * r[0:-3] ** 2, r[0:-3])
+        volMix = 0.785e-6-numPellets*(volGas+volSorbent)
+        moleTotal = numPellets*(moleSolid + moleGas)+volMix*Y[:,n-2]
+        moleRate = np.gradient(moleTotal, tspan,edge_order=2)
         volRate = np.absolute(moleRate * Rg * temperature / Ptotal)
         yOut = Y[:,n-2]*(Rg*temperature)/Ptotal
-        volFlowOut = (volRate + volFlow)
+        DnDt = np.gradient((moleGas+moleSolid)/(volSorbent+volGas),tspan,edge_order=2)
+        # volFlowOut = (volRate + volFlow)
+        volFlowOut = volFlow-(numPellets*(volSorbent+volGas)*(Rg*temperature)/Ptotal)*DnDt
         qAverage = qAverage_i
-        yOut[yOut < 1e-5] = 1e-5
-        volFlowOut[volFlowOut < volFlow] = volFlow
-        volFlowOut[volFlowOut > 100*volFlow] = 100*volFlow
-        qAverage[qAverage < 1e-6] = 1e-6
+        # yOut[yOut < 1e-5] = 1e-5
+        # volFlowOut[volFlowOut < volFlow] = volFlow
+        # volFlowOut[volFlowOut > 100*volFlow] = 100*volFlow
+        # qAverage[qAverage < 1e-6] = 1e-6
+        moleIn = moleTotal[0]-moleTotal
+        MBQ = moleTotal[0]-moleTotal[-3]
+        moleOut = scipy.integrate.cumtrapz(yOut,(tspan*volFlowOut)*Ptotal/(Rg*temperature))
+        MBY =  np.trapz(yOut[0:-3],(tspan[0:-3]*volFlowOut[0:-3])*Ptotal/(Rg*temperature))
+        MBError = (MBQ-MBY)/MBQ*100
+        print("Mass Mass Balance Error",str(round(MBError,3)),"%")
         # pdb.set_trace()
     
     return tspan, Y, r, yOut, volFlowOut, qAverage
@@ -943,8 +952,13 @@ def radialDiffusionAdsorption1Dtau(x, t, r, n, isothermModel, temperature, rateC
     
     D2cDx2[0] = 6 * Dmaceff[0] / (epsilon * deltar ** 2) * (c[1] - c[0]) 
 
+    # for i in range(1, n-1):   
+    #     D2cDx2[i] = (Dmaceff[i] / (epsilon * 2 * (i) * deltar ** 2)) * ((i + 2) * c[i + 1] - 2 * (i) * c[i] + (i - 2) * c[i - 1])
+    
     for i in range(1, n-1):   
-        D2cDx2[i] = (Dmaceff[i] / (epsilon * 2 * (i) * deltar ** 2)) * ((i + 2) * c[i + 1] - 2 * (i) * c[i] + (i - 2) * c[i - 1])
+        D2cDx2[i] = (Dmaceff[i] / (epsilon * 2 * (i) * deltar ** 2)) * ((i + 2) * c[i + 1] - 2 * (i) * c[i] + (i - 2) * c[i - 1]) + \
+                    (Dmaceff[i + 1] / (epsilon * 2 * deltar ** 2))   * (c[i + 1] - c[i]) + \
+                    (Dmaceff[i - 1] / (epsilon * 2 * deltar ** 2))   * (c[i - 1] - c[i])
 
     for i in range(0, n-2): 
         DqDt[i] = kmiceff[i] * (computeEquilibrium(c[i], temperature, isothermModel, adsorbentDensity) - q[i])

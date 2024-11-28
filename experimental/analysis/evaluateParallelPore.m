@@ -20,16 +20,17 @@
 % Output arguments:
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% clc;clear all; close all;
+clc;clear all; close all;
 
 % Define Temperatures for evaluation
 Tvals = [288.15, 298.15, 308.15];
+% Tvals = [288.15];
 % Tvals = linspace(273.15,373.15,10);
 
 CarrierGas = 'He';
 Ptotal = 1; % total pressure in atm
 Rg = 8.314;
-poreData = load('Copy_of_ZYH_ZLC_HA.mat');
+poreData = load('Copy_of_ZYTMA_ZLC_HA.mat');
 MIP = poreData.poreVolume.MIP;
 macroporeIndex = find(poreData.poreVolume.MIP(1:end,1)>1,1,'first');
 % macroporeIndex = 2;
@@ -89,8 +90,6 @@ set(groot,'defaulttextInterpreter','latex') %latex axis labels
 set(groot, 'DefaultLegendInterpreter', 'latex')
 MarkersForPlot = ["o","o","o","o"];
 MarkersForPlotH2 = ["o","v","square","diamond"];
-ColorsForPlotAll = brewermap(9,'YlOrRd');
-ColorsForPlot = ColorsForPlotAll([4 6 8],:);
 sz = 50;
 fsz = 15;
 legfsz = 15;
@@ -108,13 +107,13 @@ p_old = p_old - min(p_old);
 p = p_old(find(diff(p_old)~=0)+1);
 x = x_old(find(diff(p_old)~=0)+1);
 pVals = linspace(min(p),max(p),20000)./max(p);
-% xVals = interp1(p./max(p),x,pVals)-poreData.poreVolume.MIP(macroporeIndex,1);
-xVals = interp1(p./max(p),x,pVals);
+xVals = interp1(p./poreData.poreVolume.properties.bulkVolume,x,pVals);
 dist = fitdist(xVals',distType);
 dvals = logspace(log10(MIP(macroporeIndex,1)),log10(MIP(end,1)),200000);
 % dvals = linspace((MIP(macroporeIndex,1)),(MIP(end,1)),200000);
 distribPDF = pdf(dist,dvals);
 distribPDF(distribPDF<1e-5) = 0;
+% distribPDF = distribPDF./trapz(dvals,distribPDF);
 figure(1)
 hold on
 for kk = 1:length(Tvals)
@@ -128,6 +127,7 @@ for kk = 1:length(Tvals)
     yyaxis right
     hold on
     DrFr = Drvals(dvals).*distribPDF;
+    % semilogx(dvals,cumtrapz(dvals,DrFr)./max(p_old),'LineWidth',2, 'LineStyle','--', 'HandleVisibility','off')
     semilogx(dvals,cumtrapz(dvals,DrFr),'LineWidth',2, 'LineStyle','-', 'HandleVisibility','off')
     % semilogx(dvals,cumsum((dvals(2)-dvals(1)).*DrFr),'LineWidth',2, 'LineStyle','--', 'HandleVisibility','off')
     DpVal(kk) = trapz(dvals,DrFr)./epVals;
@@ -135,14 +135,17 @@ for kk = 1:length(Tvals)
     ylabel('$$\int_{50\mathrm{ nm}}^{W}\mathit{D(W)f(W)  \,dW}$$ [m$$^2$$s$$^{-1}$$]','FontSize',15)
 
     yyaxis left
-    semilogx(dvals,distribPDF,'LineWidth',2,'Marker','none')
     hold on
-    plot(poreData.poreVolume.MIP(:,1),poreData.poreVolume.MIP(:,3), 'HandleVisibility','off','LineWidth',1,'LineStyle','none','Marker','o')
-    xlim([50 350000])
+    semilogx(dvals,distribPDF.*max(p_old),'LineWidth',2,'Marker','none')
+    % semilogx(dvals,distribPDF,'LineWidth',2,'Marker','none','LineStyle','--')
+    plot(poreData.poreVolume.MIP(:,1),poreData.poreVolume.MIP(:,3), 'HandleVisibility','off','LineWidth',1,'LineStyle','none','Marker','o','MarkerFaceColor',	"#0072BD")
+    % plot(poreData.poreVolume.MIP(:,1),poreData.poreVolume.MIP(:,3)./max(p_old), 'HandleVisibility','off','LineWidth',1,'LineStyle','none','Marker','o')
+    xlim([50 2e3])
     % DrFr = Drvals.*frvals;
     DpVal(kk) = trapz(dvals,DrFr)./epVals;
     ylabel('$$\mathit{f(W)}$$ [-]','FontSize',15)
-    set(gca,'YScale','linear','XScale','log','FontSize',fsz,'LineWidth',0.8)
+    xlabel('$$W$$ [nm]','FontSize',15)
+    set(gca,'YScale','linear','XScale','log','FontSize',fsz,'LineWidth',1)
     grid on; axis square; box on
     set(gca,'fontname','arial')
     yyaxis left
@@ -157,13 +160,13 @@ for kk = 1:length(Tvals)
     hold on
     set(gcf,'Position',  [0 0 350 350])
     semilogx(dvals,Drvals,'LineWidth',2,'Color','black', 'LineStyle',':','DisplayName',[num2str(Tvals(kk)),' K'])
-    set(gca,'YScale','linear','XScale','log','FontSize',fsz,'LineWidth',0.8)
+    set(gca,'YScale','linear','XScale','log','FontSize',fsz,'LineWidth',1)
     grid on; axis square; box on
     set(gca,'fontname','arial')
     ylabel('$$\mathit{D(W)}$$ [m$$^2$$s$$^{-1}$$]','FontSize',15)
     xlabel('Pore width [nm]','FontSize',15)
     ylim([0 7e-5])
-    xlim([50 3e5])
+    xlim([50 2e3])
     legend('Location','northwest')
     xline(DmVal(kk),"")
 end
@@ -175,26 +178,36 @@ tauFac2 = epVals'./(tauVals'+tauDelta);
 DeVals = tauFac.*DpVal;
 DeValsDelta = abs(tauFac2'.*DpVal-DeVals);
 
-DpVal.*epVals
-% 
-% figure
-% scatter(Tvals,Ddg)
-% hold on
-% p = polyfit(Tvals, Ddg,1);
-% plot(linspace(0, 340), polyval(p, linspace(0, 340)),'Color',ColorsForPlot(2,:),'LineWidth',2,'LineStyle','-','HandleVisibility','off')
-% scatter(Tvals,DpVal)
-% 
-% figure
-% scatter(ChapmanEnskogVals(10:45,1).*eps12./kb,ChapmanEnskogVals(10:45,2))
-% hold on
-% fun = @(x) log(sum(((x(1).* ((ChapmanEnskogVals(10:45,1).*eps12./kb)./288).^x(2)+x(3)) - ChapmanEnskogVals(10:45,2)).^2)); 
-% x0 = [0,0,0];
-% % options = optimoptions('lsqnonlin','Algorithm','levenberg-marquardt')
-% % [x fval] = lsqnonlin(fun,x0,[-10,-10,-10],[10,10,10],options)
-% [x fval] = ga(fun,3,[],[],[],[],[-100,-100,-100],[100,100,100])
-% TvalsCE = linspace(100,400,1000);
-% plot(TvalsCE,x(1).*(TvalsCE./288).^x(2)+x(3))
+DpVal.*epVals;
 
+figure
+scatter(Tvals,Ddg)
+hold on
+p = polyfit(Tvals, Ddg,1);
+plot(linspace(0, 340), polyval(p, linspace(0, 340)),'Color','b','LineWidth',2,'LineStyle','-','HandleVisibility','off')
+scatter(Tvals,DpVal)
+
+figure
+scatter(ChapmanEnskogVals(66:70,1).*eps12./kb,ChapmanEnskogVals(66:70,2),60,'filled','b')
+hold on
+Nt = length(ChapmanEnskogVals(66:70,1));
+fun = @(x) log(sum(((x(1).* ((ChapmanEnskogVals(66:70,1).*eps12./kb)./288).^x(2)+0*x(3)) - ChapmanEnskogVals(66:70,2)).^2)); 
+fun = @(x) Nt./2.*log(sum(((x(1).* ((ChapmanEnskogVals(66:70,1).*eps12./kb)./250).^x(2)) - ChapmanEnskogVals(66:70,2)).^2)); 
+x0 = [0,0,0];
+x0 = [1,-0.2];
+% options = optimoptions('lsqnonlin','Algorithm','levenberg-marquardt')
+% [x fval] = lsqnonlin(fun,x0,[-10,-10,-10],[10,10,10],options)
+% [x fval] = ga(fun,3,[],[],[],[],[-100,-100,-100],[100,100,100]);
+[x fval] = ga(fun,2,[],[],[],[],[0,-2],[5,5])
+TvalsCE = linspace(0,500,1000);
+% plot(TvalsCE,x(1).*(TvalsCE./288).^x(2)+x(3))
+plot(TvalsCE,x(1).*(TvalsCE./250).^x(2),'LineWidth',2,'Color','b')
+xlim([250 450])
+set(gca,'YScale','linear','XScale','linear','FontSize',fsz,'LineWidth',1)
+grid on; axis square; box on
+set(gca,'fontname','arial')
+ylabel('$$\Omega_{D,12}$$ [-]','FontSize',15)
+xlabel('Temperature [K]','FontSize',15)
 
 function ChapmanEnskogVals = UnpackCEVals
 % tabulated values for kT/eps12 vs OmegaD from Mass Transfer in

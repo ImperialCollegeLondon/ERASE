@@ -44,10 +44,11 @@ def deadVolumeWrapper(timeInt, flowRateDV, DV_p, flagMSDeadVolume,
     else:
         feedMoleFrac = [0.]
     
+    
     if len(DV_p) == 5:
         # Simulates the tubings and fittings
         # Compute the dead volume response using the dead volume parameters input
-        timeDV , _ , moleFracSim = simulateDeadVolume(deadVolume_1 = DV_p[0],
+        timeDV , _ , moleFracSim = simulateDeadVolume(deadVolume_1 = DV_p[0]-0.786,
                                                 deadVolume_2M = DV_p[1],
                                                 deadVolume_2D = DV_p[2],                                      
                                                 numTanks_1 = int(DV_p[3]),
@@ -60,7 +61,7 @@ def deadVolumeWrapper(timeInt, flowRateDV, DV_p, flagMSDeadVolume,
     elif len(DV_p) == 8:
         # Simulates the tubings and fittings
         # Compute the dead volume response using the dead volume parameters input
-        timeDV , _ , moleFracSim = simulateDeadVolume(deadVolume_1 = DV_p[0],
+        timeDV , _ , moleFracSim = simulateDeadVolume(deadVolume_1 = DV_p[0]-0.786,
                                                 deadVolume_2M = DV_p[1],
                                                 deadVolume_2D = DV_p[2],                                      
                                                 numTanks_1 = int(DV_p[3]),
@@ -76,7 +77,7 @@ def deadVolumeWrapper(timeInt, flowRateDV, DV_p, flagMSDeadVolume,
     else:
         # Simulates the tubings and fittings
         # Compute the dead volume response using the dead volume parameters input
-        timeDV , _ , moleFracSim = simulateDeadVolume(deadVolume_1 = DV_p[0],
+        timeDV , _ , moleFracSim = simulateDeadVolume(deadVolume_1 = DV_p[0]-0.786,
                                                 deadVolume_2M = DV_p[1],
                                                 deadVolume_2D = DV_p[2],                                      
                                                 numTanks_1 = int(DV_p[3]),

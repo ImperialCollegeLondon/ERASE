@@ -187,7 +187,7 @@ end
 pVals = linspace(min(p),max(p),12000)./max(p);
 xVals = interp1(p./max(p),x,pVals);
 dist = fitdist(xVals',distType);
-dvals = linspace(poreVolume.MIP(macroporeIndex,1),poreVolume.MIP(end,1),100000);
+dvals = linspace(poreVolume.MIP(macroporeIndex,1),poreVolume.MIP(end,1),200000);
 distribPDF = pdf(dist,dvals);
 plot(dvals,distribPDF.*max(p)+min(p),'LineStyle','-','LineWidth',2,'Color','red')
 set(gca,'YScale','linear','XScale','log','FontSize',20,'LineWidth',0.8)
