@@ -72,6 +72,7 @@ def extractZLCParameters(**kwargs):
     
     # Find out the total number of cores available for parallel processing
     num_cores = 150
+    num_cores = 50
 
     #####################################
     ###### USER DEFINED PROPERTIES ######
@@ -83,7 +84,7 @@ def extractZLCParameters(**kwargs):
         modelType = 'SSL'
 
     # Number of times optimization repeated
-    numOptRepeat = 7
+    numOptRepeat = 4
     
     # Directory of raw data
     mainDir = 'runData'
@@ -420,7 +421,7 @@ def extractZLCParameters(**kwargs):
         lhsPopulation = LHS(xlimits=optBounds)
         start_population = lhsPopulation(popSize)  
     elif modelType == 'Diffusion1Ttau':
-        optBounds = np.array(([15*12e-3,15*20e-3],[1e-3,10e-3]))
+        optBounds = np.array(([15*12e-3,15*20e-3],[0.1e-3,10e-3]))
         optType=np.array(['real','real'])
         problemDimension = len(optType)
         isoRef = [1000, 1000] # Reference for the parameter (has to be a list)
@@ -642,6 +643,17 @@ def ZLCObjectiveFunction(x):
             deadVolumeFlow = deadVolumeFile[1]
         else:
             deadVolumeFlow = deadVolumeFile[0]
+            
+        # find index for threshold
+        for ii in range(len(moleFracExp)):
+            if moleFracExp[ii] < 3e-4:
+                endIndex = ii
+                break
+        
+        # Assign new threshold to experimental data
+        timeElapsedExp = timeElapsedExp[0:endIndex]
+        moleFracExp = moleFracExp[0:endIndex]
+        flowRateExp = flowRateExp[0:endIndex]
             
             
         if len(deadVolumeFlow[0]) == 1: # 1 DV for 1 DV file

@@ -839,15 +839,8 @@ def DiffusionAdsorption1Dtau(Y0, tspan, volSorbent, volGas, adsorbentDensity, ep
     import numpy as np
     from scipy.integrate import odeint
     import pdb
-    # import matplotlib.pyplot as plt
-    # from numpy import load
-    # import os
-    # import matplotlib.pyplot as plt
-    # import auxiliaryFunctions
     import scipy
-    # import nbkode
-    # plt.style.use('doubleColumn.mplstyle') # Custom matplotlib style file
-    # from scipy.integrate import odeint, solve_ivp, ode
+
 
     # Constants and others
     Rg = 8.314  # Universal gas constant [J/molK]
@@ -855,7 +848,7 @@ def DiffusionAdsorption1Dtau(Y0, tspan, volSorbent, volGas, adsorbentDensity, ep
     volSorbent = volSorbent/numPellets
     volGas = volGas/numPellets
     Rp = ((volSorbent + volGas) / (4/3 * np.pi))**(1/3)  # pellet radius [m]]
-    n = 100
+    n = 60
     r = np.linspace(0,Rp+2*Rp/n, n)  # discretize radial domain
     
     # pdb.set_trace()
@@ -874,11 +867,6 @@ def DiffusionAdsorption1Dtau(Y0, tspan, volSorbent, volGas, adsorbentDensity, ep
         scipy.integrate.ode(radialDiffusionAdsorption1Dtau).set_integrator('vode', method='bdf', order=15)
         Y = odeint(radialDiffusionAdsorption1Dtau, x0, tspan, args=inputArgs)
         
-        
-        # solver = nbkode.BDF6(radialDiffusionAdsorption1D, 0, x0, params = inputArgs)
-        
-        # tspan, Y = solver.run(tspan)
-        
         moleGas = np.zeros(len(tspan))
         moleSolid = np.zeros(len(tspan))
         qAverage_i = np.zeros(len(tspan))
@@ -888,39 +876,27 @@ def DiffusionAdsorption1Dtau(Y0, tspan, volSorbent, volGas, adsorbentDensity, ep
             moleSolid[jj] = volSorbent * 3 / (r[-3]**3) * np.trapz(Y[jj, n:2*n-2] * r[0:-2] ** 2, r[0:-2])
         volMix = 0.785e-6-numPellets*(volGas+volSorbent)
         moleTotal = numPellets*(moleSolid + moleGas)+volMix*Y[:,n-2]
-        moleRate = np.gradient(moleTotal, tspan,edge_order=2)
-        volRate = np.absolute(moleRate * Rg * temperature / Ptotal)
         yOut = Y[:,n-2]*(Rg*temperature)/Ptotal
         DnDt = np.gradient((moleGas+moleSolid)/(volSorbent+volGas),tspan,edge_order=2)
-        # volFlowOut = (volRate + volFlow)
         volFlowOut = volFlow-(numPellets*(volSorbent+volGas)*(Rg*temperature)/Ptotal)*DnDt
         qAverage = qAverage_i
-        # yOut[yOut < 1e-5] = 1e-5
-        # volFlowOut[volFlowOut < volFlow] = volFlow
-        # volFlowOut[volFlowOut > 100*volFlow] = 100*volFlow
-        # qAverage[qAverage < 1e-6] = 1e-6
-        moleIn = moleTotal[0]-moleTotal
         MBQ = moleTotal[0]-moleTotal[-3]
-        moleOut = scipy.integrate.cumtrapz(yOut,(tspan*volFlowOut)*Ptotal/(Rg*temperature))
         MBY =  np.trapz(yOut[0:-3],(tspan[0:-3]*volFlowOut[0:-3])*Ptotal/(Rg*temperature))
         MBError = (MBQ-MBY)/MBQ*100
         print("Mass Balance Error:",str(round(MBError,3)),"%")
         eqError = (qAverage[0]-qAverage[-1])/qAverage[0]*100
         print("Percentage Desorbed:",str(round(eqError,3)),"%")
-        LoadingError = ((q0[0]/adsorbentDensity+volMix*Y[0,n-2]/(volSorbent*adsorbentDensity)-MBY/(volSorbent*adsorbentDensity)) \
-            -(moleTotal[-1])/(volSorbent*adsorbentDensity))/(moleTotal[0]/(volSorbent*adsorbentDensity))*100
+        # LoadingError = ((q0[0]/adsorbentDensity+(volMix+volGas)*Y[0,n-2]/(volSorbent*adsorbentDensity)-MBY/(volSorbent*adsorbentDensity)) \
+        #     -(moleTotal[-1])/(volSorbent*adsorbentDensity))/(moleTotal[-1]/(volSorbent*adsorbentDensity))*100
+        LoadingError = (((q0[0]-qAverage[-1])/adsorbentDensity+numPellets*(volMix+volGas)*Y[0,n-2]/(numPellets*volSorbent*adsorbentDensity)-MBY/(volSorbent*adsorbentDensity))) \
+            /((q0[0]/adsorbentDensity+numPellets*(volMix+volGas)*Y[0,n-2]/(numPellets*volSorbent*adsorbentDensity)))*100
         print("Loading Error:",str(round(LoadingError,3)),"%")
-        # eqError = (q0[0]/adsorbentDensity-MBY/(volSorbent*adsorbentDensity))*100
-        # print("Percentage Desorbed:",str(round(eqError,3)),"%")
-        pdb.set_trace()
+        # pdb.set_trace()
     
     return tspan, Y, r, yOut, volFlowOut, qAverage
 
 def radialDiffusionAdsorption1Dtau(x, t, r, n, isothermModel, temperature, rateConstant_1, rateConstant_2, rateConstant_3, epsilon, adsorbentDensity,volGas, volSorbent, volFlow, Y0, Rp, rpore, Dpvals, numPellets):
     import numpy as np
-    # import computedqbydc
-    # import computedlnqbydlnp
-    # import computeEquilibrium
     import pdb
     Rg = 8.314
     Ptotal = 1e5
@@ -956,12 +932,10 @@ def radialDiffusionAdsorption1Dtau(x, t, r, n, isothermModel, temperature, rateC
 
     Dmaceff[:] =  epsilon/rateConstant_3*(Dp) 
     kmiceff[:] =  kmic
+    # pdb.set_trace()
     
     D2cDx2[0] = 6 * Dmaceff[0] / (epsilon * deltar ** 2) * (c[1] - c[0]) 
 
-    # for i in range(1, n-1):   
-    #     D2cDx2[i] = (Dmaceff[i] / (epsilon * 2 * (i) * deltar ** 2)) * ((i + 2) * c[i + 1] - 2 * (i) * c[i] + (i - 2) * c[i - 1])
-    
     for i in range(1, n-1):   
         D2cDx2[i] = (Dmaceff[i] / (epsilon * 2 * (i) * deltar ** 2)) * ((i + 2) * c[i + 1] - 2 * (i) * c[i] + (i - 2) * c[i - 1]) + \
                     (Dmaceff[i + 1] / (epsilon * 2 * deltar ** 2))   * (c[i + 1] - c[i]) + \
